@@ -1,0 +1,8 @@
+java -jar sonews.jar [arguments]
+        where arguments:
+    -c|-config         <path to config file> if custom config file preferred
+    -dumpjdbcdriver    Prints out a list of available JDBC drivers
+    -feed              Enables feed daemon for pulling news from peer servers
+    -h|-help           This output
+    -mlgw              Enables the Mailinglist Gateway poller
+    -useaux            Enables an additional secondary port for listening

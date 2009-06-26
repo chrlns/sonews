@@ -1,0 +1,52 @@
+<p>
+<a href="/sonews">Back to Main Page</a>
+</p>
+
+On this page you can configure to which peer hosts new messages are 
+posted or from which peer hosts we should receive messages.
+
+<h2>Peers</h2>
+%PEERS
+
+<h3>Add new peer</h3>
+<form action="" method="GET">
+<table style="border: 0px">
+  <tr>
+    <td>Hostname:</td>
+    <td><input type="text" name="host" value="news.someremotehost.org" /></td>
+  </tr>
+  <tr>
+    <td>Port:</td>
+    <td><input type="text" name="port" value="119" /></td>
+  </tr>
+</table>
+<input type="submit" value="Add peer" />
+</form>
+
+<h2>Rules</h2>
+<h3>Current</h3>
+%PEERING_RULES
+
+<h3>Add peering rule</h3>
+<form action="" method="GET">
+<table style="border: 0px">
+  <tr>
+    <td>Peer:</td>
+    <td>%OPTION_PEERS</td>
+  </tr>
+  <tr>
+    <td>Group:</td>
+    <td>%OPTION_GROUP</td>
+  </tr>
+  <tr>
+    <td>Peering type:</td>
+    <td>
+      <select name="peertype">
+        <option value="0">Pull peering</option>
+        <option value="1">Push peering</option>
+      </select>
+    </td>
+  </tr>
+</table>
+<input type="submit" value="Add peering rule" />
+</form>

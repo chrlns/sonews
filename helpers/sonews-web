@@ -1,0 +1,7 @@
+#!/bin/bash
+export CLASSPATH=/usr/share/java/jchart2d.jar:/usr/share/java/sonews.jar
+ARG0=org.sonews.web.SonewsServlet@sonews
+ARG1=org.sonews.web.SonewsConfigServlet@sonews/config
+ARG2=org.sonews.web.SonewsPeerServlet@sonews/peer
+ARG3=org.sonews.web.SonewsChartServlet@sonews/chart
+/usr/bin/kitten -s $ARG0 -s $ARG1 -s $ARG2 -s $ARG3

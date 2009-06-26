@@ -1,0 +1,26 @@
+AUTHORS & CREDITS
+=================
+
+As most software applications "sonews" is based on the work
+of individuals or projects. These fine people contributing to 
+the Free Software community are mentioned here:
+
+sonews News Server
+-------------------
+Copyright (c) 2009 by Christian Lins <christian.lins@fh-osnabrueck.de>
+
+based partly upon
+
+Neat NNTP Daemon (n3tpd)
+------------------------
+Copyright (c) 2007, 2008 by Christian Lins <christian.lins@web.de>
+
+based partly upon
+
+tnntpd
+------
+Copyright (c) 2003 by Dennis Schwerdel
+
+If you find someone missing here, please contact the project leader!
+
+Thanks to Sun Microsystems for supporting this project!!

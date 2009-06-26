@@ -1,0 +1,45 @@
+#!/bin/bash -x
+PACKAGE_ROOT=sonews
+
+# Compile classes 
+scons
+
+# Create JAR files; this cannot be done with SCons,
+# because Scons looses inner classes.
+jar -cf sonews.jar -C classes/ org/
+jar -ufe sonews.jar org.sonews.daemon.Main
+jar -cf test.jar -C classes/ test/ 
+jar -ufe test.jar test.TestBench
+jar -cf sonews-helpers.jar helpers/
+jar -uf sonews.jar org/sonews/web/*.tmpl
+
+# Create faked root for packaging
+sudo rm -r $PACKAGE_ROOT/
+mkdir -p $PACKAGE_ROOT/usr/share/java
+mkdir -p $PACKAGE_ROOT/usr/bin
+mkdir -p $PACKAGE_ROOT/etc/sonews
+mkdir -p $PACKAGE_ROOT/usr/share/doc/sonews/
+cp -r DEBIAN $PACKAGE_ROOT/
+cp helpers/sonews $PACKAGE_ROOT/usr/bin/sonews
+cp helpers/sonews.conf.sample $PACKAGE_ROOT/etc/sonews/sonews.conf
+cp helpers/copyright $PACKAGE_ROOT/usr/share/doc/sonews/
+cp sonews*.jar $PACKAGE_ROOT/usr/share/java/
+
+sudo chown root:root -R $PACKAGE_ROOT/
+
+dpkg-deb --build $PACKAGE_ROOT
+
+# Cleanup
+sudo rm -r $PACKAGE_ROOT
+rm -r classes/
+
+# Create metapackage sonews-web
+PACKAGE_ROOT=sonews-web
+mkdir $PACKAGE_ROOT
+cp -r DEBIAN-web $PACKAGE_ROOT/DEBIAN
+dpkg-deb --build $PACKAGE_ROOT
+rm -r $PACKAGE_ROOT
+
+# Check debs
+lintian sonews.deb
+lintian sonews-web.deb

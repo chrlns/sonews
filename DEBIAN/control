@@ -1,0 +1,15 @@
+Source: sonews
+Section: news
+Priority: optional
+Maintainer: Christian Lins <cli@openoffice.org>
+Homepage: http://www.sonews.org/
+Package: sonews
+Version: 0.5.0
+Architecture: all
+Depends: openjdk-6-jre-headless | openjdk-6-jre | sun-java6-jre | cacao | jamvm, glassfish-mail, libmysql-java
+Suggests: kitten, libpg-java, mysql-server, libjchart2d-java
+Description: Usenet news server
+ sonews is a modern Usenet server providing newsgroups via NNTP.
+ A relational database backend is used to store the news data.
+ The lightweight servlet server kitten is used to provide an optional 
+ configuration web interface.

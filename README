@@ -1,0 +1,27 @@
+sonews README
+=============
+
+Prerequisites:
+--------------
+
+* Java 6 Runtime or higher
+* MySQL v5 or PostgreSQL v8 or higher
+* JDBC driver for your database system
+
+
+Installation:
+-------------
+
+* Create a database in your DBMS, e.g. named like 'sonews'
+* Create the necessary table structure using the helpers/*.sql file
+  (you may use the experimental helper application:
+   java -cp sonews.jar:<jdbcdriver.jar> DatabaseSetup )
+* Customize the settings within the sonews.conf file or add config values to
+  the 'config' table.
+* Invoke 'bin/sonews.sh start' to start the daemon
+
+Bugs and other Issues:
+----------------------
+
+Please mail them to christian.lins@fh-osnabrueck.de or better issue them
+into the bugtracker at http://bugs.xerxys.info/ .

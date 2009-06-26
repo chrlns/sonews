@@ -1,0 +1,12 @@
+Welcome to sonews help system
+
+Here is a short overview of supported NNTP commands of this newsserver:
+
+ARTICLE <article-number|message-id>
+  Retrieve article including its head
+
+GROUP <groupname>
+  Change currently selected group
+
+POST
+  Post an article to a newsgroup
