@@ -11,7 +11,7 @@ jar -ufe sonews.jar org.sonews.daemon.Main
 jar -cf test.jar -C classes/ test/ 
 jar -ufe test.jar test.TestBench
 jar -cf sonews-helpers.jar helpers/
-jar -uf sonews.jar org/sonews/web/*.tmpl
+jar -uf sonews.jar org/sonews/web/tmpl/*.tmpl
 
 # Create faked root for packaging
 sudo rm -r $PACKAGE_ROOT/

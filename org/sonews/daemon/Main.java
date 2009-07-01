@@ -42,7 +42,7 @@ public final class Main
   }
 
   /** Version information of the sonews daemon */
-  public static final String VERSION = "sonews/0.5.0";
+  public static final String VERSION = "sonews/0.6.0beta1";
   public static final Date   STARTDATE = new Date();
   
   /**

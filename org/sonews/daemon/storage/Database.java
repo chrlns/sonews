@@ -482,8 +482,7 @@ public class Database
       this.conn.setAutoCommit(false);
       
       this.pstmtDeleteArticle0.setString(1, messageID);
-      ResultSet rs = this.pstmtDeleteArticle0.executeQuery();
-      rs.next();
+      int rs = this.pstmtDeleteArticle0.executeUpdate();
       
       // We trust the ON DELETE CASCADE functionality to delete
       // orphaned references
