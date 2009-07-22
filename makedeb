@@ -7,11 +7,10 @@ scons
 # Create JAR files; this cannot be done with SCons,
 # because Scons looses inner classes.
 jar -cf sonews.jar -C classes/ org/
-jar -ufe sonews.jar org.sonews.daemon.Main
+jar -ufe sonews.jar org.sonews.Main
 jar -cf test.jar -C classes/ test/ 
 jar -ufe test.jar test.TestBench
 jar -cf sonews-helpers.jar helpers/
-jar -uf sonews.jar org/sonews/web/tmpl/*.tmpl
 
 # Create faked root for packaging
 sudo rm -r $PACKAGE_ROOT/
@@ -33,13 +32,5 @@ dpkg-deb --build $PACKAGE_ROOT
 sudo rm -r $PACKAGE_ROOT
 rm -r classes/
 
-# Create metapackage sonews-web
-PACKAGE_ROOT=sonews-web
-mkdir $PACKAGE_ROOT
-cp -r DEBIAN-web $PACKAGE_ROOT/DEBIAN
-dpkg-deb --build $PACKAGE_ROOT
-rm -r $PACKAGE_ROOT
-
 # Check debs
 lintian sonews.deb
-lintian sonews-web.deb

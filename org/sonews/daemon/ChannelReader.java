@@ -18,7 +18,6 @@
 
 package org.sonews.daemon;
 
-import org.sonews.util.Log;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.CancelledKeyException;
@@ -27,6 +26,7 @@ import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 import java.util.Iterator;
 import java.util.Set;
+import org.sonews.util.Log;
 
 /**
  * A Thread task listening for OP_READ events from SocketChannels.
@@ -162,7 +162,7 @@ class ChannelReader extends AbstractDaemon
     
     // Some bytes are available for reading
     if(selKey.isValid())
-    {      
+    {   
       // Lock the channel
       //synchronized(socketChannel)
       {
@@ -172,7 +172,13 @@ class ChannelReader extends AbstractDaemon
         try 
         {
           read = socketChannel.read(buf);
-        } 
+        }
+        catch(IOException ex)
+        {
+          // The connection was probably closed by the remote host
+          // in a non-clean fashion
+          Log.msg("ChannelReader.processSelectionKey(): " + ex, true);
+        }
         catch(Exception ex) 
         {
           Log.msg("ChannelReader.processSelectionKey(): " + ex, false);

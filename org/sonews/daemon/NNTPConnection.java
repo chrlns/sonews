@@ -21,33 +21,19 @@ package org.sonews.daemon;
 import org.sonews.util.Log;
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.net.SocketException;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.channels.ClosedChannelException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
+import java.util.Arrays;
 import java.util.Timer;
 import java.util.TimerTask;
-import org.sonews.daemon.command.ArticleCommand;
-import org.sonews.daemon.command.CapabilitiesCommand;
-import org.sonews.daemon.command.AbstractCommand;
-import org.sonews.daemon.command.GroupCommand;
-import org.sonews.daemon.command.HelpCommand;
-import org.sonews.daemon.command.ListCommand;
-import org.sonews.daemon.command.ListGroupCommand;
-import org.sonews.daemon.command.ModeReaderCommand;
-import org.sonews.daemon.command.NewGroupsCommand;
-import org.sonews.daemon.command.NextPrevCommand;
-import org.sonews.daemon.command.OverCommand;
-import org.sonews.daemon.command.PostCommand;
-import org.sonews.daemon.command.QuitCommand;
-import org.sonews.daemon.command.StatCommand;
-import org.sonews.daemon.command.UnsupportedCommand;
-import org.sonews.daemon.command.XDaemonCommand;
-import org.sonews.daemon.command.XPatCommand;
-import org.sonews.daemon.storage.Article;
-import org.sonews.daemon.storage.Group;
+import org.sonews.daemon.command.Command;
+import org.sonews.storage.Article;
+import org.sonews.storage.Channel;
 import org.sonews.util.Stats;
 
 /**
@@ -67,9 +53,9 @@ public final class NNTPConnection
   /** SocketChannel is generally thread-safe */
   private SocketChannel   channel        = null;
   private Charset         charset        = Charset.forName("UTF-8");
-  private AbstractCommand command        = null;
+  private Command         command        = null;
   private Article         currentArticle = null;
-  private Group           currentGroup   = null;
+  private Channel         currentGroup   = null;
   private volatile long   lastActivity   = System.currentTimeMillis();
   private ChannelLineBuffers lineBuffers = new ChannelLineBuffers();
   private int             readLock       = 0;
@@ -201,6 +187,11 @@ public final class NNTPConnection
           channel.socket().shutdownOutput();
           channel.close();
         }
+        catch(SocketException ex)
+        {
+          // Socket was already disconnected
+          Log.msg("NNTPConnection.shutdownOutput(): " + ex, true);
+        }
         catch(Exception ex)
         {
           Log.msg("NNTPConnection.shutdownOutput(): " + ex, false);
@@ -213,7 +204,7 @@ public final class NNTPConnection
     }, 3000);
   }
   
-  public SocketChannel getChannel()
+  public SocketChannel getSocketChannel()
   {
     return this.channel;
   }
@@ -227,8 +218,11 @@ public final class NNTPConnection
   {
     return this.charset;
   }
-  
-  public Group getCurrentGroup()
+
+  /**
+   * @return The currently selected communication channel (not SocketChannel)
+   */
+  public Channel getCurrentChannel()
   {
     return this.currentGroup;
   }
@@ -238,7 +232,7 @@ public final class NNTPConnection
     this.currentArticle = article;
   }
   
-  public void setCurrentGroup(final Group group)
+  public void setCurrentGroup(final Channel group)
   {
     this.currentGroup = group;
   }
@@ -275,6 +269,7 @@ public final class NNTPConnection
     if(line.endsWith("\r"))
     {
       line = line.substring(0, line.length() - 1);
+      raw  = Arrays.copyOf(raw, raw.length - 1);
     }
     
     Log.msg("<< " + line, true);
@@ -288,7 +283,7 @@ public final class NNTPConnection
     try
     {
       // The command object will process the line we just received
-      command.processLine(line);
+      command.processLine(this, line, raw);
     }
     catch(ClosedChannelException ex0)
     {
@@ -324,86 +319,14 @@ public final class NNTPConnection
   }
   
   /**
-   * This method performes several if/elseif constructs to determine the
-   * fitting command object. 
-   * TODO: This string comparisons are probably slow!
+   * This method determines the fitting command processing class.
    * @param line
    * @return
    */
-  private AbstractCommand parseCommandLine(String line)
+  private Command parseCommandLine(String line)
   {
-    AbstractCommand  cmd    = new UnsupportedCommand(this);
-    String   cmdStr = line.split(" ")[0];
-    
-    if(cmdStr.equalsIgnoreCase("ARTICLE") || 
-      cmdStr.equalsIgnoreCase("BODY"))
-    {
-      cmd = new ArticleCommand(this);
-    }
-    else if(cmdStr.equalsIgnoreCase("CAPABILITIES"))
-    {
-      cmd = new CapabilitiesCommand(this);
-    }
-    else if(cmdStr.equalsIgnoreCase("GROUP"))
-    {
-      cmd = new GroupCommand(this);
-    }
-    else if(cmdStr.equalsIgnoreCase("HEAD"))
-    {
-      cmd = new ArticleCommand(this);
-    }
-    else if(cmdStr.equalsIgnoreCase("HELP"))
-    {
-      cmd = new HelpCommand(this);
-    }
-    else if(cmdStr.equalsIgnoreCase("LIST"))
-    {
-      cmd = new ListCommand(this);
-    }
-    else if(cmdStr.equalsIgnoreCase("LISTGROUP"))
-    {
-      cmd = new ListGroupCommand(this);
-    }
-    else if(cmdStr.equalsIgnoreCase("MODE"))
-    {
-      cmd = new ModeReaderCommand(this);
-    }
-    else if(cmdStr.equalsIgnoreCase("NEWGROUPS"))
-    {
-      cmd = new NewGroupsCommand(this);
-    }
-    else if(cmdStr.equalsIgnoreCase("NEXT") ||
-      cmdStr.equalsIgnoreCase("PREV"))
-    {
-      cmd = new NextPrevCommand(this);
-    }
-    else if(cmdStr.equalsIgnoreCase("OVER") ||
-      cmdStr.equalsIgnoreCase("XOVER")) // for compatibility with older RFCs
-    {
-      cmd = new OverCommand(this);
-    }
-    else if(cmdStr.equalsIgnoreCase("POST"))
-    {
-      cmd = new PostCommand(this);
-    }
-    else if(cmdStr.equalsIgnoreCase("QUIT"))
-    {
-      cmd = new QuitCommand(this);
-    }
-    else if(cmdStr.equalsIgnoreCase("STAT"))
-    {
-      cmd = new StatCommand(this);
-    }
-    else if(cmdStr.equalsIgnoreCase("XDAEMON"))
-    {
-      cmd = new XDaemonCommand(this);
-    }
-    else if(cmdStr.equalsIgnoreCase("XPAT"))
-    {
-      cmd = new XPatCommand(this);
-    }
-    
-    return cmd;
+    String cmdStr = line.split(" ")[0];
+    return CommandSelector.getInstance().get(cmdStr);
   }
   
   /**
@@ -417,6 +340,18 @@ public final class NNTPConnection
     throws IOException
   {    
     writeToChannel(CharBuffer.wrap(line), charset, line);
+    writeToChannel(CharBuffer.wrap(NEWLINE), charset, null);
+  }
+
+  /**
+   * Writes the given raw lines to the output buffers and finishes with
+   * a newline character (\r\n).
+   * @param rawLines
+   */
+  public void println(final byte[] rawLines)
+    throws IOException
+  {
+    this.lineBuffers.addOutputBuffer(ByteBuffer.wrap(rawLines));
     writeToChannel(CharBuffer.wrap(NEWLINE), charset, null);
   }
   
@@ -440,6 +375,11 @@ public final class NNTPConnection
     LineEncoder lenc = new LineEncoder(characters, charset);
     lenc.encode(lineBuffers);
     
+    enableWriteEvents(debugLine);
+  }
+
+  private void enableWriteEvents(CharSequence debugLine)
+  {
     // Enable OP_WRITE events so that the buffers are processed
     try
     {

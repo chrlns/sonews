@@ -18,8 +18,8 @@
 
 package org.sonews.util;
 
-import org.sonews.daemon.*;
 import java.util.Date;
+import org.sonews.config.Config;
 
 /**
  * Provides logging and debugging methods.
@@ -31,10 +31,10 @@ public class Log
   
   public static boolean isDebug()
   {
-    // We must use BootstrapConfig here otherwise we come
+    // We must use FileConfig here otherwise we come
     // into hell's kittchen when using the Logger within the
     // Database class.
-    return BootstrapConfig.getInstance().get(BootstrapConfig.DEBUG, false);
+    return Config.inst().get(Config.DEBUG, false);
   }
   
   /**

@@ -16,7 +16,7 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.sonews.daemon.storage;
+package org.sonews.storage.impl;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -27,55 +27,33 @@ import java.sql.PreparedStatement;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 import javax.mail.Header;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeUtility;
-import org.sonews.daemon.BootstrapConfig;
+import org.sonews.config.Config;
 import org.sonews.util.Log;
 import org.sonews.feed.Subscription;
+import org.sonews.storage.Article;
+import org.sonews.storage.ArticleHead;
+import org.sonews.storage.Channel;
+import org.sonews.storage.Group;
+import org.sonews.storage.Storage;
+import org.sonews.storage.StorageBackendException;
 import org.sonews.util.Pair;
 
 /**
- * Database facade class.
+ * JDBCDatabase facade class.
  * @author Christian Lins
  * @since sonews/0.5.0
  */
 // TODO: Refactor this class to reduce size (e.g. ArticleDatabase GroupDatabase)
-public class Database
+public class JDBCDatabase implements Storage
 {
 
   public static final int MAX_RESTARTS = 3;
-  
-  private static final Map<Thread, Database> instances 
-    = new ConcurrentHashMap<Thread, Database>();
-  
-  /**
-   * @return Instance of the current Database backend. Returns null if an error
-   * has occurred.
-   */
-  public static Database getInstance(boolean create)
-    throws SQLException
-  {
-    if(!instances.containsKey(Thread.currentThread()) && create)
-    {
-      Database db = new Database();
-      db.arise();
-      instances.put(Thread.currentThread(), db);
-      return db;
-    }
-    else
-    {
-      return instances.get(Thread.currentThread());
-    }
-  }
-  
-  public static Database getInstance()
-    throws SQLException
-  {
-    return getInstance(true);
-  }
   
   private Connection        conn = null;
   private PreparedStatement pstmtAddArticle1 = null;
@@ -87,9 +65,13 @@ public class Database
   private PreparedStatement pstmtCountArticles = null;
   private PreparedStatement pstmtCountGroups   = null;
   private PreparedStatement pstmtDeleteArticle0 = null;
+  private PreparedStatement pstmtDeleteArticle1 = null;
+  private PreparedStatement pstmtDeleteArticle2 = null;
+  private PreparedStatement pstmtDeleteArticle3 = null;
   private PreparedStatement pstmtGetArticle0 = null;
   private PreparedStatement pstmtGetArticle1 = null;
-  private PreparedStatement pstmtGetArticleHeaders  = null;
+  private PreparedStatement pstmtGetArticleHeaders0 = null;
+  private PreparedStatement pstmtGetArticleHeaders1 = null;
   private PreparedStatement pstmtGetArticleHeads = null;
   private PreparedStatement pstmtGetArticleIDs   = null;
   private PreparedStatement pstmtGetArticleIndex    = null;
@@ -104,12 +86,16 @@ public class Database
   private PreparedStatement pstmtGetLastArticleNumber  = null;
   private PreparedStatement pstmtGetMaxArticleID       = null;
   private PreparedStatement pstmtGetMaxArticleIndex    = null;
+  private PreparedStatement pstmtGetOldestArticle      = null;
   private PreparedStatement pstmtGetPostingsCount      = null;
   private PreparedStatement pstmtGetSubscriptions  = null;
   private PreparedStatement pstmtIsArticleExisting = null;
   private PreparedStatement pstmtIsGroupExisting = null;
+  private PreparedStatement pstmtPurgeGroup0     = null;
+  private PreparedStatement pstmtPurgeGroup1     = null;
   private PreparedStatement pstmtSetConfigValue0 = null;
   private PreparedStatement pstmtSetConfigValue1 = null;
+  private PreparedStatement pstmtUpdateGroup     = null;
   
   /** How many times the database connection was reinitialized */
   private int restarts = 0;
@@ -118,20 +104,20 @@ public class Database
    * Rises the database: reconnect and recreate all prepared statements.
    * @throws java.lang.SQLException
    */
-  private void arise()
+  protected void arise()
     throws SQLException
   {
     try
     {
       // Load database driver
       Class.forName(
-              BootstrapConfig.getInstance().get(BootstrapConfig.STORAGE_DBMSDRIVER, "java.lang.Object"));
+              Config.inst().get(Config.STORAGE_DBMSDRIVER, "java.lang.Object"));
 
       // Establish database connection
       this.conn = DriverManager.getConnection(
-              BootstrapConfig.getInstance().get(BootstrapConfig.STORAGE_DATABASE, "<not specified>"),
-              BootstrapConfig.getInstance().get(BootstrapConfig.STORAGE_USER, "root"),
-              BootstrapConfig.getInstance().get(BootstrapConfig.STORAGE_PASSWORD, ""));
+              Config.inst().get(Config.STORAGE_DATABASE, "<not specified>"),
+              Config.inst().get(Config.STORAGE_USER, "root"),
+              Config.inst().get(Config.STORAGE_PASSWORD, ""));
 
       this.conn.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE);
       if(this.conn.getTransactionIsolation() != Connection.TRANSACTION_SERIALIZABLE)
@@ -166,12 +152,20 @@ public class Database
       // Prepare statement for method countGroups()
       this.pstmtCountGroups = conn.prepareStatement(
         "SELECT Count(group_id) FROM groups WHERE " +
-        "flags & " + Group.DELETED + " = 0");
+        "flags & " + Channel.DELETED + " = 0");
       
       // Prepare statements for method delete(article)
       this.pstmtDeleteArticle0 = conn.prepareStatement(
         "DELETE FROM articles WHERE article_id = " +
         "(SELECT article_id FROM article_ids WHERE message_id = ?)");
+      this.pstmtDeleteArticle1 = conn.prepareStatement(
+        "DELETE FROM headers WHERE article_id = " +
+        "(SELECT article_id FROM article_ids WHERE message_id = ?)");
+      this.pstmtDeleteArticle2 = conn.prepareStatement(
+        "DELETE FROM postings WHERE article_id = " +
+        "(SELECT article_id FROM article_ids WHERE message_id = ?)");
+      this.pstmtDeleteArticle3 = conn.prepareStatement(
+        "DELETE FROM article_ids WHERE message_id = ?");
 
       // Prepare statements for methods getArticle()
       this.pstmtGetArticle0 = conn.prepareStatement(
@@ -183,10 +177,20 @@ public class Database
         "article_index = ? AND group_id = ?)");
       
       // Prepare statement for method getArticleHeaders()
-      this.pstmtGetArticleHeaders = conn.prepareStatement(
+      this.pstmtGetArticleHeaders0 = conn.prepareStatement(
         "SELECT header_key, header_value FROM headers WHERE article_id = ? " +
         "ORDER BY header_index ASC");
-      
+
+      // Prepare statement for method getArticleHeaders(regular expr pattern)
+      this.pstmtGetArticleHeaders1 = conn.prepareStatement(
+        "SELECT p.article_index, h.header_value FROM headers h " +
+          "INNER JOIN postings p ON h.article_id = p.article_id " +
+          "INNER JOIN groups g ON p.group_id = g.group_id " +
+            "WHERE g.name          =  ? AND " +
+                  "h.header_key    =  ? AND " +
+                  "p.article_index >= ? " +
+        "ORDER BY p.article_index ASC");
+
       this.pstmtGetArticleIDs = conn.prepareStatement(
         "SELECT article_index FROM postings WHERE group_id = ?");
       
@@ -245,6 +249,11 @@ public class Database
       this.pstmtGetMaxArticleIndex = conn.prepareStatement(
         "SELECT Max(article_index) FROM postings WHERE group_id = ?");
       
+      // Prepare statement for method getOldestArticle()
+      this.pstmtGetOldestArticle = conn.prepareStatement(
+        "SELECT message_id FROM article_ids WHERE article_id = " +
+        "(SELECT Min(article_id) FROM article_ids)");
+
       // Prepare statement for method getFirstArticleNumber()
       this.pstmtGetFirstArticleNumber = conn.prepareStatement(
         "SELECT Min(article_index) FROM postings WHERE group_id = ?");
@@ -272,6 +281,16 @@ public class Database
         "DELETE FROM config WHERE config_key = ?");
       this.pstmtSetConfigValue1 = conn.prepareStatement(
         "INSERT INTO config VALUES(?, ?)");
+
+      // Prepare statements for method purgeGroup()
+      this.pstmtPurgeGroup0 = conn.prepareStatement(
+        "DELETE FROM peer_subscriptions WHERE group_id = ?");
+      this.pstmtPurgeGroup1 = conn.prepareStatement(
+        "DELETE FROM groups WHERE group_id = ?");
+
+      // Prepare statement for method update(Group)
+      this.pstmtUpdateGroup = conn.prepareStatement(
+        "UPDATE groups SET flags = ?, name = ? WHERE group_id = ?");
     }
     catch(ClassNotFoundException ex)
     {
@@ -285,8 +304,9 @@ public class Database
    * @return
    * @throws java.sql.SQLException
    */
+  @Override
   public void addArticle(final Article article)
-    throws SQLException
+    throws StorageBackendException
   {
     try
     {
@@ -297,7 +317,7 @@ public class Database
       // Fill prepared statement with values;
       // writes body to article table
       pstmtAddArticle1.setInt(1, newArticleID);
-      pstmtAddArticle1.setBytes(2, article.getBody().getBytes());
+      pstmtAddArticle1.setBytes(2, article.getBody());
       pstmtAddArticle1.execute();
 
       // Add headers
@@ -317,9 +337,9 @@ public class Database
       List<Group> groups = article.getGroups();
       for(Group group : groups)
       {
-        pstmtAddArticle3.setLong(1, group.getID());
+        pstmtAddArticle3.setLong(1, group.getInternalID());
         pstmtAddArticle3.setInt(2, newArticleID);
-        pstmtAddArticle3.setLong(3, getMaxArticleIndex(group.getID()) + 1);
+        pstmtAddArticle3.setLong(3, getMaxArticleIndex(group.getInternalID()) + 1);
         pstmtAddArticle3.execute();
       }
       
@@ -359,12 +379,13 @@ public class Database
   }
   
   /**
-   * Adds a group to the Database. This method is not accessible via NNTP.
+   * Adds a group to the JDBCDatabase. This method is not accessible via NNTP.
    * @param name
    * @throws java.sql.SQLException
    */
+  @Override
   public void addGroup(String name, int flags)
-    throws SQLException
+    throws StorageBackendException
   {
     try
     {
@@ -379,15 +400,24 @@ public class Database
     }
     catch(SQLException ex)
     {
-      this.conn.rollback();
-      this.conn.setAutoCommit(true);
+      try
+      {
+        this.conn.rollback();
+        this.conn.setAutoCommit(true);
+      }
+      catch(SQLException ex2)
+      {
+        ex2.printStackTrace();
+      }
+
       restartConnection(ex);
       addGroup(name, flags);
     }
   }
-  
-  public void addEvent(long time, byte type, long gid)
-    throws SQLException
+
+  @Override
+  public void addEvent(long time, int type, long gid)
+    throws StorageBackendException
   {
     try
     {
@@ -402,16 +432,24 @@ public class Database
     }
     catch(SQLException ex)
     {
-      this.conn.rollback();
-      this.conn.setAutoCommit(true);
+      try
+      {
+        this.conn.rollback();
+        this.conn.setAutoCommit(true);
+      }
+      catch(SQLException ex2)
+      {
+        ex2.printStackTrace();
+      }
 
       restartConnection(ex);
       addEvent(time, type, gid);
     }
   }
-  
+
+  @Override
   public int countArticles()
-    throws SQLException
+    throws StorageBackendException
   {
     ResultSet rs = null;
 
@@ -436,14 +474,22 @@ public class Database
     {
       if(rs != null)
       {
-        rs.close();
+        try
+        {
+          rs.close();
+        }
+        catch(SQLException ex)
+        {
+          ex.printStackTrace();
+        }
         restarts = 0;
       }
     }
   }
-  
+
+  @Override
   public int countGroups()
-    throws SQLException
+    throws StorageBackendException
   {
     ResultSet rs = null;
 
@@ -468,14 +514,22 @@ public class Database
     {
       if(rs != null)
       {
-        rs.close();
+        try
+        {
+          rs.close();
+        }
+        catch(SQLException ex)
+        {
+          ex.printStackTrace();
+        }
         restarts = 0;
       }
     }
   }
-  
+
+  @Override
   public void delete(final String messageID)
-    throws SQLException
+    throws StorageBackendException
   {
     try
     {
@@ -484,20 +538,29 @@ public class Database
       this.pstmtDeleteArticle0.setString(1, messageID);
       int rs = this.pstmtDeleteArticle0.executeUpdate();
       
-      // We trust the ON DELETE CASCADE functionality to delete
-      // orphaned references
+      // We do not trust the ON DELETE CASCADE functionality to delete
+      // orphaned references...
+      this.pstmtDeleteArticle1.setString(1, messageID);
+      rs = this.pstmtDeleteArticle1.executeUpdate();
+
+      this.pstmtDeleteArticle2.setString(1, messageID);
+      rs = this.pstmtDeleteArticle2.executeUpdate();
+
+      this.pstmtDeleteArticle3.setString(1, messageID);
+      rs = this.pstmtDeleteArticle3.executeUpdate();
       
       this.conn.commit();
       this.conn.setAutoCommit(true);
     }
     catch(SQLException ex)
     {
-      throw ex;
+      throw new StorageBackendException(ex);
     }
   }
-  
+
+  @Override
   public Article getArticle(String messageID)
-    throws SQLException
+    throws StorageBackendException
   {
     ResultSet rs = null;
     try
@@ -511,7 +574,7 @@ public class Database
       }
       else
       {
-        String body     = new String(rs.getBytes("body"));
+        byte[] body     = rs.getBytes("body");
         String headers  = getArticleHeaders(rs.getInt("article_id"));
         return new Article(headers, body);
       }
@@ -525,7 +588,14 @@ public class Database
     {
       if(rs != null)
       {
-        rs.close();
+        try
+        {
+          rs.close();
+        }
+        catch(SQLException ex)
+        {
+          ex.printStackTrace();
+        }
         restarts = 0; // Reset error count
       }
     }
@@ -535,10 +605,11 @@ public class Database
    * Retrieves an article by its ID.
    * @param articleID
    * @return
-   * @throws java.sql.SQLException
+   * @throws StorageBackendException
    */
+  @Override
   public Article getArticle(long articleIndex, long gid)
-    throws SQLException
+    throws StorageBackendException
   {  
     ResultSet rs = null;
 
@@ -551,7 +622,7 @@ public class Database
 
       if(rs.next())
       {
-        String body    = new String(rs.getBytes("body"));
+        byte[] body    = rs.getBytes("body");
         String headers = getArticleHeaders(rs.getInt("article_id"));
         return new Article(headers, body);
       }
@@ -569,21 +640,95 @@ public class Database
     {
       if(rs != null)
       {
-        rs.close();
+        try
+        {
+          rs.close();
+        }
+        catch(SQLException ex)
+        {
+          ex.printStackTrace();
+        }
         restarts = 0;
       }
     }
   }
-  
-  public String getArticleHeaders(long articleID)
-    throws SQLException
+
+  /**
+   * Searches for fitting header values using the given regular expression.
+   * @param group
+   * @param start
+   * @param end
+   * @param headerKey
+   * @param pattern
+   * @return
+   * @throws StorageBackendException
+   */
+  @Override
+  public List<Pair<Long, String>> getArticleHeaders(Channel group, long start,
+    long end, String headerKey, String patStr)
+    throws StorageBackendException, PatternSyntaxException
+  {
+    ResultSet rs = null;
+    List<Pair<Long, String>> heads = new ArrayList<Pair<Long, String>>();
+
+    try
+    {
+      this.pstmtGetArticleHeaders1.setString(1, group.getName());
+      this.pstmtGetArticleHeaders1.setString(2, headerKey);
+      this.pstmtGetArticleHeaders1.setLong(3, start);
+
+      rs = this.pstmtGetArticleHeaders1.executeQuery();
+
+      // Convert the "NNTP" regex to Java regex
+      patStr = patStr.replace("*", ".*");
+      Pattern pattern = Pattern.compile(patStr);
+
+      while(rs.next())
+      {
+        Long articleIndex = rs.getLong(1);
+        if(end < 0 || articleIndex <= end) // Match start is done via SQL
+        {
+          String headerValue  = rs.getString(2);
+          Matcher matcher = pattern.matcher(headerValue);
+          if(matcher.matches())
+          {
+            heads.add(new Pair<Long, String>(articleIndex, headerValue));
+          }
+        }
+      }
+    }
+    catch(SQLException ex)
+    {
+      restartConnection(ex);
+      return getArticleHeaders(group, start, end, headerKey, patStr);
+    }
+    finally
+    {
+      if(rs != null)
+      {
+        try
+        {
+          rs.close();
+        }
+        catch(SQLException ex)
+        {
+          ex.printStackTrace();
+        }
+      }
+    }
+
+    return heads;
+  }
+
+  private String getArticleHeaders(long articleID)
+    throws StorageBackendException
   {
     ResultSet rs = null;
     
     try
     {
-      this.pstmtGetArticleHeaders.setLong(1, articleID);
-      rs = this.pstmtGetArticleHeaders.executeQuery();
+      this.pstmtGetArticleHeaders0.setLong(1, articleID);
+      rs = this.pstmtGetArticleHeaders0.executeQuery();
       
       StringBuilder buf = new StringBuilder();
       if(rs.next())
@@ -615,19 +760,29 @@ public class Database
     finally
     {
       if(rs != null)
-        rs.close();
+      {
+        try
+        {
+          rs.close();
+        }
+        catch(SQLException ex)
+        {
+          ex.printStackTrace();
+        }
+      }
     }
   }
-  
+
+  @Override
   public long getArticleIndex(Article article, Group group)
-    throws SQLException
+    throws StorageBackendException
   {
     ResultSet rs = null;
 
     try
     {
       this.pstmtGetArticleIndex.setString(1, article.getMessageID());
-      this.pstmtGetArticleIndex.setLong(2, group.getID());
+      this.pstmtGetArticleIndex.setLong(2, group.getInternalID());
       
       rs = this.pstmtGetArticleIndex.executeQuery();
       if(rs.next())
@@ -647,7 +802,16 @@ public class Database
     finally
     {
       if(rs != null)
-        rs.close();
+      {
+        try
+        {
+          rs.close();
+        }
+        catch(SQLException ex)
+        {
+          ex.printStackTrace();
+        }
+      }
     }
   }
   
@@ -655,16 +819,18 @@ public class Database
    * Returns a list of Long/Article Pairs.
    * @throws java.sql.SQLException
    */
-  public List<Pair<Long, ArticleHead>> getArticleHeads(Group group, int first, int last)
-    throws SQLException
+  @Override
+  public List<Pair<Long, ArticleHead>> getArticleHeads(Group group, long first,
+    long last)
+    throws StorageBackendException
   {
     ResultSet rs = null;
 
     try
     {
-      this.pstmtGetArticleHeads.setLong(1, group.getID());
-      this.pstmtGetArticleHeads.setInt(2, first);
-      this.pstmtGetArticleHeads.setInt(3, last);
+      this.pstmtGetArticleHeads.setLong(1, group.getInternalID());
+      this.pstmtGetArticleHeads.setLong(2, first);
+      this.pstmtGetArticleHeads.setLong(3, last);
       rs = pstmtGetArticleHeads.executeQuery();
 
       List<Pair<Long, ArticleHead>> articles 
@@ -689,12 +855,22 @@ public class Database
     finally
     {
       if(rs != null)
-        rs.close();
+      {
+        try
+        {
+          rs.close();
+        }
+        catch(SQLException ex)
+        {
+          ex.printStackTrace();
+        }
+      }
     }
   }
-  
+
+  @Override
   public List<Long> getArticleNumbers(long gid)
-    throws SQLException
+    throws StorageBackendException
   {
     ResultSet rs = null;
     try
@@ -717,14 +893,22 @@ public class Database
     {
       if(rs != null)
       {
-        rs.close();
-        restarts = 0; // Clear the restart count after successful request
+        try
+        {
+          rs.close();
+          restarts = 0; // Clear the restart count after successful request
+        }
+        catch(SQLException ex)
+        {
+          ex.printStackTrace();
+        }
       }
     }
   }
-  
+
+  @Override
   public String getConfigValue(String key)
-    throws SQLException
+    throws StorageBackendException
   {
     ResultSet rs = null;
     try
@@ -750,20 +934,28 @@ public class Database
     {
       if(rs != null)
       {
-        rs.close();
+        try
+        {
+          rs.close();
+        }
+        catch(SQLException ex)
+        {
+          ex.printStackTrace();
+        }
         restarts = 0; // Clear the restart count after successful request
       }
     }
   }
-  
-  public int getEventsCount(byte type, long start, long end, Group group)
-    throws SQLException
+
+  @Override
+  public int getEventsCount(int type, long start, long end, Channel channel)
+    throws StorageBackendException
   {
     ResultSet rs = null;
     
     try
     {
-      if(group == null)
+      if(channel == null)
       {
         this.pstmtGetEventsCount0.setInt(1, type);
         this.pstmtGetEventsCount0.setLong(2, start);
@@ -775,7 +967,7 @@ public class Database
         this.pstmtGetEventsCount1.setInt(1, type);
         this.pstmtGetEventsCount1.setLong(2, start);
         this.pstmtGetEventsCount1.setLong(3, end);
-        this.pstmtGetEventsCount1.setLong(4, group.getID());
+        this.pstmtGetEventsCount1.setLong(4, channel.getInternalID());
         rs = this.pstmtGetEventsCount1.executeQuery();
       }
       
@@ -791,25 +983,35 @@ public class Database
     catch(SQLException ex)
     {
       restartConnection(ex);
-      return getEventsCount(type, start, end, group);
+      return getEventsCount(type, start, end, channel);
     }
     finally
     {
       if(rs != null)
-        rs.close();
+      {
+        try
+        {
+          rs.close();
+        }
+        catch(SQLException ex)
+        {
+          ex.printStackTrace();
+        }
+      }
     }
   }
   
   /**
-   * Reads all Groups from the Database.
+   * Reads all Groups from the JDBCDatabase.
    * @return
-   * @throws java.sql.SQLException
+   * @throws StorageBackendException
    */
-  public List<Group> getGroups()
-    throws SQLException
+  @Override
+  public List<Channel> getGroups()
+    throws StorageBackendException
   {
     ResultSet   rs;
-    List<Group> buffer = new ArrayList<Group>();
+    List<Channel> buffer = new ArrayList<Channel>();
     Statement   stmt   = null;
 
     try
@@ -837,12 +1039,22 @@ public class Database
     finally
     {
       if(stmt != null)
-        stmt.close(); // Implicitely closes ResultSets
+      {
+        try
+        {
+          stmt.close(); // Implicitely closes ResultSets
+        }
+        catch(SQLException ex)
+        {
+          ex.printStackTrace();
+        }
+      }
     }
   }
-  
-  public String getGroupForList(InternetAddress listAddress)
-    throws SQLException
+
+  @Override
+  public List<String> getGroupsForList(InternetAddress listAddress)
+    throws StorageBackendException
   {
     ResultSet rs = null;
     
@@ -851,24 +1063,32 @@ public class Database
       this.pstmtGetGroupForList.setString(1, listAddress.getAddress());
 
       rs = this.pstmtGetGroupForList.executeQuery();
-      if (rs.next())
+      List<String> groups = new ArrayList<String>();
+      while(rs.next())
       {
-        return rs.getString(1);
+        String group = rs.getString(1);
+        groups.add(group);
       }
-      else
-      {
-        return null;
-      }
+      return groups;
     }
     catch(SQLException ex)
     {
       restartConnection(ex);
-      return getGroupForList(listAddress);
+      return getGroupsForList(listAddress);
     }
     finally
     {
       if(rs != null)
-        rs.close();
+      {
+        try
+        {
+          rs.close();
+        }
+        catch(SQLException ex)
+        {
+          ex.printStackTrace();
+        }
+      }
     }
   }
   
@@ -876,10 +1096,11 @@ public class Database
    * Returns the Group that is identified by the name.
    * @param name
    * @return
-   * @throws java.sql.SQLException
+   * @throws StorageBackendException
    */
+  @Override
   public Group getGroup(String name)
-    throws SQLException
+    throws StorageBackendException
   {
     ResultSet rs = null;
     
@@ -907,12 +1128,22 @@ public class Database
     finally
     {
       if(rs != null)
-        rs.close();
+      {
+        try
+        {
+          rs.close();
+        }
+        catch(SQLException ex)
+        {
+          ex.printStackTrace();
+        }
+      }
     }
   }
-  
+
+  @Override
   public String getListForGroup(String group)
-    throws SQLException
+    throws StorageBackendException
   {
     ResultSet rs = null;
 
@@ -937,12 +1168,21 @@ public class Database
     finally
     {
       if(rs != null)
-        rs.close();
+      {
+        try
+        {
+          rs.close();
+        }
+        catch(SQLException ex)
+        {
+          ex.printStackTrace();
+        }
+      }
     }
   }
   
   private int getMaxArticleIndex(long groupID)
-    throws SQLException
+    throws StorageBackendException
   {
     ResultSet rs    = null;
 
@@ -967,12 +1207,21 @@ public class Database
     finally
     {
       if(rs != null)
-        rs.close();
+      {
+        try
+        {
+          rs.close();
+        }
+        catch(SQLException ex)
+        {
+          ex.printStackTrace();
+        }
+      }
     }
   }
   
   private int getMaxArticleID()
-    throws SQLException
+    throws StorageBackendException
   {
     ResultSet rs    = null;
 
@@ -996,18 +1245,28 @@ public class Database
     finally
     {
       if(rs != null)
-        rs.close();
+      {
+        try
+        {
+          rs.close();
+        }
+        catch(SQLException ex)
+        {
+          ex.printStackTrace();
+        }
+      }
     }
   }
-  
+
+  @Override
   public int getLastArticleNumber(Group group)
-    throws SQLException
+    throws StorageBackendException
   {
     ResultSet rs = null;
 
     try
     {
-      this.pstmtGetLastArticleNumber.setLong(1, group.getID());
+      this.pstmtGetLastArticleNumber.setLong(1, group.getInternalID());
       rs = this.pstmtGetLastArticleNumber.executeQuery();
       if (rs.next())
       {
@@ -1026,17 +1285,27 @@ public class Database
     finally
     {
       if(rs != null)
-        rs.close();
+      {
+        try
+        {
+          rs.close();
+        }
+        catch(SQLException ex)
+        {
+          ex.printStackTrace();
+        }
+      }
     }
   }
-  
+
+  @Override
   public int getFirstArticleNumber(Group group)
-    throws SQLException
+    throws StorageBackendException
   {
     ResultSet rs = null;
     try
     {
-      this.pstmtGetFirstArticleNumber.setLong(1, group.getID());
+      this.pstmtGetFirstArticleNumber.setLong(1, group.getInternalID());
       rs = this.pstmtGetFirstArticleNumber.executeQuery();
       if(rs.next())
       {
@@ -1055,7 +1324,16 @@ public class Database
     finally
     {
       if(rs != null)
-        rs.close();
+      {
+        try
+        {
+          rs.close();
+        }
+        catch(SQLException ex)
+        {
+          ex.printStackTrace();
+        }
+      }
     }
   }
   
@@ -1063,10 +1341,10 @@ public class Database
    * Returns a group name identified by the given id.
    * @param id
    * @return
-   * @throws java.sql.SQLException
+   * @throws StorageBackendException
    */
   public String getGroup(int id)
-    throws SQLException
+    throws StorageBackendException
   {
     ResultSet rs = null;
 
@@ -1092,12 +1370,22 @@ public class Database
     finally
     {
       if(rs != null)
-        rs.close();
+      {
+        try
+        {
+          rs.close();
+        }
+        catch(SQLException ex)
+        {
+          ex.printStackTrace();
+        }
+      }
     }
   }
-  
-  public double getNumberOfEventsPerHour(int key, long gid)
-    throws SQLException
+
+  @Override
+  public double getEventsPerHour(int key, long gid)
+    throws StorageBackendException
   {
     String gidquery = "";
     if(gid >= 0)
@@ -1127,24 +1415,66 @@ public class Database
     catch(SQLException ex)
     {
       restartConnection(ex);
-      return getNumberOfEventsPerHour(key, gid);
+      return getEventsPerHour(key, gid);
     }
     finally
     {
-      if(stmt != null)
+      try
       {
-        stmt.close();
+        if(stmt != null)
+        {
+          stmt.close(); // Implicitely closes the result sets
+        }
       }
-      
-      if(rs != null)
+      catch(SQLException ex)
       {
-        rs.close();
+        ex.printStackTrace();
       }
     }
   }
-  
+
+  @Override
+  public String getOldestArticle()
+    throws StorageBackendException
+  {
+    ResultSet rs = null;
+
+    try
+    {
+      rs = this.pstmtGetOldestArticle.executeQuery();
+      if(rs.next())
+      {
+        return rs.getString(1);
+      }
+      else
+      {
+        return null;
+      }
+    }
+    catch(SQLException ex)
+    {
+      restartConnection(ex);
+      return getOldestArticle();
+    }
+    finally
+    {
+      if(rs != null)
+      {
+        try
+        {
+          rs.close();
+        }
+        catch(SQLException ex)
+        {
+          ex.printStackTrace();
+        }
+      }
+    }
+  }
+
+  @Override
   public int getPostingsCount(String groupname)
-    throws SQLException
+    throws StorageBackendException
   {
     ResultSet rs = null;
     
@@ -1170,12 +1500,22 @@ public class Database
     finally
     {
       if(rs != null)
-        rs.close();
+      {
+        try
+        {
+          rs.close();
+        }
+        catch(SQLException ex)
+        {
+          ex.printStackTrace();
+        }
+      }
     }
   }
-  
+
+  @Override
   public List<Subscription> getSubscriptions(int feedtype)
-    throws SQLException
+    throws StorageBackendException
   {
     ResultSet rs = null;
     
@@ -1203,18 +1543,28 @@ public class Database
     finally
     {
       if(rs != null)
-        rs.close();
+      {
+        try
+        {
+          rs.close();
+        }
+        catch(SQLException ex)
+        {
+          ex.printStackTrace();
+        }
+      }
     }
   }
 
   /**
-   * Checks if there is an article with the given messageid in the Database.
+   * Checks if there is an article with the given messageid in the JDBCDatabase.
    * @param name
    * @return
-   * @throws java.sql.SQLException
+   * @throws StorageBackendException
    */
+  @Override
   public boolean isArticleExisting(String messageID)
-    throws SQLException
+    throws StorageBackendException
   {
     ResultSet rs = null;
     
@@ -1232,18 +1582,28 @@ public class Database
     finally
     {
       if(rs != null)
-        rs.close();
+      {
+        try
+        {
+          rs.close();
+        }
+        catch(SQLException ex)
+        {
+          ex.printStackTrace();
+        }
+      }
     }
   }
   
   /**
-   * Checks if there is a group with the given name in the Database.
+   * Checks if there is a group with the given name in the JDBCDatabase.
    * @param name
    * @return
-   * @throws java.sql.SQLException
+   * @throws StorageBackendException
    */
+  @Override
   public boolean isGroupExisting(String name)
-    throws SQLException
+    throws StorageBackendException
   {
     ResultSet rs = null;
     
@@ -1261,12 +1621,22 @@ public class Database
     finally
     {
       if(rs != null)
-        rs.close();
+      {
+        try
+        {
+          rs.close();
+        }
+        catch(SQLException ex)
+        {
+          ex.printStackTrace();
+        }
+      }
     }
   }
-  
+
+  @Override
   public void setConfigValue(String key, String value)
-    throws SQLException
+    throws StorageBackendException
   {
     try
     {
@@ -1287,19 +1657,45 @@ public class Database
   }
   
   /**
-   * Closes the Database connection.
+   * Closes the JDBCDatabase connection.
    */
   public void shutdown()
-    throws SQLException
+    throws StorageBackendException
   {
-    if(this.conn != null)
+    try
     {
-      this.conn.close();
+      if(this.conn != null)
+      {
+        this.conn.close();
+      }
+    }
+    catch(SQLException ex)
+    {
+      throw new StorageBackendException(ex);
+    }
+  }
+
+  @Override
+  public void purgeGroup(Group group)
+    throws StorageBackendException
+  {
+    try
+    {
+      this.pstmtPurgeGroup0.setLong(1, group.getInternalID());
+      this.pstmtPurgeGroup0.executeUpdate();
+
+      this.pstmtPurgeGroup1.setLong(1, group.getInternalID());
+      this.pstmtPurgeGroup1.executeUpdate();
+    }
+    catch(SQLException ex)
+    {
+      restartConnection(ex);
+      purgeGroup(group);
     }
   }
   
   private void restartConnection(SQLException cause)
-    throws SQLException
+    throws StorageBackendException
   {
     restarts++;
     Log.msg(Thread.currentThread() 
@@ -1307,12 +1703,12 @@ public class Database
     
     if(restarts >= MAX_RESTARTS)
     {
-      // Delete the current, probably broken Database instance.
+      // Delete the current, probably broken JDBCDatabase instance.
       // So no one can use the instance any more.
-      Database.instances.remove(Thread.currentThread());
+      JDBCDatabaseProvider.instances.remove(Thread.currentThread());
       
       // Throw the exception upwards
-      throw cause;
+      throw new StorageBackendException(cause);
     }
     
     try
@@ -1346,6 +1742,30 @@ public class Database
     {
       Log.msg(ex.getMessage(), true);
       restartConnection(ex);
+    }
+  }
+
+  /**
+   * Writes the flags and the name of the given group to the database.
+   * @param group
+   * @throws StorageBackendException
+   */
+  @Override
+  public boolean update(Group group)
+    throws StorageBackendException
+  {
+    try
+    {
+      this.pstmtUpdateGroup.setInt(1, group.getFlags());
+      this.pstmtUpdateGroup.setString(2, group.getName());
+      this.pstmtUpdateGroup.setLong(3, group.getInternalID());
+      int rs = this.pstmtUpdateGroup.executeUpdate();
+      return rs == 1;
+    }
+    catch(SQLException ex)
+    {
+      restartConnection(ex);
+      return update(group);
     }
   }
 

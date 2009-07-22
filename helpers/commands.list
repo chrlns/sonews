@@ -1,0 +1,15 @@
+org.sonews.daemon.command.ArticleCommand
+org.sonews.daemon.command.CapabilitiesCommand
+org.sonews.daemon.command.GroupCommand
+org.sonews.daemon.command.HelpCommand
+org.sonews.daemon.command.ListCommand
+org.sonews.daemon.command.ListGroupCommand
+org.sonews.daemon.command.ModeReaderCommand
+org.sonews.daemon.command.NewGroupsCommand
+org.sonews.daemon.command.NextPrevCommand
+org.sonews.daemon.command.OverCommand
+org.sonews.daemon.command.PostCommand
+org.sonews.daemon.command.QuitCommand
+org.sonews.daemon.command.StatCommand
+org.sonews.daemon.command.XDaemonCommand
+org.sonews.daemon.command.XPatCommand

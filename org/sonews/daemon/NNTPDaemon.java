@@ -18,6 +18,8 @@
 
 package org.sonews.daemon;
 
+import org.sonews.config.Config;
+import org.sonews.Main;
 import org.sonews.util.Log;
 import java.io.IOException;
 import java.net.BindException;
@@ -140,7 +142,7 @@ public final class NNTPDaemon extends AbstractDaemon
 
           // Set write selection key and send hello to client
           conn.setWriteSelectionKey(selKeyWrite);
-          conn.println("200 " + Config.getInstance().get(Config.HOSTNAME, "localhost")
+          conn.println("200 " + Config.inst().get(Config.HOSTNAME, "localhost")
               + " " + Main.VERSION + " news server ready - (posting ok).");
         }
         catch(CancelledKeyException cke)

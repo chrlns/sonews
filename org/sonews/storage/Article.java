@@ -16,16 +16,15 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.sonews.daemon.storage;
+package org.sonews.storage;
 
-import org.sonews.daemon.Config;
-import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.nio.charset.Charset;
-import java.sql.SQLException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.UUID;
 import java.util.ArrayList;
 import java.util.Enumeration;
@@ -35,7 +34,7 @@ import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.Multipart;
 import javax.mail.internet.InternetHeaders;
-import javax.mail.internet.MimeUtility;
+import org.sonews.config.Config;
 import org.sonews.util.Log;
 
 /**
@@ -48,7 +47,7 @@ public class Article extends ArticleHead
 {
   
   /**
-   * Loads the Article identified by the given ID from the Database.
+   * Loads the Article identified by the given ID from the JDBCDatabase.
    * @param messageID
    * @return null if Article is not found or if an error occurred.
    */
@@ -56,23 +55,16 @@ public class Article extends ArticleHead
   {
     try
     {
-      return Database.getInstance().getArticle(messageID);
+      return StorageManager.current().getArticle(messageID);
     }
-    catch(SQLException ex)
+    catch(StorageBackendException ex)
     {
       ex.printStackTrace();
       return null;
     }
   }
   
-  public static Article getByArticleNumber(long articleIndex, Group group)
-    throws SQLException
-  {
-    return Database.getInstance().getArticle(articleIndex, group.getID()); 
-  }
-  
-  private String              body       = "";
-  private String              headerSrc  = null;
+  private byte[] body       = new byte[0];
   
   /**
    * Default constructor.
@@ -84,9 +76,8 @@ public class Article extends ArticleHead
   /**
    * Creates a new Article object using the date from the given
    * raw data.
-   * This construction has only package visibility.
    */
-  Article(String headers, String body)
+  public Article(String headers, byte[] body)
   {
     try
     {
@@ -128,7 +119,7 @@ public class Article extends ArticleHead
     final Object content = msg.getContent();
     if(content instanceof String)
     {
-      this.body = (String)content;
+      this.body = ((String)content).getBytes();
     }
     else if(content instanceof Multipart) // probably subclass MimeMultipart
     {
@@ -157,27 +148,25 @@ public class Article extends ArticleHead
   }
 
   /**
-   * Reads lines from the given InputString into a String object.
+   * Reads from the given InputString into a byte array.
    * TODO: Move this generalized method to org.sonews.util.io.Resource.
    * @param in
    * @return
    * @throws IOException
    */
-  private String readContent(InputStream in)
+  private byte[] readContent(InputStream in)
     throws IOException
   {
-    StringBuilder buf = new StringBuilder();
-    
-    BufferedReader rin = new BufferedReader(new InputStreamReader(in));
-    String line =  rin.readLine();
-    while(line != null)
+    ByteArrayOutputStream out = new ByteArrayOutputStream();
+
+    int b = in.read();
+    while(b >= 0)
     {
-      buf.append('\n');
-      buf.append(line);
-      line = rin.readLine();
+      out.write(b);
+      b = in.read();
     }
-    
-    return buf.toString();
+
+    return out.toByteArray();
   }
 
   /**
@@ -192,14 +181,36 @@ public class Article extends ArticleHead
 
   /**
    * Generates a message id for this article and sets it into
-   * the header object. You have to update the Database manually to make this
+   * the header object. You have to update the JDBCDatabase manually to make this
    * change persistent.
    * Note: a Message-ID should never be changed and only generated once.
    */
   private String generateMessageID()
   {
-    String msgID = "<" + UUID.randomUUID() + "@"
-        + Config.getInstance().get(Config.HOSTNAME, "localhost") + ">";
+    String randomString;
+    MessageDigest md5;
+    try
+    {
+      md5 = MessageDigest.getInstance("MD5");
+      md5.reset();
+      md5.update(getBody());
+      md5.update(getHeader(Headers.SUBJECT)[0].getBytes());
+      md5.update(getHeader(Headers.FROM)[0].getBytes());
+      byte[] result = md5.digest();
+      StringBuffer hexString = new StringBuffer();
+      for (int i = 0; i < result.length; i++)
+      {
+        hexString.append(Integer.toHexString(0xFF & result[i]));
+      }
+      randomString = hexString.toString();
+    }
+    catch (NoSuchAlgorithmException e)
+    {
+      e.printStackTrace();
+      randomString = UUID.randomUUID().toString();
+    }
+    String msgID = "<" + randomString + "@"
+        + Config.inst().get(Config.HOSTNAME, "localhost") + ">";
     
     this.headers.setHeader(Headers.MESSAGE_ID, msgID);
     
@@ -209,7 +220,7 @@ public class Article extends ArticleHead
   /**
    * Returns the body string.
    */
-  public String getBody()
+  public byte[] getBody()
   {
     return body;
   }
@@ -217,7 +228,7 @@ public class Article extends ArticleHead
   /**
    * @return Charset of the body text
    */
-  public Charset getBodyCharset()
+  private Charset getBodyCharset()
   {
     // We espect something like 
     // Content-Type: text/plain; charset=ISO-8859-15
@@ -262,7 +273,7 @@ public class Article extends ArticleHead
   /**
    * @return Numerical IDs of the newsgroups this Article belongs to.
    */
-  List<Group> getGroups()
+  public List<Group> getGroups()
   {
     String[]         groupnames = getHeader(Headers.NEWSGROUPS)[0].split(",");
     ArrayList<Group> groups     = new ArrayList<Group>();
@@ -272,7 +283,7 @@ public class Article extends ArticleHead
       for(String newsgroup : groupnames)
       {
         newsgroup = newsgroup.trim();
-        Group group = Database.getInstance().getGroup(newsgroup);
+        Group group = StorageManager.current().getGroup(newsgroup);
         if(group != null &&         // If the server does not provide the group, ignore it
           !groups.contains(group))  // Yes, there may be duplicates
         {
@@ -280,7 +291,7 @@ public class Article extends ArticleHead
         }
       }
     }
-    catch (SQLException ex)
+    catch(StorageBackendException ex)
     {
       ex.printStackTrace();
       return null;
@@ -288,7 +299,7 @@ public class Article extends ArticleHead
     return groups;
   }
 
-  public void setBody(String body)
+  public void setBody(byte[] body)
   {
     this.body = body;
   }
@@ -302,63 +313,15 @@ public class Article extends ArticleHead
     this.headers.setHeader(Headers.NEWSGROUPS, groupname);
   }
 
+  /**
+   * Returns the Message-ID of this Article. If the appropriate header
+   * is empty, a new Message-ID is created.
+   * @return Message-ID of this Article.
+   */
   public String getMessageID()
   {
     String[] msgID = getHeader(Headers.MESSAGE_ID);
-    return msgID[0];
-  }
-
-  public Enumeration getAllHeaders()
-  {
-    return this.headers.getAllHeaders();
-  }
-  
-  /**
-   * @return Header source code of this Article.
-   */
-  public String getHeaderSource()
-  {
-    if(this.headerSrc != null)
-    {
-      return this.headerSrc;
-    }
-
-    StringBuffer buf = new StringBuffer();
-    
-    for(Enumeration en = this.headers.getAllHeaders(); en.hasMoreElements();)
-    {
-      Header entry = (Header)en.nextElement();
-
-      buf.append(entry.getName());
-      buf.append(": ");
-      buf.append(
-        MimeUtility.fold(entry.getName().length() + 2, entry.getValue()));
-
-      if(en.hasMoreElements())
-      {
-        buf.append("\r\n");
-      }
-    }
-    
-    this.headerSrc = buf.toString();
-    return this.headerSrc;
-  }
-  
-  public long getIndexInGroup(Group group)
-    throws SQLException
-  {
-    return Database.getInstance().getArticleIndex(this, group);
-  }
-  
-  /**
-   * Sets the headers of this Article. If headers contain no
-   * Message-Id a new one is created.
-   * @param headers
-   */
-  public void setHeaders(InternetHeaders headers)
-  {
-    this.headers = headers;
-    validateHeaders();
+    return msgID[0].equals("") ? generateMessageID() : msgID[0];
   }
   
   /**
@@ -368,34 +331,6 @@ public class Article extends ArticleHead
   public String toString()
   {
     return getMessageID();
-  }
-  
-  /**
-   * Checks some headers for their validity and generates an
-   * appropriate Path-header for this host if not yet existing.
-   * This method is called by some Article constructors and the
-   * method setHeaders().
-   * @return true if something on the headers was changed.
-   */
-  private void validateHeaders()
-  {
-    // Check for valid Path-header
-    final String path = getHeader(Headers.PATH)[0];
-    final String host = Config.getInstance().get(Config.HOSTNAME, "localhost");
-    if(!path.startsWith(host))
-    {
-      StringBuffer pathBuf = new StringBuffer();
-      pathBuf.append(host);
-      pathBuf.append('!');
-      pathBuf.append(path);
-      this.headers.setHeader(Headers.PATH, pathBuf.toString());
-    }
-    
-    // Generate a messageID if no one is existing
-    if(getMessageID().equals(""))
-    {
-      generateMessageID();
-    }
   }
 
 }

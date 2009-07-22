@@ -16,46 +16,49 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.sonews.daemon.command;
+package org.sonews.config;
 
-import java.io.IOException;
-import org.sonews.daemon.NNTPConnection;
+import java.util.Map;
+import java.util.HashMap;
 
 /**
- * A default "Unsupported Command". Simply returns error code 500 and a
- * "command not supported" message.
+ *
  * @author Christian Lins
- * @since sonews/0.5.0
  */
-public class UnsupportedCommand implements Command
+class CommandLineConfig extends AbstractConfig
 {
+
+  private static final CommandLineConfig instance = new CommandLineConfig();
+
+  public static CommandLineConfig getInstance()
+  {
+    return instance;
+  }
+
+  private final Map<String, String> values = new HashMap<String, String>();
   
-  /**
-   * @return Always returns null.
-   */
+  private CommandLineConfig() {}
+
   @Override
-  public String[] getSupportedCommandStrings()
+  public String get(String key, String def)
   {
-    return null;
+    synchronized(this.values)
+    {
+      if(this.values.containsKey(key))
+      {
+        def = this.values.get(key);
+      }
+    }
+    return def;
   }
 
   @Override
-  public boolean hasFinished()
+  public void set(String key, String val)
   {
-    return true;
+    synchronized(this.values)
+    {
+      this.values.put(key, val);
+    }
   }
 
-  @Override
-  public boolean isStateful()
-  {
-    return false;
-  }
-
-  @Override
-  public void processLine(NNTPConnection conn, final String line, byte[] raw)
-    throws IOException
-  {
-    conn.println("500 command not supported");
-  }
-  
 }

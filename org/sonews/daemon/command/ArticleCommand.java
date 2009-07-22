@@ -19,10 +19,10 @@
 package org.sonews.daemon.command;
 
 import java.io.IOException;
-import java.sql.SQLException;
-import org.sonews.daemon.storage.Article;
+import org.sonews.storage.Article;
 import org.sonews.daemon.NNTPConnection;
-import org.sonews.daemon.storage.Group;
+import org.sonews.storage.Channel;
+import org.sonews.storage.StorageBackendException;
 
 /**
  * Class handling the ARTICLE, BODY and HEAD commands.
@@ -30,12 +30,13 @@ import org.sonews.daemon.storage.Group;
  * @author Dennis Schwerdel
  * @since n3tpd/0.1
  */
-public class ArticleCommand extends AbstractCommand
+public class ArticleCommand implements Command
 {
-  
-  public ArticleCommand(final NNTPConnection connection)
+
+  @Override
+  public String[] getSupportedCommandStrings()
   {
-    super(connection);
+    return new String[] {"ARTICLE", "BODY", "HEAD"};
   }
 
   @Override
@@ -44,9 +45,15 @@ public class ArticleCommand extends AbstractCommand
     return true;
   }
 
+  @Override
+  public boolean isStateful()
+  {
+    return false;
+  }
+
   // TODO: Refactor this method to reduce its complexity!
   @Override
-  public void processLine(final String line)
+  public void processLine(NNTPConnection conn, final String line, byte[] raw)
     throws IOException
   {
     final String[] command = line.split(" ");
@@ -55,10 +62,10 @@ public class ArticleCommand extends AbstractCommand
     long    artIndex = -1;
     if (command.length == 1)
     {
-      article = getCurrentArticle();
+      article = conn.getCurrentArticle();
       if (article == null)
       {
-        printStatus(420, "no current article has been selected");
+        conn.println("420 no current article has been selected");
         return;
       }
     }
@@ -68,7 +75,7 @@ public class ArticleCommand extends AbstractCommand
       article = Article.getByMessageID(command[1]);
       if (article == null)
       {
-        printStatus(430, "no such article found");
+        conn.println("430 no such article found");
         return;
       }
     }
@@ -77,49 +84,47 @@ public class ArticleCommand extends AbstractCommand
       // Message Number
       try
       {
-        Group currentGroup = connection.getCurrentGroup();
+        Channel currentGroup = conn.getCurrentChannel();
         if(currentGroup == null)
         {
-          printStatus(400, "no group selected");
+          conn.println("400 no group selected");
           return;
         }
         
         artIndex = Long.parseLong(command[1]);
-        article  = Article.getByArticleNumber(artIndex, currentGroup);
+        article  = currentGroup.getArticle(artIndex);
       }
       catch(NumberFormatException ex)
       {
         ex.printStackTrace();
       }
-      catch(SQLException ex)
+      catch(StorageBackendException ex)
       {
         ex.printStackTrace();
       }
 
       if (article == null)
       {
-        printStatus(423, "no such article number in this group");
+        conn.println("423 no such article number in this group");
         return;
       }
-      setCurrentArticle(article);
+      conn.setCurrentArticle(article);
     }
 
     if(command[0].equalsIgnoreCase("ARTICLE"))
     {
-      printStatus(220, artIndex + " " + article.getMessageID()
+      conn.println("220 " + artIndex + " " + article.getMessageID()
           + " article retrieved - head and body follow");
-      
-      println(article.getHeaderSource());
-      
-      println("");
-      println(article.getBody(), article.getBodyCharset());
-      println(".");
+      conn.println(article.getHeaderSource());
+      conn.println("");
+      conn.println(article.getBody());
+      conn.println(".");
     }
     else if(command[0].equalsIgnoreCase("BODY"))
     {
-      printStatus(222, artIndex + " " + article.getMessageID() + " body");
-      println(article.getBody(), article.getBodyCharset());
-      println(".");
+      conn.println("222 " + artIndex + " " + article.getMessageID() + " body");
+      conn.println(article.getBody());
+      conn.println(".");
     }
     
     /*
@@ -153,11 +158,10 @@ public class ArticleCommand extends AbstractCommand
      */
     else if(command[0].equalsIgnoreCase("HEAD"))
     {
-      printStatus(221, artIndex + " " + article.getMessageID()
+      conn.println("221 " + artIndex + " " + article.getMessageID()
           + " Headers follow (multi-line)");
-      
-      println(article.getHeaderSource());
-      println(".");
+      conn.println(article.getHeaderSource());
+      conn.println(".");
     }
   }  
   

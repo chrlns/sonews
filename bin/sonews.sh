@@ -1,6 +1,7 @@
 #!/bin/bash
 SCRIPTROOT=$(pwd)
 CLASSPATH=$SCRIPTROOT/lib/sonews.jar:\
+$SCRIPTROOT/lib/sonews-helpers.jar:\
 $SCRIPTROOT/lib/mysql-connector-java.jar:\
 $SCRIPTROOT/lib/glassfish-mail.jar:\
 $SCRIPTROOT/lib/postgresql.jar

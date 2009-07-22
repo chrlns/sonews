@@ -39,20 +39,21 @@ import org.sonews.daemon.NNTPConnection;
  * @author Christian Lins
  * @since sonews/0.5.0
  */
-public class CapabilitiesCommand extends AbstractCommand
+public class CapabilitiesCommand implements Command
 {
 
-  protected static final String[] CAPABILITIES = new String[]
+  static final String[] CAPABILITIES = new String[]
     {
       "VERSION 2", // MUST be the first one; VERSION 2 refers to RFC3977
       "READER",    // Server implements commands for reading
       "POST",      // Server implements POST command
       "OVER"       // Server implements OVER command
     };
-  
-  public CapabilitiesCommand(final NNTPConnection conn)
+
+  @Override
+  public String[] getSupportedCommandStrings()
   {
-    super(conn);
+    return new String[] {"CAPABILITIES"};
   }
 
   /**
@@ -66,15 +67,21 @@ public class CapabilitiesCommand extends AbstractCommand
   }
 
   @Override
-  public void processLine(final String line)
+  public boolean isStateful()
+  {
+    return false;
+  }
+
+  @Override
+  public void processLine(NNTPConnection conn, final String line, byte[] raw)
     throws IOException
   {
-    printStatus(101, "Capabilities list:");
+    conn.println("101 Capabilities list:");
     for(String cap : CAPABILITIES)
     {
-      println(cap);
+      conn.println(cap);
     }
-    println(".");
+    conn.println(".");
   }
 
 }

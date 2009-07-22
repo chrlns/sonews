@@ -19,6 +19,7 @@
 package org.sonews.mlgw;
 
 import java.util.Properties;
+import javax.mail.Address;
 import javax.mail.AuthenticationFailedException;
 import javax.mail.Authenticator;
 import javax.mail.Flags.Flag;
@@ -29,7 +30,7 @@ import javax.mail.NoSuchProviderException;
 import javax.mail.PasswordAuthentication;
 import javax.mail.Session;
 import javax.mail.Store;
-import org.sonews.daemon.Config;
+import org.sonews.config.Config;
 import org.sonews.daemon.AbstractDaemon;
 import org.sonews.util.Log;
 import org.sonews.util.Stats;
@@ -49,9 +50,9 @@ public class MailPoller extends AbstractDaemon
     public PasswordAuthentication getPasswordAuthentication()
     {
       final String username = 
-        Config.getInstance().get(Config.MLPOLL_USER, "user");
+        Config.inst().get(Config.MLPOLL_USER, "user");
       final String password = 
-        Config.getInstance().get(Config.MLPOLL_PASSWORD, "mysecret");
+        Config.inst().get(Config.MLPOLL_PASSWORD, "mysecret");
 
       return new PasswordAuthentication(username, password);
     }
@@ -72,11 +73,11 @@ public class MailPoller extends AbstractDaemon
         Thread.sleep(60000 * (errors + 1)); // one minute * errors
         
         final String host     = 
-          Config.getInstance().get(Config.MLPOLL_HOST, "samplehost");
+          Config.inst().get(Config.MLPOLL_HOST, "samplehost");
         final String username = 
-          Config.getInstance().get(Config.MLPOLL_USER, "user");
+          Config.inst().get(Config.MLPOLL_USER, "user");
         final String password = 
-          Config.getInstance().get(Config.MLPOLL_PASSWORD, "mysecret");
+          Config.inst().get(Config.MLPOLL_PASSWORD, "mysecret");
         
         Stats.getInstance().mlgwRunStart();
         
@@ -101,10 +102,8 @@ public class MailPoller extends AbstractDaemon
         // Dispatch messages and delete it afterwards on the inbox
         for(Message message : messages)
         {
-          String subject = message.getSubject();
-          System.out.println("MLGateway: message with subject \"" + subject + "\" received.");
           if(Dispatcher.toGroup(message)
-            || Config.getInstance().get(Config.MLPOLL_DELETEUNKNOWN, false))
+            || Config.inst().get(Config.MLPOLL_DELETEUNKNOWN, false))
           {
             // Delete the message
             message.setFlag(Flag.DELETED, true);
@@ -132,7 +131,7 @@ public class MailPoller extends AbstractDaemon
       }
       catch(InterruptedException ex)
       {
-        System.out.println("sonews: " + this + " returns.");
+        System.out.println("sonews: " + this + " returns: " + ex);
         return;
       }
       catch(MessagingException ex)

@@ -18,10 +18,11 @@
 
 package org.sonews.util;
 
-import java.sql.SQLException;
 import java.util.Calendar;
-import org.sonews.daemon.storage.Database;
-import org.sonews.daemon.storage.Group;
+import org.sonews.config.Config;
+import org.sonews.storage.Channel;
+import org.sonews.storage.StorageBackendException;
+import org.sonews.storage.StorageManager;
 
 /**
  * Class that capsulates statistical data gathering.
@@ -48,25 +49,35 @@ public final class Stats
   private Stats() {}
   
   private volatile int connectedClients = 0;
-  
+
+  /**
+   * A generic method that writes event data to the storage backend.
+   * If event logging is disabled with sonews.eventlog=false this method
+   * simply does nothing.
+   * @param type
+   * @param groupname
+   */
   private void addEvent(byte type, String groupname)
   {
-    Group group = Group.getByName(groupname);
-    if(group != null)
+    if(Config.inst().get(Config.EVENTLOG, true))
     {
-      try
+      Channel group = Channel.getByName(groupname);
+      if(group != null)
       {
-        Database.getInstance().addEvent(
-          System.currentTimeMillis(), type, group.getID());
+        try
+        {
+          StorageManager.current().addEvent(
+            System.currentTimeMillis(), type, group.getInternalID());
+        }
+        catch(StorageBackendException ex)
+        {
+          ex.printStackTrace();
+        }
       }
-      catch(SQLException ex)
+      else
       {
-        ex.printStackTrace();
+        Log.msg("Group " + groupname + " does not exist.", true);
       }
-    }
-    else
-    {
-      Log.msg("Group " + groupname + " does not exist.", true);
     }
   }
   
@@ -89,9 +100,9 @@ public final class Stats
   {
     try
     {
-      return Database.getInstance().countGroups();
+      return StorageManager.current().countGroups();
     }
-    catch(SQLException ex)
+    catch(StorageBackendException ex)
     {
       ex.printStackTrace();
       return -1;
@@ -102,9 +113,9 @@ public final class Stats
   {
     try
     {
-      return Database.getInstance().countArticles();
+      return StorageManager.current().countArticles();
     }
-    catch(SQLException ex)
+    catch(StorageBackendException ex)
     {
       ex.printStackTrace();
       return -1;
@@ -112,7 +123,7 @@ public final class Stats
   }
   
   public int getYesterdaysEvents(final byte eventType, final int hour,
-    final Group group)
+    final Channel group)
   {
     // Determine the timestamp values for yesterday and the given hour
     Calendar cal = Calendar.getInstance();
@@ -128,10 +139,10 @@ public final class Stats
     
     try
     {
-      return Database.getInstance()
+      return StorageManager.current()
         .getEventsCount(eventType, startTimestamp, endTimestamp, group);
     }
-    catch(SQLException ex)
+    catch(StorageBackendException ex)
     {
       ex.printStackTrace();
       return -1;
@@ -167,9 +178,9 @@ public final class Stats
   {
     try
     {
-      return Database.getInstance().getNumberOfEventsPerHour(key, gid);
+      return StorageManager.current().getEventsPerHour(key, gid);
     }
-    catch(SQLException ex)
+    catch(StorageBackendException ex)
     {
       ex.printStackTrace();
       return -1;

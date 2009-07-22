@@ -20,8 +20,8 @@ package org.sonews.feed;
 
 import java.io.IOException;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import org.sonews.daemon.storage.Article;
-import org.sonews.daemon.storage.Headers;
+import org.sonews.storage.Article;
+import org.sonews.storage.Headers;
 import org.sonews.util.Log;
 import org.sonews.util.io.ArticleWriter;
 
@@ -90,7 +90,7 @@ class PushFeeder extends AbstractFeeder
       }
       catch(InterruptedException ex)
       {
-        Log.msg("PushFeeder interrupted.", true);
+        Log.msg("PushFeeder interrupted: " + ex, true);
       }
     }
   }

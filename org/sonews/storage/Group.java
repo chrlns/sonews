@@ -16,7 +16,7 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.sonews.daemon.storage;
+package org.sonews.storage;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -28,28 +28,9 @@ import org.sonews.util.Pair;
  * @author Christian Lins
  * @since sonews/0.5.0
  */
-public class Group
+// TODO: This class should not be public!
+public class Group extends Channel
 {
-
-  /** 
-   * If this flag is set the Group is no real newsgroup but a mailing list
-   * mirror. In that case every posting and receiving mails must go through
-   * the mailing list gateway.
-   */
-  public static final int MAILINGLIST = 0x1;
-  
-  /**
-   * If this flag is set the Group is marked as readonly and the posting
-   * is prohibited. This can be useful for groups that are synced only in
-   * one direction.
-   */
-  public static final int READONLY    = 0x2;
-
-  /**
-   * If this flag is set the Group is marked as deleted and must not occur
-   * in any output. The deletion is done lazily by a low priority daemon.
-   */
-  public static final int DELETED     = 0x128;
   
   private long   id     = 0;
   private int    flags  = -1;
@@ -64,9 +45,9 @@ public class Group
   {
     try
     {
-      return Database.getInstance().getGroup(name);
+      return StorageManager.current().getGroup(name);
     }
-    catch(SQLException ex)
+    catch(StorageBackendException ex)
     {
       ex.printStackTrace();
       return null;
@@ -76,13 +57,13 @@ public class Group
   /**
    * @return List of all groups this server handles.
    */
-  public static List<Group> getAll()
+  public static List<Channel> getAll()
   {
     try
     {
-      return Database.getInstance().getGroups();
+      return StorageManager.current().getGroups();
     }
-    catch(SQLException ex)
+    catch(StorageBackendException ex)
     {
       Log.msg(ex.getMessage(), false);
       return null;
@@ -90,11 +71,10 @@ public class Group
   }
   
   /**
-   * Private constructor.
    * @param name
    * @param id
    */
-  Group(final String name, final long id, final int flags)
+  public Group(final String name, final long id, final int flags)
   {
     this.id    = id;
     this.flags = flags;
@@ -113,44 +93,71 @@ public class Group
       return false;
     }
   }
-    
-  public List<Pair<Long, ArticleHead>> getArticleHeads(final int first, final int last)
-    throws SQLException
+
+  public Article getArticle(long idx)
+    throws StorageBackendException
   {
-    return Database.getInstance().getArticleHeads(this, first, last);
+    return StorageManager.current().getArticle(idx, this.id);
+  }
+
+  public List<Pair<Long, ArticleHead>> getArticleHeads(final long first, final long last)
+    throws StorageBackendException
+  {
+    return StorageManager.current().getArticleHeads(this, first, last);
   }
   
   public List<Long> getArticleNumbers()
-    throws SQLException
+    throws StorageBackendException
   {
-    return Database.getInstance().getArticleNumbers(id);
+    return StorageManager.current().getArticleNumbers(id);
   }
 
-  public int getFirstArticleNumber()
-    throws SQLException
+  public long getFirstArticleNumber()
+    throws StorageBackendException
   {
-    return Database.getInstance().getFirstArticleNumber(this);
+    return StorageManager.current().getFirstArticleNumber(this);
+  }
+
+  public int getFlags()
+  {
+    return this.flags;
+  }
+
+  public long getIndexOf(Article art)
+    throws StorageBackendException
+  {
+    return StorageManager.current().getArticleIndex(art, this);
   }
 
   /**
    * Returns the group id.
    */
-  public long getID()
+  public long getInternalID()
   {
     assert id > 0;
 
     return id;
   }
-  
+
+  public boolean isDeleted()
+  {
+    return (this.flags & DELETED) != 0;
+  }
+
   public boolean isMailingList()
   {
     return (this.flags & MAILINGLIST) != 0;
   }
 
-  public int getLastArticleNumber()
-    throws SQLException
+  public boolean isWriteable()
   {
-    return Database.getInstance().getLastArticleNumber(this);
+    return true;
+  }
+
+  public long getLastArticleNumber()
+    throws StorageBackendException
+  {
+    return StorageManager.current().getLastArticleNumber(this);
   }
 
   public String getName()
@@ -160,7 +167,7 @@ public class Group
 
   /**
    * Performs this.flags |= flag to set a specified flag and updates the data
-   * in the Database.
+   * in the JDBCDatabase.
    * @param flag
    */
   public void setFlag(final int flag)
@@ -177,10 +184,19 @@ public class Group
    * @return Number of posted articles in this group.
    * @throws java.sql.SQLException
    */
-  public int getPostingsCount()
-    throws SQLException
+  public long getPostingsCount()
+    throws StorageBackendException
   {
-    return Database.getInstance().getPostingsCount(this.name);
+    return StorageManager.current().getPostingsCount(this.name);
+  }
+
+  /**
+   * Updates flags and name in the backend.
+   */
+  public void update()
+    throws StorageBackendException
+  {
+    StorageManager.current().update(this);
   }
 
 }

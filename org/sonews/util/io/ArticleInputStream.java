@@ -20,9 +20,9 @@ package org.sonews.util.io;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import org.sonews.daemon.storage.*;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
+import org.sonews.storage.Article;
 
 /**
  * Capsulates an Article to provide a raw InputStream.
@@ -41,11 +41,12 @@ public class ArticleInputStream extends InputStream
     final ByteArrayOutputStream out = new ByteArrayOutputStream();
     out.write(art.getHeaderSource().getBytes("UTF-8"));
     out.write("\r\n\r\n".getBytes());
-    out.write(art.getBody().getBytes(art.getBodyCharset()));
+    out.write(art.getBody()); // Without CRLF
     out.flush();
     this.buffer = out.toByteArray();
   }
-  
+
+  @Override
   public int read()
   {
     if(offset >= buffer.length)

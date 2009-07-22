@@ -16,46 +16,25 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.sonews.daemon.command;
-
-import java.io.IOException;
-import org.sonews.daemon.NNTPConnection;
+package org.sonews.storage;
 
 /**
- * A default "Unsupported Command". Simply returns error code 500 and a
- * "command not supported" message.
+ *
  * @author Christian Lins
- * @since sonews/0.5.0
+ * @since sonews/1.0
  */
-public class UnsupportedCommand implements Command
+public interface StorageProvider
 {
-  
+
+  public boolean isSupported(String uri);
+
   /**
-   * @return Always returns null.
+   * This method returns the reference to the associated storage.
+   * The reference MAY be unique for each thread. In any case it MUST be
+   * thread-safe to use this method.
+   * @return The reference to the associated Storage.
    */
-  @Override
-  public String[] getSupportedCommandStrings()
-  {
-    return null;
-  }
+  public Storage storage(Thread thread)
+    throws StorageBackendException;
 
-  @Override
-  public boolean hasFinished()
-  {
-    return true;
-  }
-
-  @Override
-  public boolean isStateful()
-  {
-    return false;
-  }
-
-  @Override
-  public void processLine(NNTPConnection conn, final String line, byte[] raw)
-    throws IOException
-  {
-    conn.println("500 command not supported");
-  }
-  
 }

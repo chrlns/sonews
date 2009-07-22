@@ -25,7 +25,7 @@ import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.net.Socket;
 import java.net.UnknownHostException;
-import org.sonews.daemon.storage.Article;
+import org.sonews.storage.Article;
 
 /**
  * Posts an Article to a NNTP server using the POST command.

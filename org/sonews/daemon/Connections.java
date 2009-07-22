@@ -18,6 +18,7 @@
 
 package org.sonews.daemon;
 
+import org.sonews.config.Config;
 import org.sonews.util.Log;
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -37,7 +38,7 @@ import org.sonews.util.Stats;
  * @author Christian Lins
  * @since sonews/0.5.0
  */
-final class Connections extends AbstractDaemon
+public final class Connections extends AbstractDaemon
 {
 
   private static final Connections instance = new Connections();
@@ -70,7 +71,7 @@ final class Connections extends AbstractDaemon
     synchronized(this.connections)
     {
       this.connections.add(conn);
-      this.connByChannel.put(conn.getChannel(), conn);
+      this.connByChannel.put(conn.getSocketChannel(), conn);
     }
   }
   
@@ -95,9 +96,9 @@ final class Connections extends AbstractDaemon
       for(NNTPConnection conn : this.connections)
       {
         assert conn != null;
-        assert conn.getChannel() != null;
+        assert conn.getSocketChannel() != null;
 
-        Socket socket = conn.getChannel().socket();
+        Socket socket = conn.getSocketChannel().socket();
         if(socket != null)
         {
           InetSocketAddress sockAddr = (InetSocketAddress)socket.getRemoteSocketAddress();
@@ -123,7 +124,7 @@ final class Connections extends AbstractDaemon
   {
     while(isRunning())
     {
-      int timeoutMillis = 1000 * Config.getInstance().get(Config.TIMEOUT, 180);
+      int timeoutMillis = 1000 * Config.inst().get(Config.TIMEOUT, 180);
       
       synchronized (this.connections)
       {
@@ -139,7 +140,7 @@ final class Connections extends AbstractDaemon
             iter.remove();
 
             // Close and remove the channel
-            SocketChannel channel = conn.getChannel();
+            SocketChannel channel = conn.getSocketChannel();
             connByChannel.remove(channel);
             
             try

@@ -19,10 +19,10 @@
 package org.sonews.daemon.command;
 
 import java.io.IOException;
-import java.sql.SQLException;
 import java.util.List;
 import org.sonews.daemon.NNTPConnection;
-import org.sonews.daemon.storage.Group;
+import org.sonews.storage.Channel;
+import org.sonews.storage.StorageBackendException;
 
 /**
  * Class handling the LISTGROUP command.
@@ -30,12 +30,13 @@ import org.sonews.daemon.storage.Group;
  * @author Dennis Schwerdel
  * @since n3tpd/0.1
  */
-public class ListGroupCommand extends AbstractCommand
+public class ListGroupCommand implements Command
 {
 
-  public ListGroupCommand(final NNTPConnection conn)
+  @Override
+  public String[] getSupportedCommandStrings()
   {
-    super(conn);
+    return new String[]{"LISTGROUP"};
   }
 
   @Override
@@ -45,37 +46,43 @@ public class ListGroupCommand extends AbstractCommand
   }
 
   @Override
-  public void processLine(final String commandName) 
-    throws IOException, SQLException
+  public boolean isStateful()
+  {
+    return false;
+  }
+
+  @Override
+  public void processLine(NNTPConnection conn, final String commandName, byte[] raw)
+    throws IOException, StorageBackendException
   {
     final String[] command = commandName.split(" ");
 
-    Group group;
+    Channel group;
     if(command.length >= 2)
     {
-      group = Group.getByName(command[1]);
+      group = Channel.getByName(command[1]);
     }
     else
     {
-      group = getCurrentGroup();
+      group = conn.getCurrentChannel();
     }
 
     if (group == null)
     {
-      printStatus(412, "no group selected; use GROUP <group> command");
+      conn.println("412 no group selected; use GROUP <group> command");
       return;
     }
 
     List<Long> ids = group.getArticleNumbers();
-    printStatus(211, ids.size() + " " +
+    conn.println("211 " + ids.size() + " " +
       group.getFirstArticleNumber() + " " + 
       group.getLastArticleNumber() + " list of article numbers follow");
     for(long id : ids)
     {
       // One index number per line
-      println(Long.toString(id));
+      conn.println(Long.toString(id));
     }
-    println(".");
+    conn.println(".");
   }
 
 }

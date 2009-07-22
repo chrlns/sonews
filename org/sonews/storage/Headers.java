@@ -16,7 +16,7 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.sonews.daemon.storage;
+package org.sonews.storage;
 
 /**
  * Contains header constants. These header keys are no way complete but all
@@ -39,8 +39,11 @@ public final class Headers
   public static final String NNTP_POSTING_HOST = "nntp-posting-host";
   public static final String PATH              = "path";
   public static final String REFERENCES        = "references";
+  public static final String REPLY_TO          = "reply-to";
+  public static final String SENDER            = "sender";
   public static final String SUBJECT           = "subject";
   public static final String SUPERSEDES        = "subersedes";
+  public static final String TO                = "to";
   public static final String X_COMPLAINTS_TO   = "x-complaints-to";
   public static final String X_TRACE           = "x-trace";
   public static final String XREF              = "xref";

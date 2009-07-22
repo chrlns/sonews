@@ -16,28 +16,27 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.sonews.util;
+package org.sonews.daemon.command;
+
+import java.io.IOException;
+import org.sonews.daemon.NNTPConnection;
+import org.sonews.storage.StorageBackendException;
 
 /**
- * Base class for Config and BootstrapConfig.
+ * Interface for pluggable NNTP commands handling classes.
  * @author Christian Lins
- * @since sonews/0.5.0
+ * @since sonews/0.6.0
  */
-public abstract class AbstractConfig 
+public interface Command
 {
-  
-  public abstract String get(String key, String defVal);
-  
-  public int get(final String key, final int defVal)
-  {
-    return Integer.parseInt(
-      get(key, Integer.toString(defVal)));
-  }
-  
-  public boolean get(String key, boolean defVal)
-  {
-    String val = get(key, Boolean.toString(defVal));
-    return Boolean.parseBoolean(val);
-  }
-  
+
+  boolean hasFinished();
+
+  boolean isStateful();
+
+  String[] getSupportedCommandStrings();
+
+  void processLine(NNTPConnection conn, String line, byte[] rawLine)
+    throws IOException, StorageBackendException;
+
 }

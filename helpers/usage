@@ -5,4 +5,5 @@ java -jar sonews.jar [arguments]
     -feed              Enables feed daemon for pulling news from peer servers
     -h|-help           This output
     -mlgw              Enables the Mailinglist Gateway poller
-    -useaux            Enables an additional secondary port for listening
+    -p <port>          Forces sonews to listen on the specified port.
+    -v|-version        Prints out the version info an exits.

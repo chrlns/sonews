@@ -19,7 +19,7 @@
 package org.sonews.daemon;
 
 import java.sql.SQLException;
-import org.sonews.daemon.storage.Database;
+import org.sonews.storage.StorageManager;
 import org.sonews.util.Log;
 
 /**
@@ -56,21 +56,17 @@ public abstract class AbstractDaemon extends Thread
   }
   
   /**
-   * Marks this thread to exit soon. Closes the associated Database connection
+   * Marks this thread to exit soon. Closes the associated JDBCDatabase connection
    * if available.
    * @throws java.sql.SQLException
    */
-  void shutdownNow()
+  public void shutdownNow()
     throws SQLException
   {
     synchronized(this)
     {
       this.isRunning = false;
-      Database db = Database.getInstance(false);
-      if(db != null)
-      {
-        db.shutdown();
-      }
+      StorageManager.disableProvider();
     }
   }
   

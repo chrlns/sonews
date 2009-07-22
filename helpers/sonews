@@ -1,6 +1,7 @@
 #!/bin/bash
 
 CLASSPATH=/usr/share/java/sonews.jar:\
+/usr/share/java/sonews-helpers.jar:\
 /usr/share/java/mysql-connector-java.jar:\
 /usr/share/java/glassfish-mail.jar:\
 /usr/share/java/postgresql.jar
@@ -9,7 +10,7 @@ LOGFILE=/var/log/sonews.log
 PIDFILE=/var/run/sonews.pid
 ARGS="-mlgw -c /etc/sonews/sonews.conf -feed"
 
-MAINCLASS=org.sonews.daemon.Main
+MAINCLASS=org.sonews.Main
 JAVA=java
 
 case "$1" in
@@ -31,11 +32,17 @@ case "$1" in
     done
     echo "done."
     ;;
+  restart)
+    $0 stop && $0 start
+    ;;
   setup)
     $JAVA -classpath $CLASSPATH org.sonews.util.DatabaseSetup
     ;;
   purge)
     $JAVA -classpath $CLASSPATH org.sonews.util.Purger
+    ;;
+  version)
+    $JAVA -classpath $CLASSPATH $MAINCLASS -version
     ;;
   *)
     echo "Usage: sonews [start|stop|restart|setup|purge]"

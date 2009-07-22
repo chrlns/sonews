@@ -57,11 +57,15 @@
     <sect1 label="1.2">
       <title>Roadmap</title>
       <sect2 label="1.2.1">
-        <title>sonews/0.6</title>
-        <para>Planned to implement the XPAT command for searching, correctly 
+        <title>sonews/1.0</title>
+        <para>
+        Various minor fixes and code cleanup (Storage and Command interface for
+        the upcoming Plugin API).
+        </para>
+        <para>XPAT command for searching, correctly 
         hashed Message-Ids and a news purging command.
         See <ulink url="http://bugs.xerxys.info/">Bugtracker</ulink> for
-        issues with target sonews/0.6.x.</para>
+        issues with target sonews/1.0.x.</para>
       </sect2>
     </sect1>
   </chapter>
@@ -76,17 +80,14 @@
         <ulink url="http://www.debian.org/doc/manuals/apt-howto/">APT</ulink>
         easily.
         Add the following line to /etc/apt/sources.list:</para>
-        <screen>deb http://packages.xerxys.info/debian/ unstable main
-        </screen>
+        <screen>deb http://packages.xerxys.info/debian/ unstable main</screen>
         <para>And add the GPG-Key for package authentification, see 
         <ulink url="http://packages.xerxys.info/debian/">Xerxys Debian Repository</ulink>
         for more details.</para>
         <para>Then force an update of your local package list:</para>
-        <screen># apt-get update
-</screen>
+        <screen># apt-get update</screen>
         <para>To install sonews and all prerequisites issue the following command:</para>
-        <screen># apt-get install sonews
-        </screen>
+        <screen># apt-get install sonews</screen>
         <para>This method should work for all recent Debian-based distributions
 (<ulink url="http://www.debian.org/">Debian</ulink>, <ulink url="http://www.ubuntu.com/">Ubuntu</ulink>, etc.).</para>
       </sect2>
@@ -124,11 +125,9 @@ Refer to the database's manual for instructions.</para>
       <para>You will find the SQL Schema definitions in the helpers subdirectory of
 the source and binary distributions. You can create the tables manually using
 this templates or you can use the setup helper:</para>
-      <screen>user@debian$ sonews setup
-</screen>
+      <screen>user@debian$ sonews setup</screen>
       <para>or on other *nix systems:</para>
-      <screen>user@nix$ java -jar sonews.jar org.sonews.util.DatabaseSetup
-</screen>
+      <screen>user@nix$ java -jar sonews.jar org.sonews.util.DatabaseSetup</screen>
       <para>The tool will ask for some information about your database environment,
 connect to the database, create the tables and creates a default bootstrap
 config file called sonews.conf.</para>
@@ -157,7 +156,7 @@ of large mails will fail.</para>
           <listitem>
             <para>
             If set to true every(!) data going through sonews' socket
-            is written to sonews.log. After a night the logfile can be
+            is written to sonews.log. After a high traffic night the logfile can be
             several gigabytes large, so be careful with this setting.
             </para>
           </listitem>
@@ -165,20 +164,40 @@ of large mails will fail.</para>
         <varlistentry>
           <term>&lsquo;<literal>sonews.hostname</literal>&rsquo;</term>
           <listitem>
-            <para>Canonical name of the server instance. This variable is part of the server's
-hello message to the client and used to generate Message-Ids.</para>
+            <para>
+              Canonical name of the server instance. This variable is part of
+              the server's hello message to the client and used to generate
+              Message-Ids.
+              It is highly recommended to set sonews.hostname to the full
+              qualified domain name (FQDN) of the host machine.
+            </para>
           </listitem>
         </varlistentry>
         <varlistentry>
           <term>&lsquo;<literal>sonews.timeout</literal>&rsquo;</term>
           <listitem>
-            <para>Socket timeout for client connections in seconds.</para>
+            <para>
+              Socket timeout for client connections in seconds. Default as
+              recommended in RFC3977 is 180 seconds.
+            </para>
           </listitem>
         </varlistentry>
         <varlistentry>
           <term>&lsquo;<literal>sonews.port</literal>&rsquo;</term>
           <listitem>
-            <para>Listening port of sonews daemon.</para>
+            <para>
+              Listening port of sonews daemon. This value can be overridden
+              with the -p command line argument.
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term>&lsquo;<literal>sonews.xdaemon.host</literal>&rsquo;</term>
+          <listitem>
+            <para>
+              Hostname or IP address of the client machine that is allowed to
+              use the XDAEMON command. Default: localhost
+            </para>
           </listitem>
         </varlistentry>
       </variablelist>
@@ -196,19 +215,36 @@ arguments:</para>
     -h|-help           This output
     -mlgw              Enables the Mailinglist Gateway poller
     -p portnumber      Port on which sonews is listening for incoming connections.
-                       Overrides port settings in config file and database.
-
-</screen>
+                       Overrides port settings in config file and database.</screen>
     </sect1>
 
     <sect1 label="3.3">
       <title>Webinterface</title>
       <para>The package sonews-web provides an optional webinterface that can be used to
 review statistical information and configuration values of sonews.</para>
-      <screen>sonews-web start|stop
-</screen>
+      <screen>sonews-web start|stop</screen>
       <para>The webinterface uses the the lightweight Servlet Container Kitten and is
 per default listening on HTTP-Port 8080 (go to http://localhost:8080/sonews).</para>
+    </sect1>
+
+    <sect1 label="3.4">
+      <title>Newsgroup configuration</title>
+      <para>
+        Currently some manual work is necessary to create a newsgroup hosted
+        by a sonews instance.
+      </para>
+      <para>
+        One possibility is to talk via Telnet to the sonews instance and
+        use the non-standard command XDAEMON.
+      <screen>telnet localhost 119</screen>
+      <screen>XDAEMON GROUPADD local.test 0</screen>
+      Please note that the XDAEMON command has restricted access and is only
+      available via local connections (default, can be changed with config
+      value sonews.xdaemon.host).
+      </para>
+      <para>
+        You can also use the web interface to create newsgroups.
+      </para>
     </sect1>
   </chapter>
 
@@ -217,8 +253,7 @@ per default listening on HTTP-Port 8080 (go to http://localhost:8080/sonews).</p
     <para>You're welcome to create patches with bugfixes or additional features. The
 Mercurial DSCM makes this step an easy task.</para>
     <para>Just clone the public <ulink url="http://www.selenic.com/mercurial/">Mercurial</ulink> repository:</para>
-    <screen>hg clone http://code.xerxys.info:8000/hg/sonews/trunk sonews-trunk
-</screen>
+    <screen>hg clone http://code.xerxys.info:8000/hg/sonews/ sonews-trunk</screen>
     <para>Then make your changes, create a bundle of changesets and send this to me via email.
 Or ask for push access to the public repository.</para>
     <para>

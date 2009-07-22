@@ -69,9 +69,10 @@ CREATE TABLE groups2list
   group_id   INTEGER REFERENCES groups(group_id) ON DELETE CASCADE,
   listaddress VARCHAR(255),
 
-  PRIMARY KEY(group_id, listaddress),
-  UNIQUE(listaddress)
+  PRIMARY KEY(group_id, listaddress)
 );
+
+CREATE INDEX listaddress_key ON groups2list USING btree(listaddress);
 
 /* 
   Configuration table, containing key/value pairs 

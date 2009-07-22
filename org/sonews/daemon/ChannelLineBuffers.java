@@ -233,10 +233,11 @@ public class ChannelLineBuffers
   public static void recycleBuffer(ByteBuffer buffer)
   {
     assert buffer != null;
-    assert buffer.capacity() >= BUFFER_SIZE;
 
     if(buffer.isDirect())
     {
+      assert buffer.capacity() >= BUFFER_SIZE;
+      
       // Add old buffers to the list of free buffers
       synchronized(freeSmallBuffers)
       {

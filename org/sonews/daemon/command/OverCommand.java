@@ -19,13 +19,13 @@
 package org.sonews.daemon.command;
 
 import java.io.IOException;
-import java.sql.SQLException;
 import java.util.List;
 import org.sonews.util.Log;
 import org.sonews.daemon.NNTPConnection;
-import org.sonews.daemon.storage.Article;
-import org.sonews.daemon.storage.ArticleHead;
-import org.sonews.daemon.storage.Headers;
+import org.sonews.storage.Article;
+import org.sonews.storage.ArticleHead;
+import org.sonews.storage.Headers;
+import org.sonews.storage.StorageBackendException;
 import org.sonews.util.Pair;
 
 /**
@@ -106,14 +106,15 @@ import org.sonews.util.Pair;
  * @author Christian Lins
  * @since sonews/0.5.0
  */
-public class OverCommand extends AbstractCommand
+public class OverCommand implements Command
 {
 
-  public static final int MAX_LINES_PER_DBREQUEST = 100;
-  
-  public OverCommand(final NNTPConnection conn)
+  public static final int MAX_LINES_PER_DBREQUEST = 200;
+
+  @Override
+  public String[] getSupportedCommandStrings()
   {
-    super(conn);
+    return new String[]{"OVER", "XOVER"};
   }
 
   @Override
@@ -123,12 +124,18 @@ public class OverCommand extends AbstractCommand
   }
 
   @Override
-  public void processLine(final String line)
-    throws IOException, SQLException
+  public boolean isStateful()
   {
-    if(getCurrentGroup() == null)
+    return false;
+  }
+
+  @Override
+  public void processLine(NNTPConnection conn, final String line, byte[] raw)
+    throws IOException, StorageBackendException
+  {
+    if(conn.getCurrentChannel() == null)
     {
-      printStatus(412, "No news group current selected");
+      conn.println("412 no newsgroup selected");
     }
     else
     {
@@ -138,20 +145,20 @@ public class OverCommand extends AbstractCommand
       // the currently selected article(s)
       if(command.length == 1)
       {
-        final Article art = getCurrentArticle();
+        final Article art = conn.getCurrentArticle();
         if(art == null)
         {
-          printStatus(420, "No article(s) selected");
+          conn.println("420 no article(s) selected");
           return;
         }
 
-        println(buildOverview(art, -1));
+        conn.println(buildOverview(art, -1));
       }
       // otherwise print information about the specified range
       else
       {
-        int artStart;
-        int artEnd   = getCurrentGroup().getLastArticleNumber();
+        long artStart;
+        long artEnd   = conn.getCurrentChannel().getLastArticleNumber();
         String[] nums = command[1].split("-");
         if(nums.length >= 1)
         {
@@ -167,7 +174,7 @@ public class OverCommand extends AbstractCommand
         }
         else
         {
-          artStart = getCurrentGroup().getFirstArticleNumber();
+          artStart = conn.getCurrentChannel().getFirstArticleNumber();
         }
 
         if(nums.length >=2)
@@ -186,41 +193,41 @@ public class OverCommand extends AbstractCommand
         {
           if(command[0].equalsIgnoreCase("OVER"))
           {
-            printStatus(423, "No articles in that range");
+            conn.println("423 no articles in that range");
           }
           else
           {
-            printStatus(224, "(empty) overview information follows:");
-            println(".");
+            conn.println("224 (empty) overview information follows:");
+            conn.println(".");
           }
         }
         else
         {
-          for(int n = artStart; n <= artEnd; n += MAX_LINES_PER_DBREQUEST)
+          for(long n = artStart; n <= artEnd; n += MAX_LINES_PER_DBREQUEST)
           {
-            int nEnd = Math.min(n + MAX_LINES_PER_DBREQUEST - 1, artEnd);
-            List<Pair<Long, ArticleHead>> articleHeads = getCurrentGroup()
+            long nEnd = Math.min(n + MAX_LINES_PER_DBREQUEST - 1, artEnd);
+            List<Pair<Long, ArticleHead>> articleHeads = conn.getCurrentChannel()
               .getArticleHeads(n, nEnd);
             if(articleHeads.isEmpty() && n == artStart
               && command[0].equalsIgnoreCase("OVER"))
             {
               // This reply is only valid for OVER, not for XOVER command
-              printStatus(423, "No articles in that range");
+              conn.println("423 no articles in that range");
               return;
             }
             else if(n == artStart)
             {
               // XOVER replies this although there is no data available
-              printStatus(224, "Overview information follows");
+              conn.println("224 overview information follows");
             }
 
             for(Pair<Long, ArticleHead> article : articleHeads)
             {
               String overview = buildOverview(article.getB(), article.getA());
-              println(overview);
+              conn.println(overview);
             }
           } // for
-          println(".");
+          conn.println(".");
         }
       }
     }

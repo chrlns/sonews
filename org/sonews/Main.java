@@ -16,17 +16,23 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.sonews.daemon;
+package org.sonews;
 
 import java.sql.Driver;
 import java.sql.DriverManager;
-import java.sql.SQLException;
 import java.util.Enumeration;
 import java.util.Date;
+import org.sonews.config.Config;
+import org.sonews.daemon.ChannelLineBuffers;
+import org.sonews.daemon.Connections;
+import org.sonews.daemon.NNTPDaemon;
 import org.sonews.feed.FeedManager;
 import org.sonews.mlgw.MailPoller;
-import org.sonews.daemon.storage.Database;
+import org.sonews.storage.StorageBackendException;
+import org.sonews.storage.StorageManager;
+import org.sonews.storage.StorageProvider;
 import org.sonews.util.Log;
+import org.sonews.util.Purger;
 import org.sonews.util.io.Resource;
 
 /**
@@ -42,7 +48,7 @@ public final class Main
   }
 
   /** Version information of the sonews daemon */
-  public static final String VERSION = "sonews/0.6.0beta1";
+  public static final String VERSION = "sonews/1.0.0";
   public static final Date   STARTDATE = new Date();
   
   /**
@@ -64,7 +70,7 @@ public final class Main
     {
       if(args[n].equals("-c") || args[n].equals("-config"))
       {
-        BootstrapConfig.FILE = args[++n];
+        Config.inst().set(Config.LEVEL_CLI, Config.CONFIGFILE, args[++n]);
         System.out.println("Using config file " + args[n]);
       }
       else if(args[n].equals("-dumpjdbcdriver"))
@@ -94,23 +100,30 @@ public final class Main
       {
         port = Integer.parseInt(args[++n]);
       }
+      else if(args[n].equals("-v") || args[n].equals("-version"))
+      {
+        // Simply return as the version info is already printed above
+        return;
+      }
     }
     
-    // Try to load the Database;
-    // Do NOT USE Config or Log classes before this point because they require
-    // a working Database connection.
+    // Try to load the JDBCDatabase;
+    // Do NOT USE BackendConfig or Log classes before this point because they require
+    // a working JDBCDatabase connection.
     try
     {
-      Database.getInstance();
+      StorageProvider sprov =
+        StorageManager.loadProvider("org.sonews.storage.impl.JDBCDatabaseProvider");
+      StorageManager.enableProvider(sprov);
       
       // Make sure some elementary groups are existing
-      if(!Database.getInstance().isGroupExisting("control"))
+      if(!StorageManager.current().isGroupExisting("control"))
       {
-        Database.getInstance().addGroup("control", 0);
+        StorageManager.current().addGroup("control", 0);
         Log.msg("Group 'control' created.", true);
       }
     }
-    catch(SQLException ex)
+    catch(StorageBackendException ex)
     {
       ex.printStackTrace();
       System.err.println("Database initialization failed with " + ex.toString());
@@ -127,7 +140,7 @@ public final class Main
     // Start the listening daemon
     if(port <= 0)
     {
-      port = Config.getInstance().get(Config.PORT, 119);
+      port = Config.inst().get(Config.PORT, 119);
     }
     final NNTPDaemon daemon = NNTPDaemon.createInstance(port);
     daemon.start();
@@ -146,6 +159,9 @@ public final class Main
     {
       FeedManager.startFeeding();
     }
+
+    Purger purger = new Purger();
+    purger.start();
     
     // Wait for main thread to exit (setDaemon(false))
     daemon.join();

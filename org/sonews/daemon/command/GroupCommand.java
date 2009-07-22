@@ -19,9 +19,9 @@
 package org.sonews.daemon.command;
 
 import java.io.IOException;
-import java.sql.SQLException;
 import org.sonews.daemon.NNTPConnection;
-import org.sonews.daemon.storage.Group;
+import org.sonews.storage.Channel;
+import org.sonews.storage.StorageBackendException;
 
 /**
  * Class handling the GROUP command.
@@ -45,12 +45,13 @@ import org.sonews.daemon.storage.Group;
  * @author Dennis Schwerdel
  * @since n3tpd/0.1
  */
-public class GroupCommand extends AbstractCommand
+public class GroupCommand implements Command
 {
 
-  public GroupCommand(final NNTPConnection conn)
+  @Override
+  public String[] getSupportedCommandStrings()
   {
-    super(conn);
+    return new String[]{"GROUP"};
   }
 
   @Override
@@ -58,32 +59,37 @@ public class GroupCommand extends AbstractCommand
   {
     return true;
   }
+
+  @Override
+  public boolean isStateful()
+  {
+    return true;
+  }
   
   @Override
-  public void processLine(final String line)
-    throws IOException, SQLException
+  public void processLine(NNTPConnection conn, final String line, byte[] raw)
+    throws IOException, StorageBackendException
   {
     final String[] command = line.split(" ");
 
-    Group group;
+    Channel group;
     if(command.length >= 2)
     {
-      group = Group.getByName(command[1]);
-      if(group == null)
+      group = Channel.getByName(command[1]);
+      if(group == null || group.isDeleted())
       {
-        printStatus(411, "no such news group");
+        conn.println("411 no such news group");
       }
       else
       {
-        setCurrentGroup(group);
-
-        printStatus(211, group.getPostingsCount() + " " + group.getFirstArticleNumber() 
+        conn.setCurrentGroup(group);
+        conn.println("211 " + group.getPostingsCount() + " " + group.getFirstArticleNumber()
           + " " + group.getLastArticleNumber() + " " + group.getName() + " group selected");
       }
     }
     else
     {
-      printStatus(500, "no group name given");
+      conn.println("500 no group name given");
     }
   }
 

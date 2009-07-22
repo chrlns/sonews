@@ -16,10 +16,11 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.sonews.daemon;
+package org.sonews;
 
 import java.sql.SQLException;
 import java.util.Map;
+import org.sonews.daemon.AbstractDaemon;
 
 /**
  * Will force all other threads to shutdown cleanly.

@@ -18,10 +18,10 @@
 
 package org.sonews.feed;
 
-import java.sql.SQLException;
 import java.util.List;
-import org.sonews.daemon.storage.Article;
-import org.sonews.daemon.storage.Database;
+import org.sonews.storage.Article;
+import org.sonews.storage.StorageBackendException;
+import org.sonews.storage.StorageManager;
 
 /**
  * Controlls push and pull feeder.
@@ -42,9 +42,9 @@ public final class FeedManager
    * PullFeeder or PushFeeder.
    */
   public static synchronized void startFeeding()
-    throws SQLException
+    throws StorageBackendException
   {
-    List<Subscription> subsPull = Database.getInstance()
+    List<Subscription> subsPull = StorageManager.current()
       .getSubscriptions(TYPE_PULL);
     for(Subscription sub : subsPull)
     {
@@ -52,7 +52,7 @@ public final class FeedManager
     }
     pullFeeder.start();
     
-    List<Subscription> subsPush = Database.getInstance()
+    List<Subscription> subsPush = StorageManager.current()
       .getSubscriptions(TYPE_PUSH);
     for(Subscription sub : subsPush)
     {

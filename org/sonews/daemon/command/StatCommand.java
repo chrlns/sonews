@@ -19,21 +19,22 @@
 package org.sonews.daemon.command;
 
 import java.io.IOException;
-import java.sql.SQLException;
-import org.sonews.daemon.storage.Article;
+import org.sonews.storage.Article;
 import org.sonews.daemon.NNTPConnection;
+import org.sonews.storage.StorageBackendException;
 
 /**
  * Implementation of the STAT command.
  * @author Christian Lins
  * @since sonews/0.5.0
  */
-public class StatCommand extends AbstractCommand
+public class StatCommand implements Command
 {
 
-  public StatCommand(final NNTPConnection conn)
+  @Override
+  public String[] getSupportedCommandStrings()
   {
-    super(conn);
+    return new String[]{"STAT"};
   }
 
   @Override
@@ -42,20 +43,26 @@ public class StatCommand extends AbstractCommand
     return true;
   }
 
+  @Override
+  public boolean isStateful()
+  {
+    return false;
+  }
+
   // TODO: Method has various exit points => Refactor!
   @Override
-  public void processLine(final String line)
-    throws IOException, SQLException
+  public void processLine(NNTPConnection conn, final String line, byte[] raw)
+    throws IOException, StorageBackendException
   {
     final String[] command = line.split(" ");
 
     Article article = null;
     if(command.length == 1)
     {
-      article = getCurrentArticle();
+      article = conn.getCurrentArticle();
       if(article == null)
       {
-        printStatus(420, "no current article has been selected");
+        conn.println("420 no current article has been selected");
         return;
       }
     }
@@ -65,7 +72,7 @@ public class StatCommand extends AbstractCommand
       article = Article.getByMessageID(command[1]);
       if (article == null)
       {
-        printStatus(430, "no such article found");
+        conn.println("430 no such article found");
         return;
       }
     }
@@ -75,26 +82,27 @@ public class StatCommand extends AbstractCommand
       try
       {
         long aid = Long.parseLong(command[1]);
-        article = Article.getByArticleNumber(aid, getCurrentGroup());
+        article = conn.getCurrentChannel().getArticle(aid);
       }
       catch(NumberFormatException ex)
       {
         ex.printStackTrace();
       }
-      catch(SQLException ex)
+      catch(StorageBackendException ex)
       {
         ex.printStackTrace();
       }
       if (article == null)
       {
-        printStatus(423, "no such article number in this group");
+        conn.println("423 no such article number in this group");
         return;
       }
-      setCurrentArticle(article);
+      conn.setCurrentArticle(article);
     }
     
-    printStatus(223, article.getIndexInGroup(getCurrentGroup()) + " " + article.getMessageID()
-          + " article retrieved - request text separately");
+    conn.println("223 " + conn.getCurrentChannel().getIndexOf(article) + " "
+      + article.getMessageID()
+      + " article retrieved - request text separately");
   }
   
 }

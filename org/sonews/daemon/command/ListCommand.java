@@ -19,10 +19,10 @@
 package org.sonews.daemon.command;
 
 import java.io.IOException;
-import java.sql.SQLException;
 import java.util.List;
 import org.sonews.daemon.NNTPConnection;
-import org.sonews.daemon.storage.Group;
+import org.sonews.storage.Channel;
+import org.sonews.storage.StorageBackendException;
 
 /**
  * Class handling the LIST command.
@@ -30,12 +30,13 @@ import org.sonews.daemon.storage.Group;
  * @author Dennis Schwerdel
  * @since n3tpd/0.1
  */
-public class ListCommand extends AbstractCommand
+public class ListCommand implements Command
 {
 
-  public ListCommand(final NNTPConnection conn)
+  @Override
+  public String[] getSupportedCommandStrings()
   {
-    super(conn);
+    return new String[]{"LIST"};
   }
 
   @Override
@@ -43,10 +44,16 @@ public class ListCommand extends AbstractCommand
   {
     return true;
   }
+
+  @Override
+  public boolean isStateful()
+  {
+    return false;
+  }
   
   @Override
-  public void processLine(final String line)
-    throws IOException, SQLException
+  public void processLine(NNTPConnection conn, final String line, byte[] raw)
+    throws IOException, StorageBackendException
   {
     final String[] command = line.split(" ");
     
@@ -54,54 +61,59 @@ public class ListCommand extends AbstractCommand
     {
       if (command[1].equalsIgnoreCase("OVERVIEW.FMT"))
       {
-        printStatus(215, "information follows");
-        println("Subject:\nFrom:\nDate:\nMessage-ID:\nReferences:\nBytes:\nLines:\nXref");
-        println(".");
+        conn.println("215 information follows");
+        conn.println("Subject:\nFrom:\nDate:\nMessage-ID:\nReferences:\nBytes:\nLines:\nXref");
+        conn.println(".");
       }
       else if (command[1].equalsIgnoreCase("NEWSGROUPS"))
       {
-        printStatus(215, "information follows");
-        final List<Group> list = Group.getAll();
-        for (Group g : list)
+        conn.println("215 information follows");
+        final List<Channel> list = Channel.getAll();
+        for (Channel g : list)
         {
-          println(g.getName() + "\t" + "-");
+          conn.println(g.getName() + "\t" + "-");
         }
-        println(".");
+        conn.println(".");
       }
       else if (command[1].equalsIgnoreCase("SUBSCRIPTIONS"))
       {
-        printStatus(215, "information follows");
-        println(".");
+        conn.println("215 information follows");
+        conn.println(".");
       }
       else if (command[1].equalsIgnoreCase("EXTENSIONS"))
       {
-        printStatus(202, "Supported NNTP extensions.");
-        println("LISTGROUP");
-        println(".");
- 
+        conn.println("202 Supported NNTP extensions.");
+        conn.println("LISTGROUP");
+        conn.println("XDAEMON");
+        conn.println("XPAT");
+        conn.println(".");
       }
       else
       {
-        printStatus(500, "unknown argument to LIST command");
+        conn.println("500 unknown argument to LIST command");
       }
     }
     else
     {
-      final List<Group> groups = Group.getAll();
+      final List<Channel> groups = Channel.getAll();
       if(groups != null)
       {
-        printStatus(215, "list of newsgroups follows");
-        for (Group g : groups)
+        conn.println("215 list of newsgroups follows");
+        for (Channel g : groups)
         {
-          // Indeed first the higher article number then the lower
-          println(g.getName() + " " + g.getLastArticleNumber() + " "
-              + g.getFirstArticleNumber() + " y");
+          if(!g.isDeleted())
+          {
+            String writeable = g.isWriteable() ? " y" : " n";
+            // Indeed first the higher article number then the lower
+            conn.println(g.getName() + " " + g.getLastArticleNumber() + " "
+                + g.getFirstArticleNumber() + writeable);
+          }
         }
-        println(".");
+        conn.println(".");
       }
       else
       {
-        printStatus(500, "server database malfunction");
+        conn.println("500 server database malfunction");
       }
     }
   }

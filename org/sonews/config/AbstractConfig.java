@@ -16,46 +16,42 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.sonews.daemon.command;
-
-import java.io.IOException;
-import org.sonews.daemon.NNTPConnection;
+package org.sonews.config;
 
 /**
- * A default "Unsupported Command". Simply returns error code 500 and a
- * "command not supported" message.
+ * Base class for Config and BootstrapConfig.
  * @author Christian Lins
  * @since sonews/0.5.0
  */
-public class UnsupportedCommand implements Command
+public abstract class AbstractConfig 
 {
   
+  public abstract String get(String key, String defVal);
+  
+  public int get(final String key, final int defVal)
+  {
+    return Integer.parseInt(
+      get(key, Integer.toString(defVal)));
+  }
+  
+  public boolean get(String key, boolean defVal)
+  {
+    String val = get(key, Boolean.toString(defVal));
+    return Boolean.parseBoolean(val);
+  }
+
   /**
-   * @return Always returns null.
+   * Returns a long config value specified via the given key.
+   * @param key
+   * @param defVal
+   * @return
    */
-  @Override
-  public String[] getSupportedCommandStrings()
+  public long get(String key, long defVal)
   {
-    return null;
+    String val = get(key, Long.toString(defVal));
+    return Long.parseLong(val);
   }
 
-  @Override
-  public boolean hasFinished()
-  {
-    return true;
-  }
-
-  @Override
-  public boolean isStateful()
-  {
-    return false;
-  }
-
-  @Override
-  public void processLine(NNTPConnection conn, final String line, byte[] raw)
-    throws IOException
-  {
-    conn.println("500 command not supported");
-  }
+  protected abstract void set(String key, String val);
   
 }

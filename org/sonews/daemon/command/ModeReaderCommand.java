@@ -19,8 +19,8 @@
 package org.sonews.daemon.command;
 
 import java.io.IOException;
-import java.sql.SQLException;
 import org.sonews.daemon.NNTPConnection;
+import org.sonews.storage.StorageBackendException;
 
 /**
  * Class handling the MODE READER command. This command actually does nothing
@@ -28,14 +28,15 @@ import org.sonews.daemon.NNTPConnection;
  * @author Christian Lins
  * @since sonews/0.5.0
  */
-public class ModeReaderCommand extends AbstractCommand
+public class ModeReaderCommand implements Command
 {
-
-  public ModeReaderCommand(final NNTPConnection conn)
-  {
-    super(conn);
-  }
   
+  @Override
+  public String[] getSupportedCommandStrings()
+  {
+    return new String[]{"MODE"};
+  }
+
   @Override
   public boolean hasFinished()
   {
@@ -43,15 +44,22 @@ public class ModeReaderCommand extends AbstractCommand
   }
 
   @Override
-  public void processLine(final String line) throws IOException, SQLException
+  public boolean isStateful()
+  {
+    return false;
+  }
+
+  @Override
+  public void processLine(NNTPConnection conn, final String line, byte[] raw)
+    throws IOException, StorageBackendException
   {
     if(line.equalsIgnoreCase("MODE READER"))
     {
-      printStatus(200, "hello you can post");
+      conn.println("200 hello you can post");
     }
     else
     {
-      printStatus(500, "I do not know this mode command");
+      conn.println("500 I do not know this mode command");
     }
   }
 

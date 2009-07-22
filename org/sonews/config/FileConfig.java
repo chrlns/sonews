@@ -16,14 +16,13 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.sonews.daemon;
+package org.sonews.config;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Properties;
-import org.sonews.util.AbstractConfig;
 
 /**
  * Manages the bootstrap configuration. It MUST contain all config values
@@ -33,59 +32,32 @@ import org.sonews.util.AbstractConfig;
  * @author Christian Lins
  * @since sonews/0.5.0
  */
-public final class BootstrapConfig extends AbstractConfig
+class FileConfig extends AbstractConfig
 {
-  
-  /** Key constant. If value is "true" every I/O is written to logfile 
-   * (which is a lot!) 
-   */
-  public static final String DEBUG              = "sonews.debug";
-  
-  /** Key constant. Value is classname of the JDBC driver */
-  public static final String STORAGE_DBMSDRIVER = "sonews.storage.dbmsdriver";
-  
-  /** Key constant. Value is JDBC connect String to the database. */
-  public static final String STORAGE_DATABASE   = "sonews.storage.database";
-  
-  /** Key constant. Value is the username for the DBMS. */
-  public static final String STORAGE_USER       = "sonews.storage.user";
-  
-  /** Key constant. Value is the password for the DBMS. */
-  public static final String STORAGE_PASSWORD   = "sonews.storage.password";
-  
-  /** Key constant. Value is the name of the host which is allowed to use the
-   *  XDAEMON command; default: "localhost" */
-  public static final String XDAEMON_HOST       = "sonews.xdaemon.host";
-
-  /** The config key for the filename of the logfile */
-  public static final String LOGFILE = "sonews.log";
-  
-  /** The filename of the config file that is loaded on startup */
-  public static volatile String FILE               = "sonews.conf";
 
   private static final Properties defaultConfig = new Properties();
   
-  private static BootstrapConfig instance = null;
+  private static FileConfig instance = null;
   
   static
   {
     // Set some default values
-    defaultConfig.setProperty(STORAGE_DATABASE, "jdbc:mysql://localhost/sonews");
-    defaultConfig.setProperty(STORAGE_DBMSDRIVER, "com.mysql.jdbc.Driver");
-    defaultConfig.setProperty(STORAGE_USER, "sonews_user");
-    defaultConfig.setProperty(STORAGE_PASSWORD, "mysecret");
-    defaultConfig.setProperty(DEBUG, "false");
+    defaultConfig.setProperty(Config.STORAGE_DATABASE, "jdbc:mysql://localhost/sonews");
+    defaultConfig.setProperty(Config.STORAGE_DBMSDRIVER, "com.mysql.jdbc.Driver");
+    defaultConfig.setProperty(Config.STORAGE_USER, "sonews_user");
+    defaultConfig.setProperty(Config.STORAGE_PASSWORD, "mysecret");
+    defaultConfig.setProperty(Config.DEBUG, "false");
   }
   
   /**
    * Note: this method is not thread-safe
    * @return A Config instance
    */
-  public static synchronized BootstrapConfig getInstance()
+  public static synchronized FileConfig getInstance()
   {
     if(instance == null)
     {
-      instance = new BootstrapConfig();
+      instance = new FileConfig();
     }
     return instance;
   }
@@ -99,7 +71,7 @@ public final class BootstrapConfig extends AbstractConfig
    * then one Config instance.
    * @see Config.getInstance() to retrieve an instance of Config
    */
-  private BootstrapConfig()
+  private FileConfig()
   {
     try
     {
@@ -125,7 +97,8 @@ public final class BootstrapConfig extends AbstractConfig
     
     try
     {
-      in = new FileInputStream(FILE);
+      in = new FileInputStream(
+        Config.inst().get(Config.LEVEL_CLI, Config.CONFIGFILE, "sonews.conf"));
       settings.load(in);
     }
     catch (FileNotFoundException e)
@@ -152,7 +125,8 @@ public final class BootstrapConfig extends AbstractConfig
     FileOutputStream out = null;
     try
     {
-      out = new FileOutputStream(FILE);
+      out = new FileOutputStream(
+        Config.inst().get(Config.LEVEL_CLI, Config.CONFIGFILE, "sonews.conf"));
       settings.store(out, "SONEWS Config File");
       out.flush();
     }
@@ -176,6 +150,7 @@ public final class BootstrapConfig extends AbstractConfig
    * is not found in this Config.
    * @return
    */
+  @Override
   public String get(String key, String def)
   {
     return settings.getProperty(key, def);

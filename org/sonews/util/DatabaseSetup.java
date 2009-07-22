@@ -25,7 +25,7 @@ import java.sql.DriverManager;
 import java.sql.Statement;
 import java.util.HashMap;
 import java.util.Map;
-import org.sonews.daemon.BootstrapConfig;
+import org.sonews.config.Config;
 import org.sonews.util.io.Resource;
 
 /**
@@ -108,7 +108,9 @@ public final class DatabaseSetup
     for(String chunk : tmplChunks)
     {
       if(chunk.trim().equals(""))
+      {
         continue;
+      }
       
       Statement stmt = conn.createStatement();
       stmt.execute(chunk);
@@ -117,12 +119,7 @@ public final class DatabaseSetup
     conn.commit();
     conn.setAutoCommit(true);
     
-    BootstrapConfig config = BootstrapConfig.getInstance();
-    config.set(BootstrapConfig.STORAGE_DATABASE, url);
-    config.set(BootstrapConfig.STORAGE_DBMSDRIVER, driverMap.get(dbmsType));
-    config.set(BootstrapConfig.STORAGE_PASSWORD, dbPassword);
-    config.set(BootstrapConfig.STORAGE_USER, dbUser);
-    config.save();
+    // Create config file
     
     System.out.println("Ok");
   }

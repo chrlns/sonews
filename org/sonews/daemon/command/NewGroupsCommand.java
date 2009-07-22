@@ -19,8 +19,8 @@
 package org.sonews.daemon.command;
 
 import java.io.IOException;
-import java.sql.SQLException;
 import org.sonews.daemon.NNTPConnection;
+import org.sonews.storage.StorageBackendException;
 
 /**
  * Class handling the NEWGROUPS command.
@@ -28,12 +28,13 @@ import org.sonews.daemon.NNTPConnection;
  * @author Dennis Schwerdel
  * @since n3tpd/0.1
  */
-public class NewGroupsCommand extends AbstractCommand
+public class NewGroupsCommand implements Command
 {
 
-  public NewGroupsCommand(final NNTPConnection conn)
+  @Override
+  public String[] getSupportedCommandStrings()
   {
-    super(conn);
+    return new String[]{"NEWGROUPS"};
   }
 
   @Override
@@ -43,22 +44,28 @@ public class NewGroupsCommand extends AbstractCommand
   }
 
   @Override
-  public void processLine(final String line)
-    throws IOException, SQLException
+  public boolean isStateful()
+  {
+    return false;
+  }
+
+  @Override
+  public void processLine(NNTPConnection conn, final String line, byte[] raw)
+    throws IOException, StorageBackendException
   {
     final String[] command = line.split(" ");
 
     if(command.length == 3)
     {
-      printStatus(231, "list of new newsgroups follows");
+      conn.println("231 list of new newsgroups follows");
 
       // Currently we do not store a group's creation date;
       // so we return an empty list which is a valid response
-      println(".");
+      conn.println(".");
     }
     else
     {
-      printStatus(500, "invalid command usage");
+      conn.println("500 invalid command usage");
     }
   }
 

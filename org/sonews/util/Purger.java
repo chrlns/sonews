@@ -18,70 +18,131 @@
 
 package org.sonews.util;
 
-import org.sonews.daemon.Config;
-import org.sonews.daemon.storage.Database;
-import org.sonews.daemon.storage.Article;
+import org.sonews.daemon.AbstractDaemon;
+import org.sonews.config.Config;
+import org.sonews.storage.Article;
+import org.sonews.storage.Headers;
 import java.util.Date;
+import java.util.List;
+import org.sonews.storage.Channel;
+import org.sonews.storage.Group;
+import org.sonews.storage.StorageBackendException;
+import org.sonews.storage.StorageManager;
 
 /**
  * The purger is started in configurable intervals to search
- * for old messages that can be purged.
+ * for messages that can be purged. A message must be deleted if its lifetime
+ * has exceeded, if it was marked as deleted or if the maximum number of
+ * articles in the database is reached.
  * @author Christian Lins
  * @since sonews/0.5.0
  */
-public class Purger
+public class Purger extends AbstractDaemon
 {
-
-  private long lifetime;
-  
-  public Purger()
-  {
-    this.lifetime = Config.getInstance().get("sonews.article.lifetime", 30) 
-      * 24L * 60L * 60L * 1000L; // in Milliseconds
-  }
 
   /**
    * Loops through all messages and deletes them if their time
    * has come.
    */
-  void purge()
-    throws Exception
-  {
-    System.out.println("Purging old messages...");
-
-    for (;;)
-    {
-      // TODO: Delete articles directly in database
-      Article art = null; //Database.getInstance().getOldestArticle();
-      if (art == null) // No articles in the database
-      {
-        break;
-      }
-
-/*      if (art.getDate().getTime() < (new Date().getTime() + this.lifetime))
-      {
- //       Database.getInstance().delete(art);
-        System.out.println("Deleted: " + art);
-      }
-      else
-      {
-        break;
-      }*/
-    }
-  }
-  
-  public static void main(String[] args)
+  @Override
+  public void run()
   {
     try
     {
-      Purger purger = new Purger();
-      purger.purge();
-      System.exit(0);
+      while(isRunning())
+      {
+        purgeDeleted();
+        purgeOutdated();
+
+        Thread.sleep(120000); // Sleep for two minutes
+      }
     }
-    catch(Exception ex)
+    catch(StorageBackendException ex)
     {
       ex.printStackTrace();
-      System.exit(1);
+    }
+    catch(InterruptedException ex)
+    {
+      Log.msg("Purger interrupted: " + ex, true);
+    }
+  }
+
+  private void purgeDeleted()
+    throws StorageBackendException
+  {
+    List<Channel> groups = StorageManager.current().getGroups();
+    for(Channel channel : groups)
+    {
+      if(!(channel instanceof Group))
+        continue;
+      
+      Group group = (Group)channel;
+      // Look for groups that are marked as deleted
+      if(group.isDeleted())
+      {
+        List<Long> ids = StorageManager.current().getArticleNumbers(group.getInternalID());
+        if(ids.size() == 0)
+        {
+          StorageManager.current().purgeGroup(group);
+          Log.msg("Group " + group.getName() + " purged.", true);
+        }
+
+        for(int n = 0; n < ids.size() && n < 10; n++)
+        {
+          Article art = StorageManager.current().getArticle(ids.get(n), group.getInternalID());
+          StorageManager.current().delete(art.getMessageID());
+          Log.msg("Article " + art.getMessageID() + " purged.", true);
+        }
+      }
+    }
+  }
+
+  private void purgeOutdated()
+    throws InterruptedException, StorageBackendException
+  {
+    long articleMaximum =
+      Config.inst().get("sonews.article.maxnum", Long.MAX_VALUE);
+    long lifetime =
+      Config.inst().get("sonews.article.lifetime", -1);
+
+    if(lifetime > 0 || articleMaximum < Stats.getInstance().getNumberOfNews())
+    {
+      Log.msg("Purging old messages...", true);
+      String mid = StorageManager.current().getOldestArticle();
+      if (mid == null) // No articles in the database
+      {
+        return;
+      }
+
+      Article art = StorageManager.current().getArticle(mid);
+      long artDate = 0;
+      String dateStr = art.getHeader(Headers.DATE)[0];
+      try
+      {
+        artDate = Date.parse(dateStr) / 1000 / 60 / 60 / 24;
+      }
+      catch (IllegalArgumentException ex)
+      {
+        Log.msg("Could not parse date string: " + dateStr + " " + ex, true);
+      }
+
+      // Should we delete the message because of its age or because the
+      // article maximum was reached?
+      if (lifetime < 0 || artDate < (new Date().getTime() + lifetime))
+      {
+        StorageManager.current().delete(mid);
+        System.out.println("Deleted: " + mid);
+      }
+      else
+      {
+        Thread.sleep(1000 * 60); // Wait 60 seconds
+        return;
+      }
+    }
+    else
+    {
+      Log.msg("Lifetime purger is disabled", true);
+      Thread.sleep(1000 * 60 * 30); // Wait 30 minutes
     }
   }
 

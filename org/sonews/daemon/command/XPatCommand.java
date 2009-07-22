@@ -19,8 +19,13 @@
 package org.sonews.daemon.command;
 
 import java.io.IOException;
-import java.sql.SQLException;
+import java.util.List;
+import java.util.Locale;
+import java.util.regex.PatternSyntaxException;
 import org.sonews.daemon.NNTPConnection;
+import org.sonews.storage.StorageBackendException;
+import org.sonews.storage.StorageManager;
+import org.sonews.util.Pair;
 
 /**
  * <pre>
@@ -59,18 +64,24 @@ import org.sonews.daemon.NNTPConnection;
  *       221 Header follows
  *       430 no such article
  *       502 no permission
+ *
+ *   Response Data:
+ *
+ *       art_nr fitting_header_value
+ * 
  * </pre>
  * [Source:"draft-ietf-nntp-imp-02.txt"] [Copyright: 1998 S. Barber]
  * 
  * @author Christian Lins
  * @since sonews/0.5.0
  */
-public class XPatCommand extends AbstractCommand
+public class XPatCommand implements Command
 {
 
-  public XPatCommand(final NNTPConnection conn)
+  @Override
+  public String[] getSupportedCommandStrings()
   {
-    super(conn);
+    return new String[]{"XPAT"};
   }
   
   @Override
@@ -80,10 +91,74 @@ public class XPatCommand extends AbstractCommand
   }
 
   @Override
-  public void processLine(final String line) 
-    throws IOException, SQLException
+  public boolean isStateful()
   {
-    printStatus(500, "not (yet) supported");
+    return false;
+  }
+
+  @Override
+  public void processLine(NNTPConnection conn, final String line, byte[] raw)
+    throws IOException, StorageBackendException
+  {
+    if(conn.getCurrentChannel() == null)
+    {
+      conn.println("430 no group selected");
+      return;
+    }
+
+    String[] command = line.split("\\p{Space}+");
+
+    // There may be multiple patterns and Thunderbird produces
+    // additional spaces between range and pattern
+    if(command.length >= 4)
+    {
+      String header  = command[1].toLowerCase(Locale.US);
+      String range   = command[2];
+      String pattern = command[3];
+
+      long start = -1;
+      long end   = -1;
+      if(range.contains("-"))
+      {
+        String[] rsplit = range.split("-", 2);
+        start = Long.parseLong(rsplit[0]);
+        if(rsplit[1].length() > 0)
+        {
+          end = Long.parseLong(rsplit[1]);
+        }
+      }
+      else // TODO: Handle Message-IDs
+      {
+        start = Long.parseLong(range);
+      }
+
+      try
+      {
+        List<Pair<Long, String>> heads = StorageManager.current().
+          getArticleHeaders(conn.getCurrentChannel(), start, end, header, pattern);
+        
+        conn.println("221 header follows");
+        for(Pair<Long, String> head : heads)
+        {
+          conn.println(head.getA() + " " + head.getB());
+        }
+        conn.println(".");
+      }
+      catch(PatternSyntaxException ex)
+      {
+        ex.printStackTrace();
+        conn.println("500 invalid pattern syntax");
+      }
+      catch(StorageBackendException ex)
+      {
+        ex.printStackTrace();
+        conn.println("500 internal server error");
+      }
+    }
+    else
+    {
+      conn.println("430 invalid command usage");
+    }
   }
 
 }

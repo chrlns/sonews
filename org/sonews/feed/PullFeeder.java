@@ -25,14 +25,14 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.net.SocketException;
 import java.net.UnknownHostException;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.sonews.daemon.Config;
+import org.sonews.config.Config;
 import org.sonews.util.Log;
-import org.sonews.daemon.storage.Database;
+import org.sonews.storage.StorageBackendException;
+import org.sonews.storage.StorageManager;
 import org.sonews.util.Stats;
 import org.sonews.util.io.ArticleReader;
 import org.sonews.util.io.ArticleWriter;
@@ -154,7 +154,7 @@ class PullFeeder extends AbstractFeeder
     while(isRunning())
     {
       int pullInterval = 1000 * 
-        Config.getInstance().get(Config.FEED_PULLINTERVAL, 3600);
+        Config.inst().get(Config.FEED_PULLINTERVAL, 3600);
       String host = "localhost";
       int    port = 119;
       
@@ -189,36 +189,34 @@ class PullFeeder extends AbstractFeeder
 
               for(String messageID : messageIDs)
               {
-                if(Database.getInstance().isArticleExisting(messageID))
+                if(!StorageManager.current().isArticleExisting(messageID))
                 {
-                  continue;
-                }
-
-                try
-                {
-                  // Post the message via common socket connection
-                  ArticleReader aread =
-                    new ArticleReader(sub.getHost(), sub.getPort(), messageID);
-                  byte[] abuf = aread.getArticleData();
-                  if (abuf == null)
+                  try
                   {
-                    Log.msg("Could not feed " + messageID + " from " + sub.getHost(), true);
+                    // Post the message via common socket connection
+                    ArticleReader aread =
+                      new ArticleReader(sub.getHost(), sub.getPort(), messageID);
+                    byte[] abuf = aread.getArticleData();
+                    if (abuf == null)
+                    {
+                      Log.msg("Could not feed " + messageID + " from " + sub.getHost(), true);
+                    }
+                    else
+                    {
+                      Log.msg("Feeding " + messageID, true);
+                      ArticleWriter awrite = new ArticleWriter(
+                        "localhost", Config.inst().get(Config.PORT, 119));
+                      awrite.writeArticle(abuf);
+                      awrite.close();
+                    }
+                    Stats.getInstance().mailFeeded(sub.getGroup());
                   }
-                  else
+                  catch(IOException ex)
                   {
-                    Log.msg("Feeding " + messageID, true);
-                    ArticleWriter awrite = new ArticleWriter(
-                      "localhost", Config.getInstance().get(Config.PORT, 119));
-                    awrite.writeArticle(abuf);
-                    awrite.close();
+                    // There may be a temporary network failure
+                    ex.printStackTrace();
+                    Log.msg("Skipping mail " + messageID + " due to exception.", false);
                   }
-                  Stats.getInstance().mailFeeded(sub.getGroup());
-                }
-                catch(IOException ex)
-                {
-                  // There may be a temporary network failure
-                  ex.printStackTrace();
-                  Log.msg("Skipping mail " + messageID + " due to exception.", false);
                 }
               } // for(;;)
               this.highMarks.put(sub, newMark);
@@ -226,7 +224,7 @@ class PullFeeder extends AbstractFeeder
             
             disconnect();
           }
-          catch(SQLException ex)
+          catch(StorageBackendException ex)
           {
             ex.printStackTrace();
           }

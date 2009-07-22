@@ -26,6 +26,7 @@ import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import org.sonews.config.Config;
 import org.sonews.util.Log;
 
 /**
@@ -72,6 +73,8 @@ public class ArticleReader
   public byte[] getArticleData()
     throws IOException, UnsupportedEncodingException
   {
+    long maxSize = Config.inst().get(Config.ARTICLE_MAXSIZE, 1024) * 1024L;
+
     try
     {
       this.out.write(("ARTICLE " + this.messageID + "\r\n").getBytes("UTF-8"));
@@ -90,6 +93,11 @@ public class ArticleReader
           }
 
           buf.write(10);
+          if(buf.size() > maxSize)
+          {
+            Log.msg("Skipping message that is too large: " + buf.size(), false);
+            return null;
+          }
         }
         
         return buf.toByteArray();

@@ -19,10 +19,10 @@
 package org.sonews.daemon.command;
 
 import java.io.IOException;
-import java.sql.SQLException;
 import org.sonews.daemon.NNTPConnection;
-import org.sonews.daemon.storage.Article;
-import org.sonews.daemon.storage.Group;
+import org.sonews.storage.Article;
+import org.sonews.storage.Channel;
+import org.sonews.storage.StorageBackendException;
 
 /**
  * Class handling the NEXT and LAST command.
@@ -30,12 +30,13 @@ import org.sonews.daemon.storage.Group;
  * @author Dennis Schwerdel
  * @since n3tpd/0.1
  */
-public class NextPrevCommand extends AbstractCommand
+public class NextPrevCommand implements Command
 {
 
-  public NextPrevCommand(final NNTPConnection conn)
+  @Override
+  public String[] getSupportedCommandStrings()
   {
-    super(conn);
+    return new String[]{"NEXT", "PREV"};
   }
 
   @Override
@@ -45,21 +46,27 @@ public class NextPrevCommand extends AbstractCommand
   }
 
   @Override
-  public void processLine(final String line)
-    throws IOException, SQLException
+  public boolean isStateful()
   {
-    final Article currA = getCurrentArticle();
-    final Group   currG = getCurrentGroup();
+    return false;
+  }
+
+  @Override
+  public void processLine(NNTPConnection conn, final String line, byte[] raw)
+    throws IOException, StorageBackendException
+  {
+    final Article currA = conn.getCurrentArticle();
+    final Channel currG = conn.getCurrentChannel();
     
     if (currA == null)
     {
-      printStatus(420, "no current article has been selected");
+      conn.println("420 no current article has been selected");
       return;
     }
     
     if (currG == null)
     {
-      printStatus(412, "no newsgroup selected");
+      conn.println("412 no newsgroup selected");
       return;
     }
     
@@ -67,33 +74,36 @@ public class NextPrevCommand extends AbstractCommand
 
     if(command[0].equalsIgnoreCase("NEXT"))
     {
-      selectNewArticle(currA, currG, 1);
+      selectNewArticle(conn, currA, currG, 1);
     }
     else if(command[0].equalsIgnoreCase("PREV"))
     {
-      selectNewArticle(currA, currG, -1);
+      selectNewArticle(conn, currA, currG, -1);
     }
     else
     {
-      printStatus(500, "internal server error");
+      conn.println("500 internal server error");
     }
   }
   
-  private void selectNewArticle(Article article, Group grp, final int delta)
-    throws IOException, SQLException
+  private void selectNewArticle(NNTPConnection conn, Article article, Channel grp,
+    final int delta)
+    throws IOException, StorageBackendException
   {
     assert article != null;
 
-    article = Article.getByArticleNumber(article.getIndexInGroup(grp) + delta, grp);
+    article = grp.getArticle(grp.getIndexOf(article) + delta);
 
     if(article == null)
     {
-      printStatus(421, "no next article in this group");
+      conn.println("421 no next article in this group");
     }
     else
     {
-      setCurrentArticle(article);
-      printStatus(223, article.getIndexInGroup(getCurrentGroup()) + " " + article.getMessageID() + " article retrieved - request text separately");
+      conn.setCurrentArticle(article);
+      conn.println("223 " + conn.getCurrentChannel().getIndexOf(article)
+                    + " " + article.getMessageID()
+                    + " article retrieved - request text separately");
     }
   }
 

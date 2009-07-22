@@ -30,34 +30,41 @@ import org.sonews.util.io.Resource;
  * @author Christian Lins
  * @since sonews/0.5.0
  */
-public class HelpCommand extends AbstractCommand
+public class HelpCommand implements Command
 {
-  
-  public HelpCommand(final NNTPConnection conn)
-  {
-    super(conn);
-  }
 
   @Override
   public boolean hasFinished()
   {
     return true;
   }
+
+  @Override
+  public boolean isStateful()
+  {
+    return true;
+  }
+
+  @Override
+  public String[] getSupportedCommandStrings()
+  {
+    return new String[]{"HELP"};
+  }
   
   @Override
-  public void processLine(final String line)
+  public void processLine(NNTPConnection conn, final String line, byte[] raw)
     throws IOException
   {
-    printStatus(100, "help text follows");
+    conn.println("100 help text follows");
     
     final String[] help = Resource
       .getAsString("helpers/helptext", true).split("\n");
     for(String hstr : help)
     {
-      println(hstr);
+      conn.println(hstr);
     }
     
-    println(".");
+    conn.println(".");
   }
   
 }

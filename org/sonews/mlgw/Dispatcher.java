@@ -19,24 +19,19 @@
 package org.sonews.mlgw;
 
 import java.io.IOException;
-import org.sonews.daemon.Config;
-import org.sonews.daemon.storage.Article;
-import org.sonews.util.io.ArticleInputStream;
-import org.sonews.daemon.storage.Database;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Properties;
 import javax.mail.Address;
 import javax.mail.Authenticator;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.PasswordAuthentication;
-import javax.mail.Session;
-import javax.mail.Transport;
 import javax.mail.internet.InternetAddress;
-import javax.mail.internet.MimeMessage;
-import org.sonews.daemon.storage.Headers;
+import org.sonews.config.Config;
+import org.sonews.storage.Article;
+import org.sonews.storage.Headers;
+import org.sonews.storage.StorageBackendException;
+import org.sonews.storage.StorageManager;
 import org.sonews.util.Log;
 import org.sonews.util.Stats;
 
@@ -55,9 +50,9 @@ public class Dispatcher
     public PasswordAuthentication getPasswordAuthentication()
     {
       final String username = 
-        Config.getInstance().get(Config.MLSEND_USER, "user");
+        Config.inst().get(Config.MLSEND_USER, "user");
       final String password = 
-        Config.getInstance().get(Config.MLSEND_PASSWORD, "mysecret");
+        Config.inst().get(Config.MLSEND_PASSWORD, "mysecret");
 
       return new PasswordAuthentication(username, password);
     }
@@ -76,48 +71,71 @@ public class Dispatcher
       Address[] to = msg.getAllRecipients(); // includes TO/CC/BCC
       if(to == null || to.length <= 0)
       {
-        Log.msg("Skipping message because no receipient!", true);
+        to = msg.getReplyTo();
+      }
+
+      if(to == null || to.length <= 0)
+      {
+        Log.msg("Skipping message because no recipient!", false);
         return false;
       }
       else
       {
-        boolean posted = false;
-        for(Address toa : to) // Address can have '<' '>' around
-        {
-          if(!(toa instanceof InternetAddress))
-          {
-            continue;
-          }
-          String group = Database.getInstance()
-            .getGroupForList((InternetAddress)toa);
-          if(group != null)
-          {
-            Log.msg("Posting to group " + group, true);
+        boolean      posted     = false;
+        List<String> newsgroups = new ArrayList<String>();
 
-            // Create new Article object
-            Article article = new Article(msg);
-            article.setGroup(group);
-            
-            // Write article to database
-            if(!Database.getInstance().isArticleExisting(article.getMessageID()))
+        for (Address toa : to) // Address can have '<' '>' around
+        {
+          if (toa instanceof InternetAddress)
+          {
+            List<String> groups = StorageManager.current()
+              .getGroupsForList((InternetAddress)toa);
+            newsgroups.addAll(groups);
+          }
+        }
+
+        if (newsgroups.size() > 0)
+        {
+          StringBuilder groups = new StringBuilder();
+          for(int n = 0; n < newsgroups.size(); n++)
+          {
+            groups.append(newsgroups.get(n));
+            if(n + 1 != newsgroups.size())
             {
-              Database.getInstance().addArticle(article);
-              Stats.getInstance().mailGatewayed(
-                article.getHeader(Headers.NEWSGROUPS)[0]);
+              groups.append(',');
             }
-            else
-            {
-              Log.msg("Article " + article.getMessageID() + " already existing.", true);
-              // TODO: It may be possible that a ML mail is posted to several
-              // ML addresses...
-            }
-            posted = true;
+          }
+          Log.msg("Posting to group " + groups.toString(), true);
+
+          // Create new Article object
+          Article article = new Article(msg);
+          article.setGroup(groups.toString());
+          article.removeHeader(Headers.REPLY_TO);
+          article.removeHeader(Headers.TO);
+
+          // Write article to database
+          if(!StorageManager.current().isArticleExisting(article.getMessageID()))
+          {
+            StorageManager.current().addArticle(article);
+            Stats.getInstance().mailGatewayed(
+              article.getHeader(Headers.NEWSGROUPS)[0]);
           }
           else
           {
-            Log.msg("No group for " + toa, true);
+            Log.msg("Article " + article.getMessageID() + " already existing.", true);
           }
-        } // end for
+          posted = true;
+        }
+        else
+        {
+          StringBuilder buf = new StringBuilder();
+          for(Address toa : to)
+          {
+            buf.append(' ');
+            buf.append(toa.toString());
+          }
+          Log.msg("No group for" + buf.toString(), false);
+        }
         return posted;
       }
     }
@@ -132,7 +150,7 @@ public class Dispatcher
    * Mails a message received through NNTP to the appropriate mailing list.
    */
   public static void toList(Article article)
-    throws IOException, MessagingException, SQLException
+    throws IOException, MessagingException, StorageBackendException
   {
     // Get mailing lists for the group of this article
     List<String> listAddresses = new ArrayList<String>();
@@ -140,7 +158,7 @@ public class Dispatcher
     
     for(String groupname : groupnames)
     {
-      String listAddress = Database.getInstance().getListForGroup(groupname);
+      String listAddress = StorageManager.current().getListForGroup(groupname);
       if(listAddress != null)
       {
         listAddresses.add(listAddress);
@@ -150,53 +168,34 @@ public class Dispatcher
     for(String listAddress : listAddresses)
     {
       // Compose message and send it via given SMTP-Host
-      String smtpHost = Config.getInstance().get(Config.MLSEND_HOST, "localhost");
-      int    smtpPort = Config.getInstance().get(Config.MLSEND_PORT, 25);
-      String smtpUser = Config.getInstance().get(Config.MLSEND_USER, "user");
-      String smtpPw   = Config.getInstance().get(Config.MLSEND_PASSWORD, "mysecret");
+      String smtpHost = Config.inst().get(Config.MLSEND_HOST, "localhost");
+      int    smtpPort = Config.inst().get(Config.MLSEND_PORT, 25);
+      String smtpUser = Config.inst().get(Config.MLSEND_USER, "user");
+      String smtpPw   = Config.inst().get(Config.MLSEND_PASSWORD, "mysecret");
+      String smtpFrom = Config.inst().get(
+          Config.MLSEND_ADDRESS, article.getHeader(Headers.FROM)[0]);
 
-      Properties props    = System.getProperties();
-      props.put("mail.smtp.localhost", 
-        Config.getInstance().get(Config.HOSTNAME, "localhost"));
-      props.put("mail.smtp.from",  // Used for MAIL FROM command
-        Config.getInstance().get(
-          Config.MLSEND_ADDRESS, article.getHeader(Headers.FROM)[0]));
-      props.put("mail.smtp.host", smtpHost);
-      props.put("mail.smtp.port", smtpPort);
-      props.put("mail.smtp.auth", "true");
+      // TODO: Make Article cloneable()
+      String group = article.getHeader(Headers.NEWSGROUPS)[0];
+      article.getMessageID(); // Make sure an ID is existing
+      article.removeHeader(Headers.NEWSGROUPS);
+      article.removeHeader(Headers.PATH);
+      article.removeHeader(Headers.LINES);
+      article.removeHeader(Headers.BYTES);
 
-      Address[] address = new Address[1];
-      address[0] = new InternetAddress(listAddress);
+      article.setHeader("To", listAddress);
+      article.setHeader("Reply-To", listAddress);
 
-      ArticleInputStream in = new ArticleInputStream(article);
-      Session session = Session.getDefaultInstance(props, new PasswordAuthenticator());
-      MimeMessage msg = new MimeMessage(session, in);
-      msg.setRecipient(Message.RecipientType.TO, address[0]);
-      msg.setReplyTo(address);
-      msg.removeHeader(Headers.NEWSGROUPS);
-      msg.removeHeader(Headers.PATH);
-      msg.removeHeader(Headers.LINES);
-      msg.removeHeader(Headers.BYTES);
-      
-      if(Config.getInstance().get(Config.MLSEND_RW_SENDER, false))
+      if(Config.inst().get(Config.MLSEND_RW_SENDER, false))
       {
-        rewriteSenderAddress(msg); // Set the SENDER address
+        rewriteSenderAddress(article); // Set the SENDER address
       }
-      
-      if(Config.getInstance().get(Config.MLSEND_RW_FROM, false))
-      {
-        rewriteFromAddress(msg);   // Set the FROM address
-      }
-      
-      msg.saveChanges();
 
-      // Send the mail
-      Transport transport = session.getTransport("smtp");
-      transport.connect(smtpHost, smtpPort, smtpUser, smtpPw);
-      transport.sendMessage(msg, msg.getAllRecipients());
-      transport.close();
+      SMTPTransport smtpTransport = new SMTPTransport(smtpHost, smtpPort);
+      smtpTransport.send(article, smtpFrom, listAddress);
+      smtpTransport.close();
 
-      Stats.getInstance().mailGatewayed(article.getHeader(Headers.NEWSGROUPS)[0]);
+      Stats.getInstance().mailGatewayed(group);
       Log.msg("MLGateway: Mail " + article.getHeader("Subject")[0] 
         + " was delivered to " + listAddress + ".", true);
     }
@@ -208,44 +207,19 @@ public class Dispatcher
    * @param msg
    * @throws javax.mail.MessagingException
    */
-  private static void rewriteSenderAddress(MimeMessage msg)
+  private static void rewriteSenderAddress(Article msg)
     throws MessagingException
   {
-    String mlAddress = Config.getInstance().get(Config.MLSEND_ADDRESS, null);
+    String mlAddress = Config.inst().get(Config.MLSEND_ADDRESS, null);
 
     if(mlAddress != null)
     {
-      msg.setSender(new InternetAddress(mlAddress));
+      msg.setHeader(Headers.SENDER, mlAddress);
     }
     else
     {
       throw new MessagingException("Cannot rewrite SENDER header!");
     }
-  }
-  
-  /**
-   * Sets the FROM header of the given MimeMessage. This might be necessary
-   * for moderated groups that does not allow the "normal" FROM sender.
-   * @param msg
-   * @throws javax.mail.MessagingException
-   */
-  private static void rewriteFromAddress(MimeMessage msg)
-    throws MessagingException
-  {
-    Address[] froms  = msg.getFrom();
-    String mlAddress = Config.getInstance().get(Config.MLSEND_ADDRESS, null);
-
-    if(froms.length > 0 && froms[0] instanceof InternetAddress 
-      && mlAddress != null)
-    {
-      InternetAddress from = (InternetAddress)froms[0];
-      from.setAddress(mlAddress);
-      msg.setFrom(from);
-    }
-    else
-    {
-      throw new MessagingException("Cannot rewrite FROM header!");
-    }    
   }
   
 }

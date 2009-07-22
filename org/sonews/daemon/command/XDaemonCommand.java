@@ -20,15 +20,14 @@ package org.sonews.daemon.command;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.sql.SQLException;
 import java.util.List;
-import org.sonews.daemon.BootstrapConfig;
-import org.sonews.daemon.Config;
+import org.sonews.config.Config;
 import org.sonews.daemon.NNTPConnection;
-import org.sonews.daemon.storage.Database;
-import org.sonews.daemon.storage.Group;
+import org.sonews.storage.StorageBackendException;
+import org.sonews.storage.StorageManager;
 import org.sonews.feed.FeedManager;
 import org.sonews.feed.Subscription;
+import org.sonews.storage.Group;
 import org.sonews.util.Stats;
 
 /**
@@ -40,12 +39,13 @@ import org.sonews.util.Stats;
  * @author Christian Lins
  * @since sonews/0.5.0
  */
-public class XDaemonCommand extends AbstractCommand
+public class XDaemonCommand implements Command
 {
-  
-  public XDaemonCommand(NNTPConnection conn)
+
+  @Override
+  public String[] getSupportedCommandStrings()
   {
-    super(conn);
+    return new String[]{"XDAEMON"};
   }
 
   @Override
@@ -54,94 +54,102 @@ public class XDaemonCommand extends AbstractCommand
     return true;
   }
 
+  @Override
+  public boolean isStateful()
+  {
+    return false;
+  }
+
   // TODO: Refactor this method to reduce complexity!
   @Override
-  public void processLine(String line) throws IOException, SQLException
+  public void processLine(NNTPConnection conn, String line, byte[] raw)
+    throws IOException, StorageBackendException
   {
-    InetSocketAddress addr = (InetSocketAddress)connection.getChannel().socket()
+    InetSocketAddress addr = (InetSocketAddress)conn.getSocketChannel().socket()
       .getRemoteSocketAddress();
     if(addr.getHostName().equals(
-      BootstrapConfig.getInstance().get(BootstrapConfig.XDAEMON_HOST, "localhost")))
+      Config.inst().get(Config.XDAEMON_HOST, "localhost")))
     {
       String[] commands = line.split(" ", 4);
       if(commands.length == 3 && commands[1].equalsIgnoreCase("LIST"))
       {
         if(commands[2].equalsIgnoreCase("CONFIGKEYS"))
         {
-          printStatus(200, "list of available config keys follows");
+          conn.println("100 list of available config keys follows");
           for(String key : Config.AVAILABLE_KEYS)
           {
-            println(key);
+            conn.println(key);
           }
-          println(".");
+          conn.println(".");
         }
         else if(commands[2].equalsIgnoreCase("PEERINGRULES"))
         {
           List<Subscription> pull = 
-            Database.getInstance().getSubscriptions(FeedManager.TYPE_PULL);
+            StorageManager.current().getSubscriptions(FeedManager.TYPE_PULL);
           List<Subscription> push =
-            Database.getInstance().getSubscriptions(FeedManager.TYPE_PUSH);
-          printStatus(200,"list of peering rules follows");
+            StorageManager.current().getSubscriptions(FeedManager.TYPE_PUSH);
+          conn.println("100 list of peering rules follows");
           for(Subscription sub : pull)
           {
-            println("PULL " + sub.getHost() + ":" + sub.getPort() 
+            conn.println("PULL " + sub.getHost() + ":" + sub.getPort()
               + " " + sub.getGroup());
           }
           for(Subscription sub : push)
           {
-            println("PUSH " + sub.getHost() + ":" + sub.getPort() 
+            conn.println("PUSH " + sub.getHost() + ":" + sub.getPort()
               + " " + sub.getGroup());
           }
-          println(".");
+          conn.println(".");
         }
         else
         {
-          printStatus(501, "unknown sub command");
+          conn.println("401 unknown sub command");
         }
       }
       else if(commands.length == 3 && commands[1].equalsIgnoreCase("DELETE"))
       {
-        Database.getInstance().delete(commands[2]);
-        printStatus(200, "article " + commands[2] + " deleted");
+        StorageManager.current().delete(commands[2]);
+        conn.println("200 article " + commands[2] + " deleted");
       }
       else if(commands.length == 4 && commands[1].equalsIgnoreCase("GROUPADD"))
       {
-        Database.getInstance().addGroup(commands[2], Integer.parseInt(commands[3]));
-        printStatus(200, "group " + commands[2] + " created");
+        StorageManager.current().addGroup(commands[2], Integer.parseInt(commands[3]));
+        conn.println("200 group " + commands[2] + " created");
       }
       else if(commands.length == 3 && commands[1].equalsIgnoreCase("GROUPDEL"))
       {
-        Group group = Database.getInstance().getGroup(commands[2]);
+        Group group = StorageManager.current().getGroup(commands[2]);
         if(group == null)
         {
-          printStatus(400, "group not found");
+          conn.println("400 group not found");
         }
         else
         {
           group.setFlag(Group.DELETED);
-          printStatus(200, "group " + commands[2] + " marked as deleted");
+          group.update();
+          conn.println("200 group " + commands[2] + " marked as deleted");
         }
       }
       else if(commands.length == 4 && commands[1].equalsIgnoreCase("SET"))
       {
         String key = commands[2];
         String val = commands[3];
-        Config.getInstance().set(key, val);
-        printStatus(200, "new config value set");
+        Config.inst().set(key, val);
+        conn.println("200 new config value set");
       }
       else if(commands.length == 3 && commands[1].equalsIgnoreCase("GET"))
       {
         String key = commands[2];
-        String val = Config.getInstance().get(key, null);
+        String val = Config.inst().get(key, null);
         if(val != null)
         {
-          printStatus(200, "config value for " + key + " follows");
-          println(val);
-          println(".");
+          conn.println("100 config value for " + key + " follows");
+          conn.println(val);
+          conn.println(".");
         }
         else
         {
-          printStatus(400, "config value not set");
+          conn.println("400 config value not set");
         }
       }
       else if(commands.length >= 3 && commands[1].equalsIgnoreCase("LOG"))
@@ -154,83 +162,83 @@ public class XDaemonCommand extends AbstractCommand
 
         if(commands[2].equalsIgnoreCase("CONNECTED_CLIENTS"))
         {
-          printStatus(200, "number of connections follow");
-          println(Integer.toString(Stats.getInstance().connectedClients()));
-          println(".");
+          conn.println("100 number of connections follow");
+          conn.println(Integer.toString(Stats.getInstance().connectedClients()));
+          conn.println(".");
         }
         else if(commands[2].equalsIgnoreCase("POSTED_NEWS"))
         {
-          printStatus(200, "hourly numbers of posted news yesterday");
+          conn.println("100 hourly numbers of posted news yesterday");
           for(int n = 0; n < 24; n++)
           {
-            println(n + " " + Stats.getInstance()
+            conn.println(n + " " + Stats.getInstance()
               .getYesterdaysEvents(Stats.POSTED_NEWS, n, group));
           }
-          println(".");
+          conn.println(".");
         }
         else if(commands[2].equalsIgnoreCase("GATEWAYED_NEWS"))
         {
-          printStatus(200, "hourly numbers of gatewayed news yesterday");
+          conn.println("100 hourly numbers of gatewayed news yesterday");
           for(int n = 0; n < 24; n++)
           {
-            println(n + " " + Stats.getInstance()
+            conn.println(n + " " + Stats.getInstance()
               .getYesterdaysEvents(Stats.GATEWAYED_NEWS, n, group));
           }
-          println(".");
+          conn.println(".");
         }
         else if(commands[2].equalsIgnoreCase("TRANSMITTED_NEWS"))
         {
-          printStatus(200, "hourly numbers of news transmitted to peers yesterday");
+          conn.println("100 hourly numbers of news transmitted to peers yesterday");
           for(int n = 0; n < 24; n++)
           {
-            println(n + " " + Stats.getInstance()
+            conn.println(n + " " + Stats.getInstance()
               .getYesterdaysEvents(Stats.FEEDED_NEWS, n, group));
           }
-          println(".");
+          conn.println(".");
         }
         else if(commands[2].equalsIgnoreCase("HOSTED_NEWS"))
         {
-          printStatus(200, "number of overall hosted news");
-          println(Integer.toString(Stats.getInstance().getNumberOfNews()));
-          println(".");
+          conn.println("100 number of overall hosted news");
+          conn.println(Integer.toString(Stats.getInstance().getNumberOfNews()));
+          conn.println(".");
         }
         else if(commands[2].equalsIgnoreCase("HOSTED_GROUPS"))
         {
-          printStatus(200, "number of hosted groups");
-          println(Integer.toString(Stats.getInstance().getNumberOfGroups()));
-          println(".");
+          conn.println("100 number of hosted groups");
+          conn.println(Integer.toString(Stats.getInstance().getNumberOfGroups()));
+          conn.println(".");
         }
         else if(commands[2].equalsIgnoreCase("POSTED_NEWS_PER_HOUR"))
         {
-          printStatus(200, "posted news per hour");
-          println(Double.toString(Stats.getInstance().postedPerHour(-1)));
-          println(".");
+          conn.println("100 posted news per hour");
+          conn.println(Double.toString(Stats.getInstance().postedPerHour(-1)));
+          conn.println(".");
         }
         else if(commands[2].equalsIgnoreCase("FEEDED_NEWS_PER_HOUR"))
         {
-          printStatus(200, "feeded news per hour");
-          println(Double.toString(Stats.getInstance().feededPerHour(-1)));
-          println(".");
+          conn.println("100 feeded news per hour");
+          conn.println(Double.toString(Stats.getInstance().feededPerHour(-1)));
+          conn.println(".");
         }
         else if(commands[2].equalsIgnoreCase("GATEWAYED_NEWS_PER_HOUR"))
         {
-          printStatus(200, "gatewayed news per hour");
-          println(Double.toString(Stats.getInstance().gatewayedPerHour(-1)));
-          println(".");
+          conn.println("100 gatewayed news per hour");
+          conn.println(Double.toString(Stats.getInstance().gatewayedPerHour(-1)));
+          conn.println(".");
         }
         else
         {
-          printStatus(501, "unknown sub command");
+          conn.println("401 unknown sub command");
         }
       }
       else
       {
-        printStatus(500, "invalid command usage");
+        conn.println("400 invalid command usage");
       }
     }
     else
     {
-      printStatus(500, "not allowed");
+      conn.println("501 not allowed");
     }
   }
   

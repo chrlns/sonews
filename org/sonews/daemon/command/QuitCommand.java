@@ -19,20 +19,21 @@
 package org.sonews.daemon.command;
 
 import java.io.IOException;
-import java.sql.SQLException;
 import org.sonews.daemon.NNTPConnection;
+import org.sonews.storage.StorageBackendException;
 
 /**
  * Implementation of the QUIT command; client wants to shutdown the connection.
  * @author Christian Lins
  * @since sonews/0.5.0
  */
-public class QuitCommand extends AbstractCommand
+public class QuitCommand implements Command
 {
 
-  public QuitCommand(final NNTPConnection conn)
+  @Override
+  public String[] getSupportedCommandStrings()
   {
-    super(conn);
+    return new String[]{"QUIT"};
   }
   
   @Override
@@ -42,13 +43,19 @@ public class QuitCommand extends AbstractCommand
   }
 
   @Override
-  public void processLine(final String line) 
-    throws IOException, SQLException
+  public boolean isStateful()
+  {
+    return false;
+  }
+
+  @Override
+  public void processLine(NNTPConnection conn, final String line, byte[] raw)
+    throws IOException, StorageBackendException
   {    
-    printStatus(205, "cya");
+    conn.println("205 cya");
     
-    this.connection.shutdownInput();
-    this.connection.shutdownOutput();
+    conn.shutdownInput();
+    conn.shutdownOutput();
   }
 
 }
