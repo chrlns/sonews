@@ -12,6 +12,16 @@
     database as backend.
   </para>
   <para>
+    <emphasis role="bold">2009/07/28</emphasis>:
+    <emphasis>sonews/1.0.0</emphasis>
+    (<ulink url="files/sonews-1.0.0.tar.bz2">binary tarball</ulink>,
+    <ulink url="files/sonews-1.0.0-src.tar.bz2">source tarball</ulink>) new major release.
+    A lot of refactoring was done to make the code more robust and 
+    maintainable. Of course, several bugs were fixed, too ;)
+    The 0.5.x line moves from unstable to testing in the DEB repository although
+    the 1.0.x seems no less stable. If in doubt choose 1.0.x.
+  </para>
+  <para>
     <emphasis role="bold">2009/07/01</emphasis>:
     <emphasis>sonews/0.5.1</emphasis>
     (<ulink url="files/sonews-0.5.1.tar.bz2">binary tarball</ulink>,
@@ -56,17 +66,12 @@
 
     <sect1 label="1.2">
       <title>Roadmap</title>
-      <sect2 label="1.2.1">
-        <title>sonews/1.0</title>
         <para>
-        Various minor fixes and code cleanup (Storage and Command interface for
-        the upcoming Plugin API).
-        </para>
-        <para>XPAT command for searching, correctly 
-        hashed Message-Ids and a news purging command.
+        For sonews/1.1.x a plugin API for storage backends and command handlers
+        is planned. 
         See <ulink url="http://bugs.xerxys.info/">Bugtracker</ulink> for
-        issues with target sonews/1.0.x.</para>
-      </sect2>
+        issues with target sonews/1.1.x.
+        </para>
     </sect1>
   </chapter>
 
@@ -80,7 +85,8 @@
         <ulink url="http://www.debian.org/doc/manuals/apt-howto/">APT</ulink>
         easily.
         Add the following line to /etc/apt/sources.list:</para>
-        <screen>deb http://packages.xerxys.info/debian/ unstable main</screen>
+        <screen>deb http://packages.xerxys.info/debian/ testing main # for sonews/0.5.x</screen>
+        <screen>deb http://packages.xerxys.info/debian/ unstable main # for sonews/1.0.x</screen>
         <para>And add the GPG-Key for package authentification, see 
         <ulink url="http://packages.xerxys.info/debian/">Xerxys Debian Repository</ulink>
         for more details.</para>
