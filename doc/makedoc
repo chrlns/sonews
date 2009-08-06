@@ -1,1 +1,0 @@
-xmlto --skip-validation html -m config.xsl sonews.xml
