@@ -19,7 +19,6 @@
 package org.sonews.mlgw;
 
 import java.util.Properties;
-import javax.mail.Address;
 import javax.mail.AuthenticationFailedException;
 import javax.mail.Authenticator;
 import javax.mail.Flags.Flag;
@@ -84,6 +83,7 @@ public class MailPoller extends AbstractDaemon
         // Create empty properties
         Properties props = System.getProperties();
         props.put("mail.pop3.host", host);
+        props.put("mail.mime.address.strict", "false");
 
         // Get session
         Session session = Session.getInstance(props);
