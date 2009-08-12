@@ -55,6 +55,12 @@ class CommandSelector
     String[] classes = Resource.getAsString("helpers/commands.list", true).split("\n");
     for(String className : classes)
     {
+      if(className.charAt(0) == '#')
+      {
+        // Skip comments
+        continue;
+      }
+
       try
       {
         Class<?> clazz   = Class.forName(className);
