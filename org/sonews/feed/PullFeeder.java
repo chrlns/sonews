@@ -94,6 +94,11 @@ class PullFeeder extends AbstractFeeder
     {
       throw new IOException(line);
     }
+
+    // Send MODE READER to peer, some newsservers are friendlier then
+    this.out.println("MODE READER\r\n");
+    this.out.flush();
+    line = this.in.readLine();
   }
   
   private void disconnect()
