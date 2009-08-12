@@ -4,7 +4,7 @@ Priority: optional
 Maintainer: Christian Lins <cli@openoffice.org>
 Homepage: http://www.sonews.org/
 Package: sonews
-Version: 1.0.0
+Version: 1.0.1
 Architecture: all
 Depends: openjdk-6-jre-headless | openjdk-6-jre | sun-java6-jre | cacao | jamvm, glassfish-mail, libmysql-java
 Suggests: sonews-web, libpg-java, mysql-server, libjchart2d-java
