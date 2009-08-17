@@ -32,8 +32,8 @@ import org.sonews.storage.Article;
 public class ArticleInputStream extends InputStream
 {
 
-  private byte[] buffer;
-  private int    offset = 0;
+  private byte[] buf;
+  private int    pos = 0;
   
   public ArticleInputStream(final Article art)
     throws IOException, UnsupportedEncodingException
@@ -43,19 +43,28 @@ public class ArticleInputStream extends InputStream
     out.write("\r\n\r\n".getBytes());
     out.write(art.getBody()); // Without CRLF
     out.flush();
-    this.buffer = out.toByteArray();
+    this.buf = out.toByteArray();
   }
 
+  /**
+   * This method reads one byte from the stream.  The <code>pos</code>
+   * counter is advanced to the next byte to be read.  The byte read is
+   * returned as an int in the range of 0-255.  If the stream position
+   * is already at the end of the buffer, no byte is read and a -1 is
+   * returned in order to indicate the end of the stream.
+   *
+   * @return The byte read, or -1 if end of stream
+   */
   @Override
-  public int read()
+  public synchronized int read()
   {
-    if(offset >= buffer.length)
+    if(pos < buf.length)
     {
-      return -1;
+      return ((int)buf[pos++]) & 0xFF;
     }
     else
     {
-      return buffer[offset++];
+      return -1;
     }
   }
   
