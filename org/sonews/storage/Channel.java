@@ -74,18 +74,7 @@ public abstract class Channel
 
   public static Channel getByName(String name)
   {
-    Channel channel;
-    
-    // Check if it's an aggregated group
-    channel = AggregatedGroup.getByName(name);
-
-    // If it's not an aggregate is probably a "real" group
-    if(channel == null)
-    {
-      channel = Group.getByName(name);
-    }
-
-    return channel;
+    return Group.getByName(name);
   }
 
   public abstract Article getArticle(long idx)
