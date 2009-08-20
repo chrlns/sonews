@@ -163,7 +163,7 @@ class PullFeeder extends AbstractFeeder
       String host = "localhost";
       int    port = 119;
       
-      Log.msg("Start PullFeeder run...", true);
+      Log.get().info("Start PullFeeder run...");
 
       try
       {
@@ -174,14 +174,14 @@ class PullFeeder extends AbstractFeeder
 
           try
           {
-            Log.msg("Feeding " + sub.getGroup() + " from " + sub.getHost(), true);
+            Log.get().info("Feeding " + sub.getGroup() + " from " + sub.getHost());
             try
             {
               connectTo(host, port);
             }
             catch(SocketException ex)
             {
-              Log.msg("Skipping " + sub.getHost() + ": " + ex, false);
+              Log.get().info("Skipping " + sub.getHost() + ": " + ex);
               continue;
             }
             
@@ -202,13 +202,14 @@ class PullFeeder extends AbstractFeeder
                     ArticleReader aread =
                       new ArticleReader(sub.getHost(), sub.getPort(), messageID);
                     byte[] abuf = aread.getArticleData();
-                    if (abuf == null)
+                    if(abuf == null)
                     {
-                      Log.msg("Could not feed " + messageID + " from " + sub.getHost(), true);
+                      Log.get().warning("Could not feed " + messageID
+                        + " from " + sub.getHost());
                     }
                     else
                     {
-                      Log.msg("Feeding " + messageID, true);
+                      Log.get().info("Feeding " + messageID);
                       ArticleWriter awrite = new ArticleWriter(
                         "localhost", Config.inst().get(Config.PORT, 119));
                       awrite.writeArticle(abuf);
@@ -220,7 +221,7 @@ class PullFeeder extends AbstractFeeder
                   {
                     // There may be a temporary network failure
                     ex.printStackTrace();
-                    Log.msg("Skipping mail " + messageID + " due to exception.", false);
+                    Log.get().warning("Skipping mail " + messageID + " due to exception.");
                   }
                 }
               } // for(;;)
@@ -236,16 +237,16 @@ class PullFeeder extends AbstractFeeder
           catch(IOException ex)
           {
             ex.printStackTrace();
-            Log.msg("PullFeeder run stopped due to exception.", false);
+            Log.get().severe("PullFeeder run stopped due to exception.");
           }
         } // for(Subscription sub : subscriptions)
         
-        Log.msg("PullFeeder run ended. Waiting " + pullInterval / 1000 + "s", true);
+        Log.get().info("PullFeeder run ended. Waiting " + pullInterval / 1000 + "s");
         Thread.sleep(pullInterval);
       }
       catch(InterruptedException ex)
       {
-        Log.msg(ex.getMessage(), false);
+        Log.get().warning(ex.getMessage());
       }
     }
   }

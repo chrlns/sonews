@@ -51,14 +51,14 @@ class PushFeeder extends AbstractFeeder
         
         Article  article = this.articleQueue.poll();
         String[] groups  = article.getHeader(Headers.NEWSGROUPS)[0].split(",");
-        Log.msg("PushFeed: " + article.getMessageID(), true);
+        Log.get().info("PushFeed: " + article.getMessageID());
         for(Subscription sub : this.subscriptions)
         {
           // Circle check
           if(article.getHeader(Headers.PATH)[0].contains(sub.getHost()))
           {
-            Log.msg(article.getMessageID() + " skipped for host " 
-              + sub.getHost(), true);
+            Log.get().info(article.getMessageID() + " skipped for host "
+              + sub.getHost());
             continue;
           }
 
@@ -84,13 +84,13 @@ class PushFeeder extends AbstractFeeder
           }
           catch(IOException ex)
           {
-            Log.msg(ex, false);
+            Log.get().warning(ex.toString());
           }
         }
       }
       catch(InterruptedException ex)
       {
-        Log.msg("PushFeeder interrupted: " + ex, true);
+        Log.get().warning("PushFeeder interrupted: " + ex);
       }
     }
   }

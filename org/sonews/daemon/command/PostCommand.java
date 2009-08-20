@@ -226,7 +226,7 @@ public class PostCommand implements Command
       default:
       {
         // Should never happen
-        Log.msg("PostCommand::processLine(): already finished...", false);
+        Log.get().severe("PostCommand::processLine(): already finished...");
       }
     }
   }
@@ -252,7 +252,7 @@ public class PostCommand implements Command
       }
       catch(StorageBackendException ex)
       {
-        Log.msg(ex, false);
+        Log.get().severe(ex.toString());
         conn.println("500 internal server error");
       }
     }
@@ -274,7 +274,7 @@ public class PostCommand implements Command
     }
     catch(StorageBackendException ex)
     {
-      Log.msg(ex, false);
+      Log.get().severe(ex.toString());
       conn.println("500 internal server error");
     }
   }
@@ -338,7 +338,7 @@ public class PostCommand implements Command
       }
       catch(AddressException ex)
       {
-        Log.msg(ex.getMessage(), true);
+        Log.get().warning(ex.getMessage());
         conn.println("441 invalid sender address");
       }
       catch(MessagingException ex)

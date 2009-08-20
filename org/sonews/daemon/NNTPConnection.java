@@ -166,11 +166,7 @@ public final class NNTPConnection
     }
     catch(IOException ex)
     {
-      Log.msg("Exception in NNTPConnection.shutdownInput(): " + ex, false);
-      if(Log.isDebug())
-      {
-        ex.printStackTrace();
-      }
+      Log.get().warning("Exception in NNTPConnection.shutdownInput(): " + ex);
     }
   }
   
@@ -190,15 +186,11 @@ public final class NNTPConnection
         catch(SocketException ex)
         {
           // Socket was already disconnected
-          Log.msg("NNTPConnection.shutdownOutput(): " + ex, true);
+          Log.get().info("NNTPConnection.shutdownOutput(): " + ex);
         }
         catch(Exception ex)
         {
-          Log.msg("NNTPConnection.shutdownOutput(): " + ex, false);
-          if(Log.isDebug())
-          {
-            ex.printStackTrace();
-          }
+          Log.get().warning("NNTPConnection.shutdownOutput(): " + ex);
         }
       }
     }, 3000);
@@ -272,7 +264,7 @@ public final class NNTPConnection
       raw  = Arrays.copyOf(raw, raw.length - 1);
     }
     
-    Log.msg("<< " + line, true);
+    Log.get().fine("<< " + line);
     
     if(command == null)
     {
@@ -289,8 +281,8 @@ public final class NNTPConnection
     {
       try
       {
-        Log.msg("Connection to " + channel.socket().getRemoteSocketAddress() 
-            + " closed: " + ex0, true);
+        Log.get().info("Connection to " + channel.socket().getRemoteSocketAddress()
+            + " closed: " + ex0);
       }
       catch(Exception ex0a)
       {
@@ -367,7 +359,7 @@ public final class NNTPConnection
   {
     if(!charset.canEncode())
     {
-      Log.msg("FATAL: Charset " + charset + " cannot encode!", false);
+      Log.get().severe("FATAL: Charset " + charset + " cannot encode!");
       return;
     }
     
@@ -386,9 +378,9 @@ public final class NNTPConnection
       this.writeSelKey.interestOps(SelectionKey.OP_WRITE);
       ChannelWriter.getInstance().getSelector().wakeup();
     }
-    catch (Exception ex) // CancelledKeyException and ChannelCloseException
+    catch(Exception ex) // CancelledKeyException and ChannelCloseException
     {
-      Log.msg("NNTPConnection.writeToChannel(): " + ex, false);
+      Log.get().warning("NNTPConnection.writeToChannel(): " + ex);
       return;
     }
 
@@ -396,7 +388,7 @@ public final class NNTPConnection
     this.lastActivity = System.currentTimeMillis();
     if(debugLine != null)
     {
-      Log.msg(">> " + debugLine, true);
+      Log.get().fine(">> " + debugLine);
     }
   }
   

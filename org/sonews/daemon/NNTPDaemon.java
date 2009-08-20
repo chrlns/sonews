@@ -61,7 +61,7 @@ public final class NNTPDaemon extends AbstractDaemon
   
   private NNTPDaemon(final int port)
   {
-    Log.msg("Server listening on port " + port, false);
+    Log.get().info("Server listening on port " + port);
     this.port = port;
   }
 
@@ -113,8 +113,8 @@ public final class NNTPDaemon extends AbstractDaemon
           // Under heavy load an IOException "Too many open files may
           // be thrown. It most cases we should slow down the connection
           // accepting, to give the worker threads some time to process work.
-          Log.msg("IOException while accepting connection: " + ex.getMessage(), false);
-          Log.msg("Connection accepting sleeping for seconds...", true);
+          Log.get().severe("IOException while accepting connection: " + ex.getMessage());
+          Log.get().info("Connection accepting sleeping for seconds...");
           Thread.sleep(5000); // 5 seconds
           continue;
         }
@@ -127,7 +127,7 @@ public final class NNTPDaemon extends AbstractDaemon
         }
         catch(IOException ex)
         {
-          Log.msg(ex.getLocalizedMessage(), false);
+          Log.get().warning(ex.toString());
           socketChannel.close();
           continue;
         }
@@ -138,7 +138,7 @@ public final class NNTPDaemon extends AbstractDaemon
             registerSelector(writeSelector, socketChannel, SelectionKey.OP_WRITE);
           registerSelector(readSelector, socketChannel, SelectionKey.OP_READ);
           
-          Log.msg("Connected: " + socketChannel.socket().getRemoteSocketAddress(), true);
+          Log.get().info("Connected: " + socketChannel.socket().getRemoteSocketAddress());
 
           // Set write selection key and send hello to client
           conn.setWriteSelectionKey(selKeyWrite);
@@ -147,13 +147,13 @@ public final class NNTPDaemon extends AbstractDaemon
         }
         catch(CancelledKeyException cke)
         {
-          Log.msg("CancelledKeyException " + cke.getMessage() + " was thrown: " 
-            + socketChannel.socket(), false);
+          Log.get().warning("CancelledKeyException " + cke.getMessage() + " was thrown: "
+            + socketChannel.socket());
         }
         catch(ClosedChannelException cce)
         {
-          Log.msg("ClosedChannelException " + cce.getMessage() + " was thrown: " 
-            + socketChannel.socket(), false);
+          Log.get().warning("ClosedChannelException " + cce.getMessage() + " was thrown: "
+            + socketChannel.socket());
         }
       }
     }

@@ -73,15 +73,15 @@ class CommandSelector
       }
       catch(ClassNotFoundException ex)
       {
-        Log.msg("Could not load command class: " + ex, false);
+        Log.get().warning("Could not load command class: " + ex);
       }
       catch(InstantiationException ex)
       {
-        Log.msg("Could not instantiate command class: " + ex, false);
+        Log.get().severe("Could not instantiate command class: " + ex);
       }
       catch(IllegalAccessException ex)
       {
-        Log.msg("Could not access command class: " + ex, false);
+        Log.get().severe("Could not access command class: " + ex);
       }
     }
   }

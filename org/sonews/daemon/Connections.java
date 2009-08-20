@@ -147,12 +147,12 @@ public final class Connections extends AbstractDaemon
             {
               // Close the channel; implicitely cancels all selectionkeys
               channel.close();
-              Log.msg("Disconnected: " + channel.socket().getRemoteSocketAddress() +
-                " (timeout)", true);
+              Log.get().info("Disconnected: " + channel.socket().getRemoteSocketAddress() +
+                " (timeout)");
             }
             catch(IOException ex)
             {
-              Log.msg("Connections.run(): " + ex, false);
+              Log.get().warning("Connections.run(): " + ex);
             }
 
             // Recycle the used buffers
@@ -169,7 +169,7 @@ public final class Connections extends AbstractDaemon
       }
       catch(InterruptedException ex)
       {
-        Log.msg("Connections Thread was interrupted: " + ex.getMessage(), false);
+        Log.get().warning("Connections Thread was interrupted: " + ex.getMessage());
       }
     }
   }

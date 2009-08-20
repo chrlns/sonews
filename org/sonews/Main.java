@@ -48,7 +48,7 @@ public final class Main
   }
 
   /** Version information of the sonews daemon */
-  public static final String VERSION = "sonews/1.0.0";
+  public static final String VERSION = "sonews/1.1.0";
   public static final Date   STARTDATE = new Date();
   
   /**
@@ -120,7 +120,7 @@ public final class Main
       if(!StorageManager.current().isGroupExisting("control"))
       {
         StorageManager.current().addGroup("control", 0);
-        Log.msg("Group 'control' created.", true);
+        Log.get().info("Group 'control' created.");
       }
     }
     catch(StorageBackendException ex)

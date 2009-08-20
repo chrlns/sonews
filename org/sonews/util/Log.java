@@ -18,7 +18,11 @@
 
 package org.sonews.util;
 
-import java.util.Date;
+import java.util.logging.Level;
+import java.util.logging.LogManager;
+import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
+import java.util.logging.StreamHandler;
 import org.sonews.config.Config;
 
 /**
@@ -28,32 +32,26 @@ import org.sonews.config.Config;
  */
 public class Log
 {
-  
-  public static boolean isDebug()
+
+  public static final String MAIN = "main";
+
+  static
   {
-    // We must use FileConfig here otherwise we come
-    // into hell's kittchen when using the Logger within the
-    // Database class.
-    return Config.inst().get(Config.DEBUG, false);
+    Logger mainLogger = Logger.getLogger(MAIN);
+    StreamHandler handler = new StreamHandler(System.out, new SimpleFormatter());
+    handler.setLevel(Level.parse(Config.inst().get(Config.LOGLEVEL, "INFO")));
+    mainLogger.addHandler(handler);
+    LogManager.getLogManager().addLogger(mainLogger);
   }
-  
-  /**
-   * Writes the given message to the debug output.
-   * @param msg A String message or an object.
-   * @param If true this message is only shown if debug mode is enabled.
-   */
-  public static void msg(final Object msg, boolean debug)
+
+  public static Logger get()
   {
-    if(isDebug() || !debug)
-    {
-      synchronized(System.out)
-      {
-        System.out.print(new Date().toString());
-        System.out.print(": ");
-        System.out.println(msg);
-        System.out.flush();
-      }
-    }
+    return get(MAIN);
+  }
+
+  public static Logger get(String name)
+  {
+    return LogManager.getLogManager().getLogger(name);
   }
 
 }

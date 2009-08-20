@@ -81,7 +81,7 @@ public abstract class AbstractDaemon extends Thread
     }
     catch(SQLException ex)
     {
-      Log.msg(ex, true);
+      Log.get().warning(ex.toString());
     }
   }
   

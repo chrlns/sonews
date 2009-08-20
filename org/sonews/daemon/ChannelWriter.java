@@ -123,7 +123,7 @@ class ChannelWriter extends AbstractDaemon
           }
           catch (IOException ex)
           {
-            Log.msg("Error writing to channel: " + ex, false);
+            Log.get().warning("Error writing to channel: " + ex);
 
             // Cancel write events for this channel
             selKey.cancel();
@@ -137,7 +137,7 @@ class ChannelWriter extends AbstractDaemon
       }
       catch(CancelledKeyException ex)
       {
-        Log.msg("ChannelWriter.run(): " + ex, true);
+        Log.get().info("ChannelWriter.run(): " + ex);
       }
       catch(Exception ex)
       {
@@ -192,14 +192,14 @@ class ChannelWriter extends AbstractDaemon
     }
     else
     {
-      Log.msg("Invalid OP_WRITE key: " + selKey, false);
+      Log.get().warning("Invalid OP_WRITE key: " + selKey);
 
-      if (socketChannel.socket().isClosed())
+      if(socketChannel.socket().isClosed())
       {
         connection.shutdownInput();
         connection.shutdownOutput();
         socketChannel.close();
-        Log.msg("Connection closed.", true);
+        Log.get().info("Connection closed.");
       }
     }
   }

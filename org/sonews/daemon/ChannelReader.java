@@ -26,6 +26,7 @@ import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.logging.Level;
 import org.sonews.util.Log;
 
 /**
@@ -130,11 +131,8 @@ class ChannelReader extends AbstractDaemon
       }
       catch(CancelledKeyException ex)
       {
-        Log.msg("ChannelReader.run(): " + ex, false);
-        if(Log.isDebug())
-        {
-          ex.printStackTrace();
-        }
+        Log.get().warning("ChannelReader.run(): " + ex);
+        Log.get().log(Level.INFO, "", ex);
       }
       catch(Exception ex)
       {
@@ -177,15 +175,11 @@ class ChannelReader extends AbstractDaemon
         {
           // The connection was probably closed by the remote host
           // in a non-clean fashion
-          Log.msg("ChannelReader.processSelectionKey(): " + ex, true);
+          Log.get().info("ChannelReader.processSelectionKey(): " + ex);
         }
         catch(Exception ex) 
         {
-          Log.msg("ChannelReader.processSelectionKey(): " + ex, false);
-          if(Log.isDebug())
-          {
-            ex.printStackTrace();
-          }
+          Log.get().warning("ChannelReader.processSelectionKey(): " + ex);
         }
         
         if(read == -1) // End of stream
@@ -201,7 +195,7 @@ class ChannelReader extends AbstractDaemon
     else
     {
       // Should not happen
-      Log.msg(selKey, false);
+      Log.get().severe("Should not happen: " + selKey.toString());
     }
   }
   

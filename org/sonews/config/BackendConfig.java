@@ -18,6 +18,7 @@
 
 package org.sonews.config;
 
+import java.util.logging.Level;
 import org.sonews.util.Log;
 import org.sonews.storage.StorageBackendException;
 import org.sonews.storage.StorageManager;
@@ -64,7 +65,7 @@ class BackendConfig extends AbstractConfig
       {
         if(StorageManager.current() == null)
         {
-          Log.msg("Warning: BackendConfig not available, using default.", false);
+          Log.get().warning("BackendConfig not available, using default.");
           return defaultValue;
         }
 
@@ -86,7 +87,7 @@ class BackendConfig extends AbstractConfig
     }
     catch(StorageBackendException ex)
     {
-      Log.msg(ex.getMessage(), false);
+      Log.get().log(Level.SEVERE, "Storage backend problem", ex);
       return defaultValue;
     }
   }

@@ -42,6 +42,7 @@ public class Config extends AbstractConfig
   public static final String HOSTNAME          = "sonews.hostname";
   public static final String PORT              = "sonews.port";
   public static final String TIMEOUT           = "sonews.timeout";
+  public static final String LOGLEVEL          = "sonews.loglevel";
   public static final String MLPOLL_DELETEUNKNOWN = "sonews.mlpoll.deleteunknown";
   public static final String MLPOLL_HOST       = "sonews.mlpoll.host";
   public static final String MLPOLL_PASSWORD   = "sonews.mlpoll.password";

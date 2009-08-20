@@ -89,11 +89,11 @@ class ConnectionWorker extends AbstractDaemon
       }
       catch(InterruptedException ex)
       {
-        Log.msg("ConnectionWorker interrupted: " + ex, true);
+        Log.get().info("ConnectionWorker interrupted: " + ex);
       }
       catch(Exception ex)
       {
-        Log.msg("Exception in ConnectionWorker: " + ex, false);
+        Log.get().severe("Exception in ConnectionWorker: " + ex);
         ex.printStackTrace();
       }
     } // end while(isRunning())
