@@ -20,9 +20,13 @@ package org.sonews.daemon.command;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 import org.sonews.daemon.NNTPConnection;
 import org.sonews.storage.Channel;
 import org.sonews.storage.StorageBackendException;
+import org.sonews.util.Log;
 
 /**
  * Class handling the LIST command.
@@ -90,8 +94,9 @@ public class ListCommand implements Command
       }
       else if(command[1].equalsIgnoreCase("ACTIVE"))
       {
-        // TODO: Implement wildcards for LIST ACTIVE
-        printGroupInfo(conn);
+        String  pattern  = command.length == 2
+          ? null : command[2].replace("*", "\\w*");
+        printGroupInfo(conn, pattern);
       }
       else
       {
@@ -100,31 +105,42 @@ public class ListCommand implements Command
     }
     else
     {
-      printGroupInfo(conn);
+      printGroupInfo(conn, null);
     }
   }
 
-  private void printGroupInfo(NNTPConnection conn)
+  private void printGroupInfo(NNTPConnection conn, String pattern)
     throws IOException, StorageBackendException
   {
     final List<Channel> groups = Channel.getAll();
-    if (groups != null)
+    if(groups != null)
     {
       conn.println("215 list of newsgroups follows");
-      for (Channel g : groups)
+      for(Channel g : groups)
       {
-        if (!g.isDeleted())
+        try
         {
-          String writeable = g.isWriteable() ? " y" : " n";
-          // Indeed first the higher article number then the lower
-          conn.println(g.getName() + " " + g.getLastArticleNumber() + " " + g.getFirstArticleNumber() + writeable);
+          Matcher matcher = pattern == null ?
+            null : Pattern.compile(pattern).matcher(g.getName());
+          if(!g.isDeleted() &&
+            (matcher == null || matcher.find()))
+          {
+            String writeable = g.isWriteable() ? " y" : " n";
+            // Indeed first the higher article number then the lower
+            conn.println(g.getName() + " " + g.getLastArticleNumber() + " "
+              + g.getFirstArticleNumber() + writeable);
+          }
+        }
+        catch(PatternSyntaxException ex)
+        {
+          Log.get().info(ex.toString());
         }
       }
       conn.println(".");
     }
     else
     {
-      conn.println("500 server database malfunction");
+      conn.println("500 server backend malfunction");
     }
   }
 
