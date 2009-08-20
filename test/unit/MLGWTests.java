@@ -16,24 +16,23 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.sonews.storage;
+package test.unit;
+
+import junit.textui.TestRunner;
+import test.util.mlgw.DispatcherTest;
 
 /**
- *
+ * Unit tests for package org.sonews.mlgw.
  * @author Christian Lins
- * @since sonews/1.0
+ * @since sonews/1.0.3
  */
-public class StorageBackendException extends Exception
+public class MLGWTests
 {
 
-  public StorageBackendException(Throwable cause)
+  public static void main(String[] args)
   {
-    super(cause);
-  }
-
-  public StorageBackendException(String msg)
-  {
-    super(msg);
+    System.out.println("DispatcherTest");
+    TestRunner.run(DispatcherTest.class);
   }
 
 }

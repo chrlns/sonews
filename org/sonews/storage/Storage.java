@@ -31,6 +31,11 @@ import org.sonews.util.Pair;
 public interface Storage
 {
 
+  /**
+   * Stores the given Article in the storage.
+   * @param art
+   * @throws StorageBackendException
+   */
   void addArticle(Article art)
     throws StorageBackendException;
 
@@ -93,7 +98,14 @@ public interface Storage
   int getLastArticleNumber(Group group)
     throws StorageBackendException;
 
-  String getListForGroup(String groupname)
+  /**
+   * Returns a list of email addresses that are related to the given
+   * groupname. In most cases the list may contain only one entry.
+   * @param groupname
+   * @return
+   * @throws StorageBackendException
+   */
+  List<String> getListsForGroup(String groupname)
     throws StorageBackendException;
 
   String getOldestArticle()

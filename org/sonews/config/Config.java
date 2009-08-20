@@ -78,7 +78,7 @@ public class Config extends AbstractConfig
   /** The config key for the filename of the logfile */
   public static final String LOGFILE = "sonews.log";
 
-    public static final String[] AVAILABLE_KEYS = {
+  public static final String[] AVAILABLE_KEYS = {
       ARTICLE_MAXSIZE,
       EVENTLOG,
       FEED_NEWSPERRUN,

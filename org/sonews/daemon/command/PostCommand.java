@@ -21,12 +21,8 @@ package org.sonews.daemon.command;
 import java.io.IOException;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.nio.charset.Charset;
-import java.nio.charset.IllegalCharsetNameException;
-import java.nio.charset.UnsupportedCharsetException;
 import java.sql.SQLException;
 import java.util.Arrays;
-import java.util.Locale;
 import javax.mail.MessagingException;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetHeaders;
@@ -303,7 +299,7 @@ public class PostCommand implements Command
         boolean success = false;
         String[] groupnames = article.getHeader(Headers.NEWSGROUPS)[0].split(",");
         for(String groupname : groupnames)
-        {
+        {          
           Group group = StorageManager.current().getGroup(groupname);
           if(group != null && !group.isDeleted())
           {
@@ -311,7 +307,7 @@ public class PostCommand implements Command
             {
               // Send to mailing list; the Dispatcher writes 
               // statistics to database
-              Dispatcher.toList(article);
+              Dispatcher.toList(article, group.getName());
               success = true;
             }
             else

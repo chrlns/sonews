@@ -119,7 +119,7 @@ public class Article extends ArticleHead
     final Object content = msg.getContent();
     if(content instanceof String)
     {
-      this.body = ((String)content).getBytes();
+      this.body = ((String)content).getBytes(getBodyCharset());
     }
     else if(content instanceof Multipart) // probably subclass MimeMultipart
     {

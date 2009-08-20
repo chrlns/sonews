@@ -57,15 +57,15 @@ public class ListCommand implements Command
   {
     final String[] command = line.split(" ");
     
-    if (command.length >= 2)
+    if(command.length >= 2)
     {
-      if (command[1].equalsIgnoreCase("OVERVIEW.FMT"))
+      if(command[1].equalsIgnoreCase("OVERVIEW.FMT"))
       {
         conn.println("215 information follows");
         conn.println("Subject:\nFrom:\nDate:\nMessage-ID:\nReferences:\nBytes:\nLines:\nXref");
         conn.println(".");
       }
-      else if (command[1].equalsIgnoreCase("NEWSGROUPS"))
+      else if(command[1].equalsIgnoreCase("NEWSGROUPS"))
       {
         conn.println("215 information follows");
         final List<Channel> list = Channel.getAll();
@@ -75,18 +75,23 @@ public class ListCommand implements Command
         }
         conn.println(".");
       }
-      else if (command[1].equalsIgnoreCase("SUBSCRIPTIONS"))
+      else if(command[1].equalsIgnoreCase("SUBSCRIPTIONS"))
       {
         conn.println("215 information follows");
         conn.println(".");
       }
-      else if (command[1].equalsIgnoreCase("EXTENSIONS"))
+      else if(command[1].equalsIgnoreCase("EXTENSIONS"))
       {
         conn.println("202 Supported NNTP extensions.");
         conn.println("LISTGROUP");
         conn.println("XDAEMON");
         conn.println("XPAT");
         conn.println(".");
+      }
+      else if(command[1].equalsIgnoreCase("ACTIVE"))
+      {
+        // TODO: Implement wildcards for LIST ACTIVE
+        printGroupInfo(conn);
       }
       else
       {
@@ -95,26 +100,31 @@ public class ListCommand implements Command
     }
     else
     {
-      final List<Channel> groups = Channel.getAll();
-      if(groups != null)
+      printGroupInfo(conn);
+    }
+  }
+
+  private void printGroupInfo(NNTPConnection conn)
+    throws IOException, StorageBackendException
+  {
+    final List<Channel> groups = Channel.getAll();
+    if (groups != null)
+    {
+      conn.println("215 list of newsgroups follows");
+      for (Channel g : groups)
       {
-        conn.println("215 list of newsgroups follows");
-        for (Channel g : groups)
+        if (!g.isDeleted())
         {
-          if(!g.isDeleted())
-          {
-            String writeable = g.isWriteable() ? " y" : " n";
-            // Indeed first the higher article number then the lower
-            conn.println(g.getName() + " " + g.getLastArticleNumber() + " "
-                + g.getFirstArticleNumber() + writeable);
-          }
+          String writeable = g.isWriteable() ? " y" : " n";
+          // Indeed first the higher article number then the lower
+          conn.println(g.getName() + " " + g.getLastArticleNumber() + " " + g.getFirstArticleNumber() + writeable);
         }
-        conn.println(".");
       }
-      else
-      {
-        conn.println("500 server database malfunction");
-      }
+      conn.println(".");
+    }
+    else
+    {
+      conn.println("500 server database malfunction");
     }
   }
 

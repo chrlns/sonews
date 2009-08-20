@@ -33,6 +33,7 @@ public final class Headers
   public static final String DATE              = "date";
   public static final String FROM              = "from";
   public static final String LINES             = "lines";
+  public static final String LIST_POST         = "list-post";
   public static final String MESSAGE_ID        = "message-id";
   public static final String NEWSGROUPS        = "newsgroups";
   public static final String NNTP_POSTING_DATE = "nntp-posting-date";
@@ -45,6 +46,7 @@ public final class Headers
   public static final String SUPERSEDES        = "subersedes";
   public static final String TO                = "to";
   public static final String X_COMPLAINTS_TO   = "x-complaints-to";
+  public static final String X_LIST_POST       = "x-list-post";
   public static final String X_TRACE           = "x-trace";
   public static final String XREF              = "xref";
 
