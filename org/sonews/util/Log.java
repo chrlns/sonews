@@ -39,8 +39,10 @@ public class Log
   {
     Logger mainLogger = Logger.getLogger(MAIN);
     StreamHandler handler = new StreamHandler(System.out, new SimpleFormatter());
-    handler.setLevel(Level.parse(Config.inst().get(Config.LOGLEVEL, "INFO")));
+    Level level = Level.parse(Config.inst().get(Config.LOGLEVEL, "INFO"));
+    handler.setLevel(level);
     mainLogger.addHandler(handler);
+    mainLogger.setLevel(level);
     LogManager.getLogManager().addLogger(mainLogger);
   }
 
@@ -51,7 +53,10 @@ public class Log
 
   public static Logger get(String name)
   {
-    return LogManager.getLogManager().getLogger(name);
+    Level level = Level.parse(Config.inst().get(Config.LOGLEVEL, "INFO"));
+    Logger logger = LogManager.getLogManager().getLogger(name);
+    logger.setLevel(level);
+    return logger;
   }
 
 }

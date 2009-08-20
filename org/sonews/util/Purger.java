@@ -63,7 +63,7 @@ public class Purger extends AbstractDaemon
     }
     catch(InterruptedException ex)
     {
-      Log.msg("Purger interrupted: " + ex, true);
+      Log.get().warning("Purger interrupted: " + ex);
     }
   }
 
@@ -84,14 +84,14 @@ public class Purger extends AbstractDaemon
         if(ids.size() == 0)
         {
           StorageManager.current().purgeGroup(group);
-          Log.msg("Group " + group.getName() + " purged.", true);
+          Log.get().info("Group " + group.getName() + " purged.");
         }
 
         for(int n = 0; n < ids.size() && n < 10; n++)
         {
           Article art = StorageManager.current().getArticle(ids.get(n), group.getInternalID());
           StorageManager.current().delete(art.getMessageID());
-          Log.msg("Article " + art.getMessageID() + " purged.", true);
+          Log.get().info("Article " + art.getMessageID() + " purged.");
         }
       }
     }
@@ -107,7 +107,7 @@ public class Purger extends AbstractDaemon
 
     if(lifetime > 0 || articleMaximum < Stats.getInstance().getNumberOfNews())
     {
-      Log.msg("Purging old messages...", true);
+      Log.get().info("Purging old messages...");
       String mid = StorageManager.current().getOldestArticle();
       if (mid == null) // No articles in the database
       {
@@ -123,7 +123,7 @@ public class Purger extends AbstractDaemon
       }
       catch (IllegalArgumentException ex)
       {
-        Log.msg("Could not parse date string: " + dateStr + " " + ex, true);
+        Log.get().warning("Could not parse date string: " + dateStr + " " + ex);
       }
 
       // Should we delete the message because of its age or because the
@@ -141,7 +141,7 @@ public class Purger extends AbstractDaemon
     }
     else
     {
-      Log.msg("Lifetime purger is disabled", true);
+      Log.get().info("Lifetime purger is disabled");
       Thread.sleep(1000 * 60 * 30); // Wait 30 minutes
     }
   }

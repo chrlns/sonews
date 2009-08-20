@@ -76,7 +76,7 @@ public final class Stats
       }
       else
       {
-        Log.msg("Group " + groupname + " does not exist.", true);
+        Log.get().info("Group " + groupname + " does not exist.");
       }
     }
   }

@@ -65,7 +65,7 @@ public class Group extends Channel
     }
     catch(StorageBackendException ex)
     {
-      Log.msg(ex.getMessage(), false);
+      Log.get().severe(ex.getMessage());
       return null;
     }
   }

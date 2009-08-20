@@ -95,7 +95,7 @@ public class ArticleReader
           buf.write(10);
           if(buf.size() > maxSize)
           {
-            Log.msg("Skipping message that is too large: " + buf.size(), false);
+            Log.get().warning("Skipping message that is too large: " + buf.size());
             return null;
           }
         }
@@ -104,7 +104,7 @@ public class ArticleReader
       }
       else
       {
-        Log.msg("ArticleReader: " + line, false);
+        Log.get().warning("ArticleReader: " + line);
         return null;
       }
     }

@@ -121,7 +121,7 @@ public class JDBCDatabase implements Storage
       this.conn.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE);
       if(this.conn.getTransactionIsolation() != Connection.TRANSACTION_SERIALIZABLE)
       {
-        Log.msg("Warning: Database is NOT fully serializable!", false);
+        Log.get().warning("Database is NOT fully serializable!");
       }
 
       // Prepare statements for method addArticle()
@@ -360,7 +360,7 @@ public class JDBCDatabase implements Storage
       }
       catch(SQLException ex2)
       {
-        Log.msg("Rollback of addArticle() failed: " + ex2, false);
+        Log.get().severe("Rollback of addArticle() failed: " + ex2);
       }
       
       try
@@ -369,7 +369,7 @@ public class JDBCDatabase implements Storage
       }
       catch(SQLException ex2)
       {
-        Log.msg("setAutoCommit(true) of addArticle() failed: " + ex2, false);
+        Log.get().severe("setAutoCommit(true) of addArticle() failed: " + ex2);
       }
 
       restartConnection(ex);
@@ -1486,7 +1486,7 @@ public class JDBCDatabase implements Storage
       }
       else
       {
-        Log.msg("Warning: Count on postings return nothing!", true);
+        Log.get().warning("Count on postings return nothing!");
         return 0;
       }
     }
@@ -1696,8 +1696,8 @@ public class JDBCDatabase implements Storage
     throws StorageBackendException
   {
     restarts++;
-    Log.msg(Thread.currentThread() 
-      + ": Database connection was closed (restart " + restarts + ").", false);
+    Log.get().severe(Thread.currentThread()
+      + ": Database connection was closed (restart " + restarts + ").");
     
     if(restarts >= MAX_RESTARTS)
     {
@@ -1715,7 +1715,7 @@ public class JDBCDatabase implements Storage
     }
     catch(InterruptedException ex)
     {
-      Log.msg("Interrupted: " + ex.getMessage(), false);
+      Log.get().warning("Interrupted: " + ex.getMessage());
     }
     
     // Try to properly close the old database connection
@@ -1728,7 +1728,7 @@ public class JDBCDatabase implements Storage
     }
     catch(SQLException ex)
     {
-      Log.msg(ex.getMessage(), true);
+      Log.get().warning(ex.getMessage());
     }
     
     try
@@ -1738,7 +1738,7 @@ public class JDBCDatabase implements Storage
     }
     catch(SQLException ex)
     {
-      Log.msg(ex.getMessage(), true);
+      Log.get().warning(ex.getMessage());
       restartConnection(ex);
     }
   }

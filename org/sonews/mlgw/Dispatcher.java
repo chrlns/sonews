@@ -115,7 +115,7 @@ public class Dispatcher
     }
     else if(fallback)
     {
-      Log.msg("Using fallback recipient discovery for: " + msg.getSubject(), true);
+      Log.get().info("Using fallback recipient discovery for: " + msg.getSubject());
       groups = new ArrayList<String>();
       // Fallback to TO/CC/BCC addresses
       Address[] to = msg.getAllRecipients();
@@ -181,7 +181,7 @@ public class Dispatcher
             groups.append(',');
           }
         }
-        Log.msg("Posting to group " + groups.toString(), true);
+        Log.get().info("Posting to group " + groups.toString());
 
         article.setGroup(groups.toString());
         //article.removeHeader(Headers.REPLY_TO);
@@ -190,14 +190,15 @@ public class Dispatcher
         // Write article to database
         if(updateReq)
         {
-          Log.msg("Updating " + article.getMessageID() + " with additional groups", true);
+          Log.get().info("Updating " + article.getMessageID()
+            + " with additional groups");
           StorageManager.current().delete(article.getMessageID());
           StorageManager.current().addArticle(article);
         }
         else
         {
-          Log.msg("Gatewaying " + article.getMessageID() + " to "
-            + article.getHeader(Headers.NEWSGROUPS)[0], true);
+          Log.get().info("Gatewaying " + article.getMessageID() + " to "
+            + article.getHeader(Headers.NEWSGROUPS)[0]);
           StorageManager.current().addArticle(article);
           Stats.getInstance().mailGatewayed(
             article.getHeader(Headers.NEWSGROUPS)[0]);
@@ -213,7 +214,7 @@ public class Dispatcher
           buf.append(toa.toString());
         }
         buf.append(" " + article.getHeader(Headers.LIST_POST)[0]);
-        Log.msg("No group for" + buf.toString(), false);
+        Log.get().warning("No group for" + buf.toString());
       }
       return posted;
     }
@@ -237,7 +238,7 @@ public class Dispatcher
 
     if(rcptAddresses == null || rcptAddresses.size() == 0)
     {
-      Log.msg("No ML-address for " + group + " found.", false);
+      Log.get().warning("No ML-address for " + group + " found.");
       return;
     }
 
@@ -271,8 +272,8 @@ public class Dispatcher
       smtpTransport.close();
 
       Stats.getInstance().mailGatewayed(group);
-      Log.msg("MLGateway: Mail " + article.getHeader("Subject")[0]
-        + " was delivered to " + rcptAddress + ".", true);
+      Log.get().info("MLGateway: Mail " + article.getHeader("Subject")[0]
+        + " was delivered to " + rcptAddress + ".");
     }
   }
   

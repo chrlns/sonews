@@ -139,8 +139,10 @@ public class Article extends ArticleHead
       // Unknown content is probably a malformed mail we should skip.
       // On the other hand we produce an inconsistent mail mirror, but no
       // mail system must transport invalid content.
-      Log.msg("Skipping message due to unknown content. Throwing exception...", true);
-      throw new MessagingException("Unknown content: " + content);
+      Log.get().severe("Skipping message due to unknown content. Throwing exception...");
+      MessagingException ex = new MessagingException("Unknown content: " + content);
+      Log.get().throwing("Article.java", "<init>", ex);
+      throw ex;
     }
     
     // Validate headers
@@ -264,8 +266,8 @@ public class Article extends ArticleHead
     }
     catch(Exception ex)
     {
-      Log.msg(ex.getMessage(), false);
-      Log.msg("Article.getBodyCharset(): Unknown charset: " + charsetName, false);
+      Log.get().severe(ex.getMessage());
+      Log.get().severe("Article.getBodyCharset(): Unknown charset: " + charsetName);
     }
     return charset;
   }

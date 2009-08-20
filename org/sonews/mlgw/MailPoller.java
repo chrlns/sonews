@@ -61,7 +61,7 @@ public class MailPoller extends AbstractDaemon
   @Override
   public void run()
   {
-    Log.msg("Starting Mailinglist Poller...", false);
+    Log.get().info("Starting Mailinglist Poller...");
     int errors = 0;
     while(isRunning() && errors < 5)
     {
@@ -119,7 +119,7 @@ public class MailPoller extends AbstractDaemon
       }
       catch(NoSuchProviderException ex)
       {
-        Log.msg(ex.toString(), false);
+        Log.get().severe(ex.toString());
         shutdown();
       }
       catch(AuthenticationFailedException ex)
@@ -145,7 +145,7 @@ public class MailPoller extends AbstractDaemon
         errors++;
       }
     }
-    Log.msg("MailPoller exited.", false);
+    Log.get().severe("MailPoller exited.");
   }
   
 }
