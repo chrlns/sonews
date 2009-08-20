@@ -19,7 +19,6 @@
 package org.sonews.storage;
 
 import java.util.List;
-import javax.mail.internet.InternetAddress;
 import org.sonews.feed.Subscription;
 import org.sonews.util.Pair;
 
@@ -92,7 +91,14 @@ public interface Storage
   List<Channel> getGroups()
     throws StorageBackendException;
 
-  List<String> getGroupsForList(InternetAddress inetaddress)
+  /**
+   * Retrieves the collection of groupnames that are associated with the
+   * given list address.
+   * @param inetaddress
+   * @return
+   * @throws StorageBackendException
+   */
+  List<String> getGroupsForList(String listAddress)
     throws StorageBackendException;
 
   int getLastArticleNumber(Group group)

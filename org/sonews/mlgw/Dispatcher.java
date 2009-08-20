@@ -111,7 +111,7 @@ public class Dispatcher
       // listPost[0] is of form "<mailto:dev@openoffice.org>"
       listPost[0]  = chunkListPost(listPost[0]);
       listPostAddr = new InternetAddress(listPost[0], false);
-      groups = StorageManager.current().getGroupsForList(listPostAddr);
+      groups = StorageManager.current().getGroupsForList(listPostAddr.getAddress());
     }
     else if(fallback)
     {
@@ -123,7 +123,8 @@ public class Dispatcher
       {
         if(toa instanceof InternetAddress)
         {
-          List<String> g = StorageManager.current().getGroupsForList((InternetAddress) toa);
+          List<String> g = StorageManager.current()
+            .getGroupsForList(((InternetAddress)toa).getAddress());
           groups.addAll(g);
         }
       }

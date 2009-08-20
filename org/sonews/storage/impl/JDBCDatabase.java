@@ -31,7 +31,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 import javax.mail.Header;
-import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeUtility;
 import org.sonews.config.Config;
 import org.sonews.util.Log;
@@ -1053,14 +1052,14 @@ public class JDBCDatabase implements Storage
   }
 
   @Override
-  public List<String> getGroupsForList(InternetAddress listAddress)
+  public List<String> getGroupsForList(String listAddress)
     throws StorageBackendException
   {
     ResultSet rs = null;
     
     try
     {
-      this.pstmtGetGroupForList.setString(1, listAddress.getAddress());
+      this.pstmtGetGroupForList.setString(1, listAddress);
 
       rs = this.pstmtGetGroupForList.executeQuery();
       List<String> groups = new ArrayList<String>();
