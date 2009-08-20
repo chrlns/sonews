@@ -1142,28 +1142,27 @@ public class JDBCDatabase implements Storage
   }
 
   @Override
-  public String getListForGroup(String group)
+  public List<String> getListsForGroup(String group)
     throws StorageBackendException
   {
-    ResultSet rs = null;
+    ResultSet     rs    = null;
+    List<String>  lists = new ArrayList<String>();
 
     try
     {
       this.pstmtGetListForGroup.setString(1, group);
       rs = this.pstmtGetListForGroup.executeQuery();
-      if (rs.next())
+
+      while(rs.next())
       {
-        return rs.getString(1);
+        lists.add(rs.getString(1));
       }
-      else
-      {
-        return null;
-      }
+      return lists;
     }
     catch(SQLException ex)
     {
       restartConnection(ex);
-      return getListForGroup(group);
+      return getListsForGroup(group);
     }
     finally
     {

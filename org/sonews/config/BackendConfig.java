@@ -62,6 +62,12 @@ class BackendConfig extends AbstractConfig
       String configValue = values.get(key);
       if(configValue == null)
       {
+        if(StorageManager.current() == null)
+        {
+          Log.msg("Warning: BackendConfig not available, using default.", false);
+          return defaultValue;
+        }
+
         configValue = StorageManager.current().getConfigValue(key);
         if(configValue == null)
         {

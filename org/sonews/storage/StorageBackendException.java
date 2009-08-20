@@ -31,4 +31,9 @@ public class StorageBackendException extends Exception
     super(cause);
   }
 
+  public StorageBackendException(String msg)
+  {
+    super(msg);
+  }
+
 }

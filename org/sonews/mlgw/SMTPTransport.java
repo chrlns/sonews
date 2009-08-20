@@ -84,6 +84,10 @@ class SMTPTransport
   public void send(Article article, String mailFrom, String rcptTo)
     throws IOException
   {
+    assert(article != null);
+    assert(mailFrom != null);
+    assert(rcptTo != null);
+
     this.out.println("MAIL FROM: " + mailFrom);
     this.out.flush();
     String line = this.in.readLine();
