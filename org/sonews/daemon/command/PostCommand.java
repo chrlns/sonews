@@ -252,7 +252,7 @@ public class PostCommand implements Command
     {
       // Circle check; note that Path can already contain the hostname here
       String host = Config.inst().get(Config.HOSTNAME, "localhost");
-      if(article.getHeader(Headers.PATH)[0].contains(host + "!"))
+      if(article.getHeader(Headers.PATH)[0].indexOf(host + "!", 1) > 0)
       {
         Log.get().info(article.getMessageID() + " skipped for host " + host);
         conn.println("441 I know this article already");
