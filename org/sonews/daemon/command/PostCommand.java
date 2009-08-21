@@ -178,48 +178,6 @@ public class PostCommand implements Command
             state = PostState.Finished;
             break;
           }
-          
-          // Check if this message is a MIME-multipart message and needs a
-          // charset change
-          /*try
-          {
-            line = line.toLowerCase(Locale.ENGLISH);
-            if(line.startsWith(Headers.CONTENT_TYPE))
-            {
-              int idxStart = line.indexOf("charset=") + "charset=".length();
-              int idxEnd   = line.indexOf(";", idxStart);
-              if(idxEnd < 0)
-              {
-                idxEnd = line.length();
-              }
-
-              if(idxStart > 0)
-              {
-                String charsetName = line.substring(idxStart, idxEnd);
-                if(charsetName.length() > 0 && charsetName.charAt(0) == '"')
-                {
-                  charsetName = charsetName.substring(1, charsetName.length() - 1);
-                }
-
-                try
-                {
-                  conn.setCurrentCharset(Charset.forName(charsetName));
-                }
-                catch(IllegalCharsetNameException ex)
-                {
-                  Log.msg("PostCommand: " + ex, false);
-                }
-                catch(UnsupportedCharsetException ex)
-                {
-                  Log.msg("PostCommand: " + ex, false);
-                }
-              } // if(idxStart > 0)
-            }
-          }
-          catch(Exception ex)
-          {
-            ex.printStackTrace();
-          }*/
         }
         break;
       }
@@ -292,6 +250,15 @@ public class PostCommand implements Command
     }
     else // Post the article regularily
     {
+      // Circle check; note that Path can already contain the hostname here
+      String host = Config.inst().get(Config.HOSTNAME, "localhost");
+      if(article.getHeader(Headers.PATH)[0].contains(host + "!"))
+      {
+        Log.get().info(article.getMessageID() + " skipped for host " + host);
+        conn.println("441 I know this article already");
+        return;
+      }
+
       // Try to create the article in the database or post it to
       // appropriate mailing list
       try

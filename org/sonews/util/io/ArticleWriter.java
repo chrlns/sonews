@@ -65,7 +65,7 @@ public class ArticleWriter
     this.out.write("\r\n.\r\n".getBytes());
     this.out.flush();
     String line = inr.readLine();
-    if(line == null || !line.startsWith("240 "))
+    if(line == null || !line.startsWith("240 ") || !line.startsWith("441 "))
     {
       throw new IOException(line);
     }

@@ -136,7 +136,7 @@ public class ArticleHead
     validateHeaders();
   }
 
-    /**
+  /**
    * Checks some headers for their validity and generates an
    * appropriate Path-header for this host if not yet existing.
    * This method is called by some Article constructors and the
