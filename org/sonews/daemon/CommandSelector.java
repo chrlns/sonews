@@ -29,28 +29,17 @@ import org.sonews.util.io.Resource;
 /**
  * Selects the correct command processing class.
  * @author Christian Lins
+ * @since sonews/1.0
  */
-class CommandSelector
+public class CommandSelector
 {
 
   private static Map<Thread, CommandSelector> instances
     = new ConcurrentHashMap<Thread, CommandSelector>();
-  
-  public static CommandSelector getInstance()
-  {
-    CommandSelector csel = instances.get(Thread.currentThread());
-    if(csel == null)
-    {
-      csel = new CommandSelector();
-      instances.put(Thread.currentThread(), csel);
-    }
-    return csel;
-  }
+  private static Map<String, Class<?>> commandClassesMapping
+    = new ConcurrentHashMap<String, Class<?>>();
 
-  private Map<String, Command> commandMapping = new HashMap<String, Command>();
-  private Command              unsupportedCmd = new UnsupportedCommand();
-
-  private CommandSelector()
+  static
   {
     String[] classes = Resource.getAsString("helpers/commands.list", true).split("\n");
     for(String className : classes)
@@ -63,13 +52,7 @@ class CommandSelector
 
       try
       {
-        Class<?> clazz   = Class.forName(className);
-        Command  cmd     = (Command)clazz.newInstance();
-        String[] cmdStrs = cmd.getSupportedCommandStrings();
-        for(String cmdStr : cmdStrs)
-        {
-          this.commandMapping.put(cmdStr, cmd);
-        }
+        addCommandHandler(className);
       }
       catch(ClassNotFoundException ex)
       {
@@ -86,6 +69,35 @@ class CommandSelector
     }
   }
 
+  public static void addCommandHandler(String className)
+    throws ClassNotFoundException, InstantiationException, IllegalAccessException
+  {
+    Class<?> clazz = Class.forName(className);
+    Command cmd = (Command)clazz.newInstance();
+    String[] cmdStrs = cmd.getSupportedCommandStrings();
+    for (String cmdStr : cmdStrs)
+    {
+      commandClassesMapping.put(cmdStr, clazz);
+    }
+  }
+
+  public static CommandSelector getInstance()
+  {
+    CommandSelector csel = instances.get(Thread.currentThread());
+    if(csel == null)
+    {
+      csel = new CommandSelector();
+      instances.put(Thread.currentThread(), csel);
+    }
+    return csel;
+  }
+
+  private Map<String, Command> commandMapping = new HashMap<String, Command>();
+  private Command              unsupportedCmd = new UnsupportedCommand();
+
+  private CommandSelector()
+  {}
+
   public Command get(String commandName)
   {
     try
@@ -95,16 +107,23 @@ class CommandSelector
 
       if(cmd == null)
       {
-        return this.unsupportedCmd;
+        Class<?> clazz = commandClassesMapping.get(commandName);
+        if(clazz == null)
+        {
+          cmd = this.unsupportedCmd;
+        }
+        else
+        {
+          cmd = (Command)clazz.newInstance();
+          this.commandMapping.put(commandName, cmd);
+        }
       }
       else if(cmd.isStateful())
       {
-        return cmd.getClass().newInstance();
+        cmd = cmd.getClass().newInstance();
       }
-      else
-      {
-        return cmd;
-      }
+
+      return cmd;
     }
     catch(Exception ex)
     {

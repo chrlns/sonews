@@ -1,9 +1,16 @@
 java -jar sonews.jar [arguments]
         where arguments:
-    -c|-config         <path to config file> if custom config file preferred
-    -dumpjdbcdriver    Prints out a list of available JDBC drivers
-    -feed              Enables feed daemon for pulling news from peer servers
-    -h|-help           This output
-    -mlgw              Enables the Mailinglist Gateway poller
-    -p <port>          Forces sonews to listen on the specified port.
-    -v|-version        Prints out the version info an exits.
+   -c|-config <config file>    If custom config file preferred
+   -dumpjdbcdriver             Prints out a list of available JDBC drivers
+   -feed                       Enables feed daemon for pulling/pushing news
+                                from/to peer servers
+   -h|-help                    This output
+   -mlgw                       Enables the Mailinglist Gateway poller
+   -p <port>                   Forces sonews to listen on the specified port
+   -plugin <name|class|file>   Loads the given plugin.
+   -plugin-command <class>     Loads the given class on startup as NNTP command
+                                handler. Can be specified multiple times. The
+                                class must be found in the JVMs classpath.
+   -plugin-storage <class>     Loads the given StorageProvider class. The class
+                                must be found in the JVMs classpath.
+   -v|-version                 Prints out the version info an exits.

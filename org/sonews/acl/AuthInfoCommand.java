@@ -18,12 +18,47 @@
 
 package org.sonews.acl;
 
+import java.io.IOException;
+import org.sonews.daemon.NNTPConnection;
+import org.sonews.daemon.command.Command;
+import org.sonews.storage.StorageBackendException;
+
 /**
  *
  * @author Christian Lins
  * @since sonews/1.1
  */
-public class AuthInfoCommand
+public class AuthInfoCommand implements Command
 {
+
+  @Override
+  public String[] getSupportedCommandStrings()
+  {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public boolean hasFinished()
+  {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public String impliedCapability()
+  {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public boolean isStateful()
+  {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public void processLine(NNTPConnection conn, String line, byte[] rawLine) throws IOException, StorageBackendException
+  {
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
 
 }

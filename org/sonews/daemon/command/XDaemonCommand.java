@@ -237,6 +237,10 @@ public class XDaemonCommand implements Command
           conn.println("401 unknown sub command");
         }
       }
+      else if(commands.length >= 3 && commands[1].equalsIgnoreCase("PLUGIN"))
+      {
+        
+      }
       else
       {
         conn.println("400 invalid command usage");

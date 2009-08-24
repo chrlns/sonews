@@ -22,8 +22,10 @@ import java.sql.Driver;
 import java.sql.DriverManager;
 import java.util.Enumeration;
 import java.util.Date;
+import java.util.logging.Level;
 import org.sonews.config.Config;
 import org.sonews.daemon.ChannelLineBuffers;
+import org.sonews.daemon.CommandSelector;
 import org.sonews.daemon.Connections;
 import org.sonews.daemon.NNTPDaemon;
 import org.sonews.feed.FeedManager;
@@ -99,6 +101,26 @@ public final class Main
       else if(args[n].equals("-p"))
       {
         port = Integer.parseInt(args[++n]);
+      }
+      else if(args[n].equals("-plugin"))
+      {
+        System.out.println("Warning: -plugin-storage is not implemented!");
+      }
+      else if(args[n].equals("-plugin-command"))
+      {
+        try
+        {
+          CommandSelector.addCommandHandler(args[++n]);
+        }
+        catch(Exception ex)
+        {
+          Log.get().warning("Could not load command plugin: " + args[n]);
+          Log.get().log(Level.INFO, "Main.java", ex);
+        }
+      }
+      else if(args[n].equals("-plugin-storage"))
+      {
+        System.out.println("Warning: -plugin-storage is not implemented!");
       }
       else if(args[n].equals("-v") || args[n].equals("-version"))
       {
