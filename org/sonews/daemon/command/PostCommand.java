@@ -71,6 +71,12 @@ public class PostCommand implements Command
   }
 
   @Override
+  public String impliedCapability()
+  {
+    return null;
+  }
+
+  @Override
   public boolean isStateful()
   {
     return true;

@@ -16,25 +16,14 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.sonews.storage;
+package org.sonews.acl;
 
 /**
- * Provides access to storage backend instances.
+ *
  * @author Christian Lins
- * @since sonews/1.0
+ * @since sonews/1.1
  */
-public interface StorageProvider
+public class AuthInfoCommand
 {
-
-  public boolean isSupported(String uri);
-
-  /**
-   * This method returns the reference to the associated storage.
-   * The reference MAY be unique for each thread. In any case it MUST be
-   * thread-safe to use this method.
-   * @return The reference to the associated Storage.
-   */
-  public Storage storage(Thread thread)
-    throws StorageBackendException;
 
 }

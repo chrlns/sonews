@@ -30,7 +30,16 @@ import org.sonews.storage.StorageBackendException;
 public interface Command
 {
 
+  /**
+   * @return true if this instance can be reused.
+   */
   boolean hasFinished();
+
+  /**
+   * Returns capability string that is implied by this command class.
+   * MAY return null if the command is required by the NNTP standard.
+   */
+  String impliedCapability();
 
   boolean isStateful();
 
