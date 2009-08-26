@@ -135,6 +135,15 @@ public interface Storage
   void setConfigValue(String key, String value)
     throws StorageBackendException;
 
+  /**
+   * Updates headers and channel references of the given article.
+   * @param article
+   * @return
+   * @throws StorageBackendException
+   */
+  boolean update(Article article)
+    throws StorageBackendException;
+
   boolean update(Group group)
     throws StorageBackendException;
 

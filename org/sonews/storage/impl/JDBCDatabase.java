@@ -1743,6 +1743,17 @@ public class JDBCDatabase implements Storage
     }
   }
 
+  @Override
+  public boolean update(Article article)
+    throws StorageBackendException
+  {
+    // DELETE FROM headers WHERE article_id = ?
+
+    // INSERT INTO headers ...
+
+    // SELECT * FROM postings WHERE article_id = ? AND group_id = ?
+  }
+
   /**
    * Writes the flags and the name of the given group to the database.
    * @param group
