@@ -19,9 +19,13 @@
 package org.sonews.feed;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import org.sonews.daemon.AbstractDaemon;
 import org.sonews.storage.Article;
 import org.sonews.storage.Headers;
+import org.sonews.storage.StorageBackendException;
+import org.sonews.storage.StorageManager;
 import org.sonews.util.Log;
 import org.sonews.util.io.ArticleWriter;
 
@@ -31,7 +35,7 @@ import org.sonews.util.io.ArticleWriter;
  * @author Christian Lins
  * @since sonews/0.5.0
  */
-class PushFeeder extends AbstractFeeder
+class PushFeeder extends AbstractDaemon
 {
   
   private ConcurrentLinkedQueue<Article> articleQueue = 
@@ -49,10 +53,13 @@ class PushFeeder extends AbstractFeeder
           this.wait();
         }
         
+        List<Subscription> subscriptions = StorageManager.current()
+          .getSubscriptions(FeedManager.TYPE_PUSH);
+
         Article  article = this.articleQueue.poll();
         String[] groups  = article.getHeader(Headers.NEWSGROUPS)[0].split(",");
         Log.get().info("PushFeed: " + article.getMessageID());
-        for(Subscription sub : this.subscriptions)
+        for(Subscription sub : subscriptions)
         {
           // Circle check
           if(article.getHeader(Headers.PATH)[0].contains(sub.getHost()))
@@ -87,6 +94,10 @@ class PushFeeder extends AbstractFeeder
             Log.get().warning(ex.toString());
           }
         }
+      }
+      catch(StorageBackendException ex)
+      {
+        Log.get().severe(ex.toString());
       }
       catch(InterruptedException ex)
       {

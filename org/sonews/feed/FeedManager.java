@@ -18,10 +18,7 @@
 
 package org.sonews.feed;
 
-import java.util.List;
 import org.sonews.storage.Article;
-import org.sonews.storage.StorageBackendException;
-import org.sonews.storage.StorageManager;
 
 /**
  * Controlls push and pull feeder.
@@ -42,22 +39,8 @@ public final class FeedManager
    * PullFeeder or PushFeeder.
    */
   public static synchronized void startFeeding()
-    throws StorageBackendException
   {
-    List<Subscription> subsPull = StorageManager.current()
-      .getSubscriptions(TYPE_PULL);
-    for(Subscription sub : subsPull)
-    {
-      pullFeeder.addSubscription(sub);
-    }
     pullFeeder.start();
-    
-    List<Subscription> subsPush = StorageManager.current()
-      .getSubscriptions(TYPE_PUSH);
-    for(Subscription sub : subsPush)
-    {
-      pushFeeder.addSubscription(sub);
-    }
     pushFeeder.start();
   }
   

@@ -40,6 +40,27 @@ public class Subscription
     this.group    = group;
   }
 
+  @Override
+  public boolean equals(Object obj)
+  {
+    if(obj instanceof Subscription)
+    {
+      Subscription sub = (Subscription)obj;
+      return sub.host.equals(host) && sub.group.equals(group) 
+        && sub.port == port && sub.feedtype == feedtype;
+    }
+    else
+    {
+      return false;
+    }
+  }
+
+  @Override
+  public int hashCode()
+  {
+    return host.hashCode() + port + feedtype + group.hashCode();
+  }
+
   public int getFeedtype()
   {
     return feedtype;

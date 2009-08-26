@@ -27,9 +27,13 @@ import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.logging.Level;
 import org.sonews.config.Config;
+import org.sonews.daemon.AbstractDaemon;
 import org.sonews.util.Log;
 import org.sonews.storage.StorageBackendException;
 import org.sonews.storage.StorageManager;
@@ -43,20 +47,23 @@ import org.sonews.util.io.ArticleWriter;
  * @author Christian Lins
  * @since sonews/0.5.0
  */
-class PullFeeder extends AbstractFeeder
+class PullFeeder extends AbstractDaemon
 {
   
   private Map<Subscription, Integer> highMarks = new HashMap<Subscription, Integer>();
   private BufferedReader             in;
   private PrintWriter                out;
+  private Set<Subscription>          subscriptions = new HashSet<Subscription>();
   
-  @Override
-  public void addSubscription(final Subscription sub)
+  private void addSubscription(final Subscription sub)
   {
-    super.addSubscription(sub);
-    
-    // Set a initial highMark
-    this.highMarks.put(sub, 0);
+    subscriptions.add(sub);
+
+    if(!highMarks.containsKey(sub))
+    {
+      // Set a initial highMark
+      this.highMarks.put(sub, 0);
+    }
   }
   
   /**
@@ -164,6 +171,21 @@ class PullFeeder extends AbstractFeeder
       int    port = 119;
       
       Log.get().info("Start PullFeeder run...");
+
+      try
+      {
+        this.subscriptions.clear();
+        List<Subscription> subsPull = StorageManager.current()
+          .getSubscriptions(FeedManager.TYPE_PULL);
+        for(Subscription sub : subsPull)
+        {
+          addSubscription(sub);
+        }
+      }
+      catch(StorageBackendException ex)
+      {
+        Log.get().log(Level.SEVERE, host, ex);
+      }
 
       try
       {
