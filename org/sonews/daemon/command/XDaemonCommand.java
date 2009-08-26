@@ -66,6 +66,21 @@ public class XDaemonCommand implements Command
     return false;
   }
 
+  private void channelAdd(String[] commands, NNTPConnection conn)
+    throws IOException, StorageBackendException
+  {
+    String groupName = commands[2];
+    if(StorageManager.current().isGroupExisting(groupName))
+    {
+      conn.println("400 group " + groupName + " already existing!");
+    }
+    else
+    {
+      StorageManager.current().addGroup(groupName, Integer.parseInt(commands[3]));
+      conn.println("200 group " + groupName + " created");
+    }
+  }
+
   // TODO: Refactor this method to reduce complexity!
   @Override
   public void processLine(NNTPConnection conn, String line, byte[] raw)
@@ -119,8 +134,7 @@ public class XDaemonCommand implements Command
       }
       else if(commands.length == 4 && commands[1].equalsIgnoreCase("GROUPADD"))
       {
-        StorageManager.current().addGroup(commands[2], Integer.parseInt(commands[3]));
-        conn.println("200 group " + commands[2] + " created");
+        channelAdd(commands, conn);
       }
       else if(commands.length == 3 && commands[1].equalsIgnoreCase("GROUPDEL"))
       {
