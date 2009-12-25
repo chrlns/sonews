@@ -18,7 +18,6 @@
 
 package org.sonews.daemon;
 
-import org.sonews.util.Log;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.SocketException;
@@ -34,6 +33,7 @@ import java.util.TimerTask;
 import org.sonews.daemon.command.Command;
 import org.sonews.storage.Article;
 import org.sonews.storage.Channel;
+import org.sonews.util.Log;
 import org.sonews.util.Stats;
 
 /**
@@ -407,6 +407,11 @@ public final class NNTPConnection
   public void setCurrentCharset(final Charset charset)
   {
     this.charset = charset;
+  }
+
+  void setLastActivity(long timestamp)
+  {
+    this.lastActivity = timestamp;
   }
   
 }

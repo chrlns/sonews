@@ -169,6 +169,9 @@ class ChannelWriter extends AbstractDaemon
           // events until we have something to write to the socket channel
           //selKey.cancel();
           selKey.interestOps(0);
+          // Update activity timestamp to prevent too early disconnects
+          // on slow client connections
+          connection.setLastActivity(System.currentTimeMillis());
           return;
         }
  

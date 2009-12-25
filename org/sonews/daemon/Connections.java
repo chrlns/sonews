@@ -134,7 +134,8 @@ public final class Connections extends AbstractDaemon
         while (iter.hasNext())
         {
           conn = iter.next();
-          if((System.currentTimeMillis() - conn.getLastActivity()) > timeoutMillis)
+          if((System.currentTimeMillis() - conn.getLastActivity()) > timeoutMillis
+              && conn.getBuffers().isOutputBufferEmpty())
           {
             // A connection timeout has occurred so purge the connection
             iter.remove();

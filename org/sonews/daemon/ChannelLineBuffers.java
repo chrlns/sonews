@@ -124,6 +124,18 @@ public class ChannelLineBuffers
       }
     }
   }
+
+  /**
+   * @return false if there are output buffers pending to be written to the
+   * client.
+   */
+  boolean isOutputBufferEmpty()
+  {
+    synchronized(outputBuffers)
+    {
+      return outputBuffers.isEmpty();
+    }
+  }
   
   /**
    * Goes through the input buffer of the given channel and searches

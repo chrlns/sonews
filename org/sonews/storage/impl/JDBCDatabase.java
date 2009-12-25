@@ -1752,6 +1752,7 @@ public class JDBCDatabase implements Storage
     // INSERT INTO headers ...
 
     // SELECT * FROM postings WHERE article_id = ? AND group_id = ?
+    return false;
   }
 
   /**
