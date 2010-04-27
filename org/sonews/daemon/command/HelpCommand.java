@@ -19,12 +19,14 @@
 package org.sonews.daemon.command;
 
 import java.io.IOException;
+import java.util.Set;
+import org.sonews.daemon.CommandSelector;
 import org.sonews.daemon.NNTPConnection;
 import org.sonews.util.io.Resource;
 
 /**
  * This command provides a short summary of the commands that are
- * understood by this implementation of the server.  The help text will
+ * understood by this implementation of the server. The help text will
  * be presented as a multi-line data block following the 100 response
  * code (taken from RFC).
  * @author Christian Lins
@@ -61,13 +63,35 @@ public class HelpCommand implements Command
   public void processLine(NNTPConnection conn, final String line, byte[] raw)
     throws IOException
   {
+    final String[] command = line.split(" ");
     conn.println("100 help text follows");
-    
-    final String[] help = Resource
-      .getAsString("helpers/helptext", true).split("\n");
-    for(String hstr : help)
+
+    if(line.length() <= 1)
     {
-      conn.println(hstr);
+      final String[] help = Resource
+        .getAsString("helpers/helptext", true).split("\n");
+      for(String hstr : help)
+      {
+        conn.println(hstr);
+      }
+
+      Set<String> commandNames = CommandSelector.getCommandNames();
+      for(String cmdName : commandNames)
+      {
+        conn.println(cmdName);
+      }
+    }
+    else
+    {
+      Command cmd = CommandSelector.getInstance().get(command[1]);
+      if(cmd instanceof HelpfulCommand)
+      {
+        conn.println(((HelpfulCommand)cmd).getHelpString());
+      }
+      else
+      {
+        conn.println("No further help information available.");
+      }
     }
     
     conn.println(".");

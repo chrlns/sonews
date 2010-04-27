@@ -20,6 +20,7 @@ package org.sonews.daemon;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import org.sonews.daemon.command.Command;
 import org.sonews.daemon.command.UnsupportedCommand;
@@ -79,6 +80,11 @@ public class CommandSelector
     {
       commandClassesMapping.put(cmdStr, clazz);
     }
+  }
+
+  public static Set<String> getCommandNames()
+  {
+    return commandClassesMapping.keySet();
   }
 
   public static CommandSelector getInstance()
