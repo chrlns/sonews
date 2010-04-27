@@ -63,7 +63,7 @@ public class MailPoller extends AbstractDaemon
   {
     Log.get().info("Starting Mailinglist Poller...");
     int errors = 0;
-    while(isRunning() && errors < 5)
+    while(isRunning())
     {
       try
       {
@@ -127,7 +127,7 @@ public class MailPoller extends AbstractDaemon
         // AuthentificationFailedException may be thrown if credentials are
         // bad or if the Mailbox is in use (locked).
         ex.printStackTrace();
-        errors++;
+        errors = errors < 5 ? errors + 1 : errors;
       }
       catch(InterruptedException ex)
       {
@@ -137,12 +137,12 @@ public class MailPoller extends AbstractDaemon
       catch(MessagingException ex)
       {
         ex.printStackTrace();
-        errors++;
+        errors = errors < 5 ? errors + 1 : errors;
       }
       catch(Exception ex)
       {
         ex.printStackTrace();
-        errors++;
+        errors = errors < 5 ? errors + 1 : errors;
       }
     }
     Log.get().severe("MailPoller exited.");
