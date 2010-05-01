@@ -20,10 +20,8 @@ package org.sonews.mlgw;
 
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.PrintWriter;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import org.sonews.config.Config;
@@ -33,20 +31,21 @@ import org.sonews.util.io.ArticleInputStream;
 /**
  * Connects to a SMTP server and sends a given Article to it.
  * @author Christian Lins
+ * @since sonews/1.0
  */
 class SMTPTransport
 {
 
-  protected BufferedReader in;
-  protected PrintWriter    out;
-  protected Socket         socket;
+  protected BufferedReader       in;
+  protected BufferedOutputStream out;
+  protected Socket               socket;
 
   public SMTPTransport(String host, int port)
     throws IOException, UnknownHostException
   {
     socket = new Socket(host, port);
     this.in  = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-    this.out = new PrintWriter(socket.getOutputStream());
+    this.out = new BufferedOutputStream(socket.getOutputStream());
 
     // Read helo from server
     String line = this.in.readLine();
@@ -56,7 +55,8 @@ class SMTPTransport
     }
 
     // Send HELO to server
-    this.out.println("HELO " + Config.inst().get(Config.HOSTNAME, "localhost"));
+    this.out.write(
+      ("HELO " + Config.inst().get(Config.HOSTNAME, "localhost") + "\r\n").getBytes("UTF-8"));
     this.out.flush();
     line = this.in.readLine();
     if(line == null || !line.startsWith("250 "))
@@ -74,7 +74,7 @@ class SMTPTransport
   public void close()
     throws IOException
   {
-    this.out.println("QUIT");
+    this.out.write("QUIT".getBytes("UTF-8"));
     this.out.flush();
     this.in.readLine();
 
@@ -88,7 +88,7 @@ class SMTPTransport
     assert(mailFrom != null);
     assert(rcptTo != null);
 
-    this.out.println("MAIL FROM: " + mailFrom);
+    this.out.write(("MAIL FROM: " + mailFrom).getBytes("UTF-8"));
     this.out.flush();
     String line = this.in.readLine();
     if(line == null || !line.startsWith("250 "))
@@ -96,7 +96,7 @@ class SMTPTransport
       throw new IOException("Unexpected reply: " + line);
     }
 
-    this.out.println("RCPT TO: " + rcptTo);
+    this.out.write(("RCPT TO: " + rcptTo).getBytes("UTF-8"));
     this.out.flush();
     line  = this.in.readLine();
     if(line == null || !line.startsWith("250 "))
@@ -104,7 +104,7 @@ class SMTPTransport
       throw new IOException("Unexpected reply: " + line);
     }
 
-    this.out.println("DATA");
+    this.out.write("DATA".getBytes("UTF-8"));
     this.out.flush();
     line = this.in.readLine();
     if(line == null || !line.startsWith("354 "))
@@ -113,20 +113,15 @@ class SMTPTransport
     }
 
     ArticleInputStream   artStream = new ArticleInputStream(article);
-    BufferedOutputStream outStream = new BufferedOutputStream(socket.getOutputStream());
-    FileOutputStream     fileStream = new FileOutputStream("smtp.dump");
     for(int b = artStream.read(); b >= 0; b = artStream.read())
     {
-      outStream.write(b);
-      fileStream.write(b);
+      this.out.write(b);
     }
 
     // Flush the binary stream; important because otherwise the output
     // will be mixed with the PrintWriter.
-    outStream.flush();
-    fileStream.flush();
-    fileStream.close();
-    this.out.print("\r\n.\r\n");
+    this.out.flush();
+    this.out.write("\r\n.\r\n".getBytes("UTF-8"));
     this.out.flush();
     line = this.in.readLine();
     if(line == null || !line.startsWith("250 "))

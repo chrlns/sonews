@@ -20,6 +20,7 @@ package org.sonews.daemon;
 
 import org.sonews.config.Config;
 import org.sonews.util.Log;
+import org.sonews.util.Stats;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
@@ -29,7 +30,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
-import org.sonews.util.Stats;
 
 /**
  * Daemon thread collecting all NNTPConnection instances. The thread
@@ -146,6 +146,9 @@ public final class Connections extends AbstractDaemon
             
             try
             {
+              assert channel != null;
+              assert channel.socket() != null;
+      
               // Close the channel; implicitely cancels all selectionkeys
               channel.close();
               Log.get().info("Disconnected: " + channel.socket().getRemoteSocketAddress() +
