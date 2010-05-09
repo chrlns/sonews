@@ -161,6 +161,7 @@ class FileConfig extends AbstractConfig
    * @param key
    * @param value
    */
+  @Override
   public void set(final String key, final String value)
   {
     settings.setProperty(key, value);

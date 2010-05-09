@@ -52,7 +52,7 @@ import org.sonews.util.Pair;
 public class JDBCDatabase implements Storage
 {
 
-  public static final int MAX_RESTARTS = 3;
+  public static final int MAX_RESTARTS = 2;
   
   private Connection        conn = null;
   private PreparedStatement pstmtAddArticle1 = null;
@@ -110,13 +110,13 @@ public class JDBCDatabase implements Storage
     {
       // Load database driver
       Class.forName(
-              Config.inst().get(Config.STORAGE_DBMSDRIVER, "java.lang.Object"));
+        Config.inst().get(Config.LEVEL_FILE, Config.STORAGE_DBMSDRIVER, "java.lang.Object"));
 
       // Establish database connection
       this.conn = DriverManager.getConnection(
-              Config.inst().get(Config.STORAGE_DATABASE, "<not specified>"),
-              Config.inst().get(Config.STORAGE_USER, "root"),
-              Config.inst().get(Config.STORAGE_PASSWORD, ""));
+        Config.inst().get(Config.LEVEL_FILE, Config.STORAGE_DATABASE, "<not specified>"),
+        Config.inst().get(Config.LEVEL_FILE, Config.STORAGE_USER, "root"),
+        Config.inst().get(Config.LEVEL_FILE, Config.STORAGE_PASSWORD, ""));
 
       this.conn.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE);
       if(this.conn.getTransactionIsolation() != Connection.TRANSACTION_SERIALIZABLE)

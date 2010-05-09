@@ -128,24 +128,20 @@ public class Config extends AbstractConfig
     return val;
   }
 
-  public String get(int level, String key, String def)
+  public String get(int maxLevel, String key, String def)
   {
-    switch(level)
+    String val = CommandLineConfig.getInstance().get(key, null);
+
+    if(val == null && maxLevel <= LEVEL_FILE)
     {
-      case LEVEL_CLI:
+      val = FileConfig.getInstance().get(key, null);
+      if(val == null && maxLevel <= LEVEL_BACKEND)
       {
-        return CommandLineConfig.getInstance().get(key, def);
-      }
-      case LEVEL_FILE:
-      {
-        return FileConfig.getInstance().get(key, def);
-      }
-      case LEVEL_BACKEND:
-      {
-        return BackendConfig.getInstance().get(key, def);
+        val = BackendConfig.getInstance().get(key, def);
       }
     }
-    return null;
+
+    return val != null ? val : def;
   }
 
   @Override

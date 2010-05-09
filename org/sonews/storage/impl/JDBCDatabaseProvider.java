@@ -18,10 +18,12 @@
 
 package org.sonews.storage.impl;
 
-import org.sonews.storage.*;
 import java.sql.SQLException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import org.sonews.storage.Storage;
+import org.sonews.storage.StorageBackendException;
+import org.sonews.storage.StorageProvider;
 
 /**
  *

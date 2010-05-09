@@ -33,6 +33,7 @@ import java.util.TimerTask;
 import org.sonews.daemon.command.Command;
 import org.sonews.storage.Article;
 import org.sonews.storage.Channel;
+import org.sonews.storage.StorageBackendException;
 import org.sonews.util.Log;
 import org.sonews.util.Stats;
 
@@ -275,7 +276,17 @@ public final class NNTPConnection
     try
     {
       // The command object will process the line we just received
-      command.processLine(this, line, raw);
+      try
+      {
+        command.processLine(this, line, raw);
+      }
+      catch(StorageBackendException ex)
+      {
+        Log.get().info("Retry command processing after StorageBackendException");
+
+        // Try it a second time, so that the backend has time to recover
+        command.processLine(this, line, raw);
+      }
     }
     catch(ClosedChannelException ex0)
     {
@@ -289,7 +300,7 @@ public final class NNTPConnection
         ex0a.printStackTrace();
       }
     }
-    catch(Exception ex1)
+    catch(Exception ex1) // This will catch a second StorageBackendException
     {
       try
       {
