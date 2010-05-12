@@ -73,8 +73,9 @@ public abstract class Channel
   }
 
   public static Channel getByName(String name)
+    throws StorageBackendException
   {
-    return Group.getByName(name);
+    return StorageManager.current().getGroup(name);
   }
 
   public abstract Article getArticle(long idx)

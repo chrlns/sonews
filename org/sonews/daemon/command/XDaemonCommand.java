@@ -27,6 +27,7 @@ import org.sonews.storage.StorageBackendException;
 import org.sonews.storage.StorageManager;
 import org.sonews.feed.FeedManager;
 import org.sonews.feed.Subscription;
+import org.sonews.storage.Channel;
 import org.sonews.storage.Group;
 import org.sonews.util.Stats;
 
@@ -177,7 +178,7 @@ public class XDaemonCommand implements Command
         Group group = null;
         if(commands.length > 3)
         {
-          group = Group.getByName(commands[3]);
+          group = (Group)Channel.getByName(commands[3]);
         }
 
         if(commands[2].equalsIgnoreCase("CONNECTED_CLIENTS"))

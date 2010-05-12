@@ -59,25 +59,26 @@ public final class Stats
    */
   private void addEvent(byte type, String groupname)
   {
-    if(Config.inst().get(Config.EVENTLOG, true))
+    try
     {
-      Channel group = Channel.getByName(groupname);
-      if(group != null)
+      if (Config.inst().get(Config.EVENTLOG, true))
       {
-        try
+
+        Channel group = Channel.getByName(groupname);
+        if (group != null)
         {
           StorageManager.current().addEvent(
-            System.currentTimeMillis(), type, group.getInternalID());
+                  System.currentTimeMillis(), type, group.getInternalID());
         }
-        catch(StorageBackendException ex)
-        {
-          ex.printStackTrace();
-        }
-      }
+      } 
       else
       {
         Log.get().info("Group " + groupname + " does not exist.");
       }
+    } 
+    catch (StorageBackendException ex)
+    {
+      ex.printStackTrace();
     }
   }
   

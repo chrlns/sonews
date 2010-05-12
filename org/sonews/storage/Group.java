@@ -35,24 +35,6 @@ public class Group extends Channel
   private long   id     = 0;
   private int    flags  = -1;
   private String name   = null;
-  
-  /**
-   * Returns a Group identified by its full name.
-   * @param name
-   * @return
-   */
-  public static Group getByName(final String name)
-  {
-    try
-    {
-      return StorageManager.current().getGroup(name);
-    }
-    catch(StorageBackendException ex)
-    {
-      ex.printStackTrace();
-      return null;
-    }
-  }
 
   /**
    * @return List of all groups this server handles.
