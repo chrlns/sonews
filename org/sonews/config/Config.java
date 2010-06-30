@@ -132,10 +132,10 @@ public class Config extends AbstractConfig
   {
     String val = CommandLineConfig.getInstance().get(key, null);
 
-    if(val == null && maxLevel <= LEVEL_FILE)
+    if(val == null && maxLevel >= LEVEL_FILE)
     {
       val = FileConfig.getInstance().get(key, null);
-      if(val == null && maxLevel <= LEVEL_BACKEND)
+      if(val == null && maxLevel >= LEVEL_BACKEND)
       {
         val = BackendConfig.getInstance().get(key, def);
       }

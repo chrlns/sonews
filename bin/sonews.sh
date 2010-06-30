@@ -1,17 +1,18 @@
 #!/bin/bash
-SCRIPTROOT=$(pwd)
-CLASSPATH=$SCRIPTROOT/lib/sonews.jar:\
-$SCRIPTROOT/lib/sonews-helpers.jar:\
-$SCRIPTROOT/lib/mysql-connector-java.jar:\
-$SCRIPTROOT/lib/glassfish-mail.jar:\
-$SCRIPTROOT/lib/postgresql.jar
+cd `dirname $0`/..
+NEWSROOT=`pwd`
+CLASSPATH=$NEWSROOT/lib/sonews.jar:\
+$NEWSROOT/lib/sonews-helpers.jar:\
+$NEWSROOT/lib/mysql-connector-java.jar:\
+$NEWSROOT/lib/glassfish-mail.jar:\
+$NEWSROOT/lib/postgresql.jar
 
-LOGFILE=sonews.log
-PIDFILE=sonews.pid
+LOGFILE=/var/log/sonews.log
+PIDFILE=/var/pid/sonews.pid
 ARGS=$@
 
-MAINCLASS=org.sonews.daemon.Main
-JAVA=java
+MAINCLASS=org.sonews.Main
+JAVA=$JAVA_HOME/bin/java
 
 case "$1" in
   start)
