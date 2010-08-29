@@ -49,7 +49,7 @@
                deprecation="${deprecation}"
                optimize="${optimize}"
                classpathref="classpath">
-            <src path="."/>
+            <src path="./src"/>
                 <include name="org/sonews/**/*.java"/>
 	</javac>
 	<javac destdir="${build.class}"

@@ -143,6 +143,11 @@ public class Dispatcher
    */
   public static boolean toGroup(final Message msg)
   {
+    if(msg == null)
+	{
+      throw new IllegalArgumentException("Argument 'msg' must not be null!");
+    }
+
     try
     {
       // Create new Article object
@@ -159,14 +164,17 @@ public class Dispatcher
       {
         // Check for duplicate entries of the same group
         Article oldArticle = StorageManager.current().getArticle(article.getMessageID());
-        List<Group> oldGroups = oldArticle.getGroups();
-        for(Group oldGroup : oldGroups)
-        {
-          if(!newsgroups.contains(oldGroup.getName()))
+        if(oldArticle != null)
+		{
+          List<Group> oldGroups = oldArticle.getGroups();
+          for(Group oldGroup : oldGroups)
           {
-            oldgroups.add(oldGroup.getName());
+            if(!newsgroups.contains(oldGroup.getName()))
+            {
+              oldgroups.add(oldGroup.getName());
+            }
           }
-        }
+		}
       }
 
       if(newsgroups.size() > 0)

@@ -18,12 +18,12 @@
 
 package org.sonews.util;
 
+import java.util.Date;
+import java.util.List;
 import org.sonews.daemon.AbstractDaemon;
 import org.sonews.config.Config;
 import org.sonews.storage.Article;
 import org.sonews.storage.Headers;
-import java.util.Date;
-import java.util.List;
 import org.sonews.storage.Channel;
 import org.sonews.storage.Group;
 import org.sonews.storage.StorageBackendException;
