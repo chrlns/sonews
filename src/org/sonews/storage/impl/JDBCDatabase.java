@@ -305,39 +305,7 @@ public class JDBCDatabase implements Storage
 			this.conn.setAutoCommit(false);
 
 			int newArticleID = getMaxArticleID() + 1;
-
-			// Fill prepared statement with values;
-			// writes body to article table
-			pstmtAddArticle1.setInt(1, newArticleID);
-			pstmtAddArticle1.setBytes(2, article.getBody());
-			pstmtAddArticle1.execute();
-
-			// Add headers
-			Enumeration headers = article.getAllHeaders();
-			for (int n = 0; headers.hasMoreElements(); n++) {
-				Header header = (Header) headers.nextElement();
-				pstmtAddArticle2.setInt(1, newArticleID);
-				pstmtAddArticle2.setString(2, header.getName().toLowerCase());
-				pstmtAddArticle2.setString(3,
-					header.getValue().replaceAll("[\r\n]", ""));
-				pstmtAddArticle2.setInt(4, n);
-				pstmtAddArticle2.execute();
-			}
-
-			// For each newsgroup add a reference
-			List<Group> groups = article.getGroups();
-			for (Group group : groups) {
-				pstmtAddArticle3.setLong(1, group.getInternalID());
-				pstmtAddArticle3.setInt(2, newArticleID);
-				pstmtAddArticle3.setLong(3, getMaxArticleIndex(group.getInternalID()) + 1);
-				pstmtAddArticle3.execute();
-			}
-
-			// Write message-id to article_ids table
-			this.pstmtAddArticle4.setInt(1, newArticleID);
-			this.pstmtAddArticle4.setString(2, article.getMessageID());
-			this.pstmtAddArticle4.execute();
-
+			addArticle(article, newArticleID);
 			this.conn.commit();
 			this.conn.setAutoCommit(true);
 
@@ -358,6 +326,48 @@ public class JDBCDatabase implements Storage
 			restartConnection(ex);
 			addArticle(article);
 		}
+	}
+
+	/**
+	 * Adds an article to the database.
+	 * @param article
+	 * @return
+	 * @throws java.sql.SQLException
+	 */
+	void addArticle(final Article article, final int newArticleID)
+		throws SQLException, StorageBackendException
+	{
+		// Fill prepared statement with values;
+		// writes body to article table
+		pstmtAddArticle1.setInt(1, newArticleID);
+		pstmtAddArticle1.setBytes(2, article.getBody());
+		pstmtAddArticle1.execute();
+
+		// Add headers
+		Enumeration headers = article.getAllHeaders();
+		for (int n = 0; headers.hasMoreElements(); n++) {
+			Header header = (Header) headers.nextElement();
+			pstmtAddArticle2.setInt(1, newArticleID);
+			pstmtAddArticle2.setString(2, header.getName().toLowerCase());
+			pstmtAddArticle2.setString(3,
+				header.getValue().replaceAll("[\r\n]", ""));
+			pstmtAddArticle2.setInt(4, n);
+			pstmtAddArticle2.execute();
+		}
+
+		// For each newsgroup add a reference
+		List<Group> groups = article.getGroups();
+		for (Group group : groups) {
+			pstmtAddArticle3.setLong(1, group.getInternalID());
+			pstmtAddArticle3.setInt(2, newArticleID);
+			pstmtAddArticle3.setLong(3, getMaxArticleIndex(group.getInternalID()) + 1);
+			pstmtAddArticle3.execute();
+		}
+
+		// Write message-id to article_ids table
+		this.pstmtAddArticle4.setInt(1, newArticleID);
+		this.pstmtAddArticle4.setString(2, article.getMessageID());
+		this.pstmtAddArticle4.execute();
 	}
 
 	/**
@@ -1398,12 +1408,29 @@ public class JDBCDatabase implements Storage
 	public boolean update(Article article)
 		throws StorageBackendException
 	{
-		// DELETE FROM headers WHERE article_id = ?
+		ResultSet rs = null;
+		try {
+			// Retrieve internal article_id
+			this.pstmtGetArticle0.setString(1, article.getMessageID());
+			rs = this.pstmtGetArticle0.executeQuery();
+			int articleID = rs.getInt("article_id");
 
-		// INSERT INTO headers ...
+			delete(article.getMessageID());
 
-		// SELECT * FROM postings WHERE article_id = ? AND group_id = ?
-		return false;
+			this.conn.setAutoCommit(false);
+			addArticle(article, articleID);
+			this.conn.commit();
+			this.conn.setAutoCommit(true);
+			return true;
+		} catch (SQLException ex) {
+			try {
+				this.conn.rollback();
+			} catch(SQLException ex2) {
+				Log.get().severe("Rollback failed: " + ex2.getMessage());
+			}
+			restartConnection(ex);
+			return update(article);
+		}
 	}
 
 	/**
