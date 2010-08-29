@@ -21,8 +21,6 @@ package org.sonews.storage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.Charset;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.UUID;
@@ -32,10 +30,8 @@ import java.util.List;
 import javax.mail.Header;
 import javax.mail.Message;
 import javax.mail.MessagingException;
-import javax.mail.Multipart;
 import javax.mail.internet.InternetHeaders;
 import org.sonews.config.Config;
-import org.sonews.util.Log;
 
 /**
  * Represents a newsgroup article.
@@ -97,7 +93,7 @@ public class Article extends ArticleHead
 
   /**
    * Creates an Article instance using the data from the javax.mail.Message
-   * object.
+   * object. This constructor is called by the Mailinglist gateway.
    * @see javax.mail.Message
    * @param msg
    * @throws IOException
@@ -113,61 +109,25 @@ public class Article extends ArticleHead
       final Header header = (Header)e.nextElement();
       this.headers.addHeader(header.getName(), header.getValue());
     }
-    
-    // The "content" of the message can be a String if it's a simple text/plain
-    // message, a Multipart object or an InputStream if the content is unknown.
-    final Object content = msg.getContent();
-    if(content instanceof String)
-    {
-      this.body = ((String)content).getBytes(getBodyCharset());
-    }
-    else if(content instanceof Multipart) // probably subclass MimeMultipart
-    {
-      // We're are not interested in the different parts of the MultipartMessage,
-      // so we simply read in all data which *can* be huge.
-      InputStream in = msg.getInputStream();
-      this.body = readContent(in);
-    }
-    else if(content instanceof InputStream)
-    {
-      // The message format is unknown to the Message class, but we can
-      // simply read in the whole message data.
-      this.body = readContent((InputStream)content);
-    }
-    else
-    {
-      // Unknown content is probably a malformed mail we should skip.
-      // On the other hand we produce an inconsistent mail mirror, but no
-      // mail system must transport invalid content.
-      Log.get().severe("Skipping message due to unknown content. Throwing exception...");
-      MessagingException ex = new MessagingException("Unknown content: " + content);
-      Log.get().throwing("Article.java", "<init>", ex);
-      throw ex;
-    }
+
+	// Reads the raw byte body using Message.writeTo(OutputStream out)
+	this.body = readContent(msg);
     
     // Validate headers
     validateHeaders();
   }
 
   /**
-   * Reads from the given InputString into a byte array.
-   * TODO: Move this generalized method to org.sonews.util.io.Resource.
+   * Reads from the given Message into a byte array.
    * @param in
    * @return
    * @throws IOException
    */
-  private byte[] readContent(InputStream in)
-    throws IOException
+  private byte[] readContent(Message in)
+    throws IOException, MessagingException
   {
     ByteArrayOutputStream out = new ByteArrayOutputStream();
-
-    int b = in.read();
-    while(b >= 0)
-    {
-      out.write(b);
-      b = in.read();
-    }
-
+    in.writeTo(out);
     return out.toByteArray();
   }
 
@@ -225,51 +185,6 @@ public class Article extends ArticleHead
   public byte[] getBody()
   {
     return body;
-  }
-
-  /**
-   * @return Charset of the body text
-   */
-  private Charset getBodyCharset()
-  {
-    // We espect something like 
-    // Content-Type: text/plain; charset=ISO-8859-15
-    String contentType = getHeader(Headers.CONTENT_TYPE)[0];
-    int idxCharsetStart = contentType.indexOf("charset=") + "charset=".length();
-    int idxCharsetEnd   = contentType.indexOf(";", idxCharsetStart);
-    
-    String charsetName = "UTF-8";
-    if(idxCharsetStart >= 0 && idxCharsetStart < contentType.length())
-    {
-      if(idxCharsetEnd < 0)
-      {
-        charsetName = contentType.substring(idxCharsetStart);
-      }
-      else
-      {
-        charsetName = contentType.substring(idxCharsetStart, idxCharsetEnd);
-      }
-    }
-    
-    // Sometimes there are '"' around the name
-    if(charsetName.length() > 2 &&
-      charsetName.charAt(0) == '"' && charsetName.endsWith("\""))
-    {
-      charsetName = charsetName.substring(1, charsetName.length() - 2);
-    }
-    
-    // Create charset
-    Charset charset = Charset.forName("UTF-8"); // This MUST be supported by JVM
-    try
-    {
-      charset = Charset.forName(charsetName);
-    }
-    catch(Exception ex)
-    {
-      Log.get().severe(ex.getMessage());
-      Log.get().severe("Article.getBodyCharset(): Unknown charset: " + charsetName);
-    }
-    return charset;
   }
   
   /**
