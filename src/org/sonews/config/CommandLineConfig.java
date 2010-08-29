@@ -28,37 +28,34 @@ import java.util.HashMap;
 class CommandLineConfig extends AbstractConfig
 {
 
-  private static final CommandLineConfig instance = new CommandLineConfig();
+	private static final CommandLineConfig instance = new CommandLineConfig();
 
-  public static CommandLineConfig getInstance()
-  {
-    return instance;
-  }
+	public static CommandLineConfig getInstance()
+	{
+		return instance;
+	}
+	private final Map<String, String> values = new HashMap<String, String>();
 
-  private final Map<String, String> values = new HashMap<String, String>();
-  
-  private CommandLineConfig() {}
+	private CommandLineConfig()
+	{
+	}
 
-  @Override
-  public String get(String key, String def)
-  {
-    synchronized(this.values)
-    {
-      if(this.values.containsKey(key))
-      {
-        def = this.values.get(key);
-      }
-    }
-    return def;
-  }
+	@Override
+	public String get(String key, String def)
+	{
+		synchronized (this.values) {
+			if (this.values.containsKey(key)) {
+				def = this.values.get(key);
+			}
+		}
+		return def;
+	}
 
-  @Override
-  public void set(String key, String val)
-  {
-    synchronized(this.values)
-    {
-      this.values.put(key, val);
-    }
-  }
-
+	@Override
+	public void set(String key, String val)
+	{
+		synchronized (this.values) {
+			this.values.put(key, val);
+		}
+	}
 }

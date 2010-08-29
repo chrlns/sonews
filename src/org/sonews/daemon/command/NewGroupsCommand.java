@@ -31,48 +31,44 @@ import org.sonews.storage.StorageBackendException;
 public class NewGroupsCommand implements Command
 {
 
-  @Override
-  public String[] getSupportedCommandStrings()
-  {
-    return new String[]{"NEWGROUPS"};
-  }
+	@Override
+	public String[] getSupportedCommandStrings()
+	{
+		return new String[] {"NEWGROUPS"};
+	}
 
-  @Override
-  public boolean hasFinished()
-  {
-    return true;
-  }
+	@Override
+	public boolean hasFinished()
+	{
+		return true;
+	}
 
-  @Override
-  public String impliedCapability()
-  {
-    return null;
-  }
+	@Override
+	public String impliedCapability()
+	{
+		return null;
+	}
 
-  @Override
-  public boolean isStateful()
-  {
-    return false;
-  }
+	@Override
+	public boolean isStateful()
+	{
+		return false;
+	}
 
-  @Override
-  public void processLine(NNTPConnection conn, final String line, byte[] raw)
-    throws IOException, StorageBackendException
-  {
-    final String[] command = line.split(" ");
+	@Override
+	public void processLine(NNTPConnection conn, final String line, byte[] raw)
+		throws IOException, StorageBackendException
+	{
+		final String[] command = line.split(" ");
 
-    if(command.length == 3)
-    {
-      conn.println("231 list of new newsgroups follows");
+		if (command.length == 3) {
+			conn.println("231 list of new newsgroups follows");
 
-      // Currently we do not store a group's creation date;
-      // so we return an empty list which is a valid response
-      conn.println(".");
-    }
-    else
-    {
-      conn.println("500 invalid command usage");
-    }
-  }
-
+			// Currently we do not store a group's creation date;
+			// so we return an empty list which is a valid response
+			conn.println(".");
+		} else {
+			conn.println("500 invalid command usage");
+		}
+	}
 }

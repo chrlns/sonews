@@ -42,110 +42,94 @@ import org.sonews.util.Stats;
 public class MailPoller extends AbstractDaemon
 {
 
-  static class PasswordAuthenticator extends Authenticator
-  {
-    
-    @Override
-    public PasswordAuthentication getPasswordAuthentication()
-    {
-      final String username = 
-        Config.inst().get(Config.MLPOLL_USER, "user");
-      final String password = 
-        Config.inst().get(Config.MLPOLL_PASSWORD, "mysecret");
+	static class PasswordAuthenticator extends Authenticator
+	{
 
-      return new PasswordAuthentication(username, password);
-    }
-    
-  }
-  
-  @Override
-  public void run()
-  {
-    Log.get().info("Starting Mailinglist Poller...");
-    int errors = 0;
-    while(isRunning())
-    {
-      try
-      {
-        // Wait some time between runs. At the beginning has advantages,
-        // because the wait is not skipped if an exception occurs.
-        Thread.sleep(60000 * (errors + 1)); // one minute * errors
-        
-        final String host     = 
-          Config.inst().get(Config.MLPOLL_HOST, "samplehost");
-        final String username = 
-          Config.inst().get(Config.MLPOLL_USER, "user");
-        final String password = 
-          Config.inst().get(Config.MLPOLL_PASSWORD, "mysecret");
-        
-        Stats.getInstance().mlgwRunStart();
-        
-        // Create empty properties
-        Properties props = System.getProperties();
-        props.put("mail.pop3.host", host);
-        props.put("mail.mime.address.strict", "false");
+		@Override
+		public PasswordAuthentication getPasswordAuthentication()
+		{
+			final String username =
+				Config.inst().get(Config.MLPOLL_USER, "user");
+			final String password =
+				Config.inst().get(Config.MLPOLL_PASSWORD, "mysecret");
 
-        // Get session
-        Session session = Session.getInstance(props);
+			return new PasswordAuthentication(username, password);
+		}
+	}
 
-        // Get the store
-        Store store = session.getStore("pop3");
-        store.connect(host, 110, username, password);
+	@Override
+	public void run()
+	{
+		Log.get().info("Starting Mailinglist Poller...");
+		int errors = 0;
+		while (isRunning()) {
+			try {
+				// Wait some time between runs. At the beginning has advantages,
+				// because the wait is not skipped if an exception occurs.
+				Thread.sleep(60000 * (errors + 1)); // one minute * errors
 
-        // Get folder
-        Folder folder = store.getFolder("INBOX");
-        folder.open(Folder.READ_WRITE);
+				final String host =
+					Config.inst().get(Config.MLPOLL_HOST, "samplehost");
+				final String username =
+					Config.inst().get(Config.MLPOLL_USER, "user");
+				final String password =
+					Config.inst().get(Config.MLPOLL_PASSWORD, "mysecret");
 
-        // Get directory
-        Message[] messages = folder.getMessages();
+				Stats.getInstance().mlgwRunStart();
 
-        // Dispatch messages and delete it afterwards on the inbox
-        for(Message message : messages)
-        {
-          if(Dispatcher.toGroup(message)
-            || Config.inst().get(Config.MLPOLL_DELETEUNKNOWN, false))
-          {
-            // Delete the message
-            message.setFlag(Flag.DELETED, true);
-          }
-        }
+				// Create empty properties
+				Properties props = System.getProperties();
+				props.put("mail.pop3.host", host);
+				props.put("mail.mime.address.strict", "false");
 
-        // Close connection 
-        folder.close(true); // true to expunge deleted messages
-        store.close();
-        errors = 0;
-        
-        Stats.getInstance().mlgwRunEnd();
-      }
-      catch(NoSuchProviderException ex)
-      {
-        Log.get().severe(ex.toString());
-        shutdown();
-      }
-      catch(AuthenticationFailedException ex)
-      {
-        // AuthentificationFailedException may be thrown if credentials are
-        // bad or if the Mailbox is in use (locked).
-        ex.printStackTrace();
-        errors = errors < 5 ? errors + 1 : errors;
-      }
-      catch(InterruptedException ex)
-      {
-        System.out.println("sonews: " + this + " returns: " + ex);
-        return;
-      }
-      catch(MessagingException ex)
-      {
-        ex.printStackTrace();
-        errors = errors < 5 ? errors + 1 : errors;
-      }
-      catch(Exception ex)
-      {
-        ex.printStackTrace();
-        errors = errors < 5 ? errors + 1 : errors;
-      }
-    }
-    Log.get().severe("MailPoller exited.");
-  }
-  
+				// Get session
+				Session session = Session.getInstance(props);
+
+				// Get the store
+				Store store = session.getStore("pop3");
+				store.connect(host, 110, username, password);
+
+				// Get folder
+				Folder folder = store.getFolder("INBOX");
+				folder.open(Folder.READ_WRITE);
+
+				// Get directory
+				Message[] messages = folder.getMessages();
+
+				// Dispatch messages and delete it afterwards on the inbox
+				for (Message message : messages) {
+					if (Dispatcher.toGroup(message)
+						|| Config.inst().get(Config.MLPOLL_DELETEUNKNOWN, false)) {
+						// Delete the message
+						message.setFlag(Flag.DELETED, true);
+					}
+				}
+
+				// Close connection
+				folder.close(true); // true to expunge deleted messages
+				store.close();
+				errors = 0;
+
+				Stats.getInstance().mlgwRunEnd();
+			} catch (NoSuchProviderException ex) {
+				Log.get().severe(ex.toString());
+				shutdown();
+			} catch (AuthenticationFailedException ex) {
+				// AuthentificationFailedException may be thrown if credentials are
+				// bad or if the Mailbox is in use (locked).
+				ex.printStackTrace();
+				errors = errors < 5 ? errors + 1 : errors;
+			} catch (InterruptedException ex) {
+				System.out.println("sonews: " + this + " returns: " + ex);
+				return;
+			} catch (MessagingException ex) {
+				ex.printStackTrace();
+				errors = errors < 5 ? errors + 1 : errors;
+			} catch (Exception ex) {
+				ex.printStackTrace();
+				errors = errors < 5 ? errors + 1 : errors;
+			}
+		}
+		Log.get().severe("MailPoller exited.");
+	}
 }

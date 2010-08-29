@@ -33,25 +33,24 @@ import org.sonews.config.Config;
 public class Log extends Logger
 {
 
-  private static Log instance = new Log();
+	private static Log instance = new Log();
 
-  private Log()
-  {
-    super("org.sonews", null);
+	private Log()
+	{
+		super("org.sonews", null);
 
-    StreamHandler handler = new StreamHandler(System.out, new SimpleFormatter());
-    Level level = Level.parse(Config.inst().get(Config.LOGLEVEL, "INFO"));
-    handler.setLevel(level);
-    addHandler(handler);
-    setLevel(level);
-    LogManager.getLogManager().addLogger(this);
-  }
+		StreamHandler handler = new StreamHandler(System.out, new SimpleFormatter());
+		Level level = Level.parse(Config.inst().get(Config.LOGLEVEL, "INFO"));
+		handler.setLevel(level);
+		addHandler(handler);
+		setLevel(level);
+		LogManager.getLogManager().addLogger(this);
+	}
 
-  public static Logger get()
-  {
-    Level level = Level.parse(Config.inst().get(Config.LOGLEVEL, "INFO"));
-    instance.setLevel(level);
-    return instance;
-  }
-
+	public static Logger get()
+	{
+		Level level = Level.parse(Config.inst().get(Config.LOGLEVEL, "INFO"));
+		instance.setLevel(level);
+		return instance;
+	}
 }

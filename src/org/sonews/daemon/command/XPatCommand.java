@@ -78,93 +78,79 @@ import org.sonews.util.Pair;
 public class XPatCommand implements Command
 {
 
-  @Override
-  public String[] getSupportedCommandStrings()
-  {
-    return new String[]{"XPAT"};
-  }
-  
-  @Override
-  public boolean hasFinished()
-  {
-    return true;
-  }
+	@Override
+	public String[] getSupportedCommandStrings()
+	{
+		return new String[] {"XPAT"};
+	}
 
-  @Override
-  public String impliedCapability()
-  {
-    return null;
-  }
+	@Override
+	public boolean hasFinished()
+	{
+		return true;
+	}
 
-  @Override
-  public boolean isStateful()
-  {
-    return false;
-  }
+	@Override
+	public String impliedCapability()
+	{
+		return null;
+	}
 
-  @Override
-  public void processLine(NNTPConnection conn, final String line, byte[] raw)
-    throws IOException, StorageBackendException
-  {
-    if(conn.getCurrentChannel() == null)
-    {
-      conn.println("430 no group selected");
-      return;
-    }
+	@Override
+	public boolean isStateful()
+	{
+		return false;
+	}
 
-    String[] command = line.split("\\p{Space}+");
+	@Override
+	public void processLine(NNTPConnection conn, final String line, byte[] raw)
+		throws IOException, StorageBackendException
+	{
+		if (conn.getCurrentChannel() == null) {
+			conn.println("430 no group selected");
+			return;
+		}
 
-    // There may be multiple patterns and Thunderbird produces
-    // additional spaces between range and pattern
-    if(command.length >= 4)
-    {
-      String header  = command[1].toLowerCase(Locale.US);
-      String range   = command[2];
-      String pattern = command[3];
+		String[] command = line.split("\\p{Space}+");
 
-      long start = -1;
-      long end   = -1;
-      if(range.contains("-"))
-      {
-        String[] rsplit = range.split("-", 2);
-        start = Long.parseLong(rsplit[0]);
-        if(rsplit[1].length() > 0)
-        {
-          end = Long.parseLong(rsplit[1]);
-        }
-      }
-      else // TODO: Handle Message-IDs
-      {
-        start = Long.parseLong(range);
-      }
+		// There may be multiple patterns and Thunderbird produces
+		// additional spaces between range and pattern
+		if (command.length >= 4) {
+			String header = command[1].toLowerCase(Locale.US);
+			String range = command[2];
+			String pattern = command[3];
 
-      try
-      {
-        List<Pair<Long, String>> heads = StorageManager.current().
-          getArticleHeaders(conn.getCurrentChannel(), start, end, header, pattern);
-        
-        conn.println("221 header follows");
-        for(Pair<Long, String> head : heads)
-        {
-          conn.println(head.getA() + " " + head.getB());
-        }
-        conn.println(".");
-      }
-      catch(PatternSyntaxException ex)
-      {
-        ex.printStackTrace();
-        conn.println("500 invalid pattern syntax");
-      }
-      catch(StorageBackendException ex)
-      {
-        ex.printStackTrace();
-        conn.println("500 internal server error");
-      }
-    }
-    else
-    {
-      conn.println("430 invalid command usage");
-    }
-  }
+			long start = -1;
+			long end = -1;
+			if (range.contains("-")) {
+				String[] rsplit = range.split("-", 2);
+				start = Long.parseLong(rsplit[0]);
+				if (rsplit[1].length() > 0) {
+					end = Long.parseLong(rsplit[1]);
+				}
+			} else // TODO: Handle Message-IDs
+			{
+				start = Long.parseLong(range);
+			}
 
+			try {
+				List<Pair<Long, String>> heads = StorageManager.current().
+					getArticleHeaders(conn.getCurrentChannel(), start, end, header, pattern);
+
+				conn.println("221 header follows");
+				for (Pair<Long, String> head : heads) {
+					conn.println(head.getA() + " " + head.getB());
+				}
+				conn.println(".");
+			} catch (PatternSyntaxException ex) {
+				ex.printStackTrace();
+				conn.println("500 invalid pattern syntax");
+			} catch (StorageBackendException ex) {
+				ex.printStackTrace();
+				conn.println("500 internal server error");
+			}
+		} else {
+			conn.println("430 invalid command usage");
+		}
+	}
 }

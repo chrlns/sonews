@@ -19,21 +19,20 @@
 package org.sonews.storage;
 
 /**
- *
+ * Exception caused by the storage backend.
  * @author Christian Lins
  * @since sonews/1.0
  */
 public class StorageBackendException extends Exception
 {
 
-  public StorageBackendException(Throwable cause)
-  {
-    super(cause);
-  }
+	public StorageBackendException(Throwable cause)
+	{
+		super(cause);
+	}
 
-  public StorageBackendException(String msg)
-  {
-    super(msg);
-  }
-
+	public StorageBackendException(String msg)
+	{
+		super(msg);
+	}
 }

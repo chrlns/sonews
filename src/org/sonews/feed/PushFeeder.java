@@ -37,82 +37,65 @@ import org.sonews.util.io.ArticleWriter;
  */
 class PushFeeder extends AbstractDaemon
 {
-  
-  private ConcurrentLinkedQueue<Article> articleQueue = 
-    new ConcurrentLinkedQueue<Article>();
-  
-  @Override
-  public void run()
-  {
-    while(isRunning())
-    {
-      try
-      {
-        synchronized(this)
-        {
-          this.wait();
-        }
-        
-        List<Subscription> subscriptions = StorageManager.current()
-          .getSubscriptions(FeedManager.TYPE_PUSH);
 
-        Article  article = this.articleQueue.poll();
-        String[] groups  = article.getHeader(Headers.NEWSGROUPS)[0].split(",");
-        Log.get().info("PushFeed: " + article.getMessageID());
-        for(Subscription sub : subscriptions)
-        {
-          // Circle check
-          if(article.getHeader(Headers.PATH)[0].contains(sub.getHost()))
-          {
-            Log.get().info(article.getMessageID() + " skipped for host "
-              + sub.getHost());
-            continue;
-          }
+	private ConcurrentLinkedQueue<Article> articleQueue =
+		new ConcurrentLinkedQueue<Article>();
 
-          try
-          {
-            for(String group : groups)
-            {
-              if(sub.getGroup().equals(group))
-              {
-                // Delete headers that may cause problems
-                article.removeHeader(Headers.NNTP_POSTING_DATE);
-                article.removeHeader(Headers.NNTP_POSTING_HOST);
-                article.removeHeader(Headers.X_COMPLAINTS_TO);
-                article.removeHeader(Headers.X_TRACE);
-                article.removeHeader(Headers.XREF);
-                
-                // POST the message to remote server
-                ArticleWriter awriter = new ArticleWriter(sub.getHost(), sub.getPort());
-                awriter.writeArticle(article);
-                break;
-              }
-            }
-          }
-          catch(IOException ex)
-          {
-            Log.get().warning(ex.toString());
-          }
-        }
-      }
-      catch(StorageBackendException ex)
-      {
-        Log.get().severe(ex.toString());
-      }
-      catch(InterruptedException ex)
-      {
-        Log.get().warning("PushFeeder interrupted: " + ex);
-      }
-    }
-  }
-  
-  public void queueForPush(Article article)
-  {
-    this.articleQueue.add(article);
-    synchronized(this)
-    {
-      this.notifyAll();
-    }
-  }
-  
+	@Override
+	public void run()
+	{
+		while (isRunning()) {
+			try {
+				synchronized (this) {
+					this.wait();
+				}
+
+				List<Subscription> subscriptions = StorageManager.current().getSubscriptions(FeedManager.TYPE_PUSH);
+
+				Article article = this.articleQueue.poll();
+				String[] groups = article.getHeader(Headers.NEWSGROUPS)[0].split(",");
+				Log.get().info("PushFeed: " + article.getMessageID());
+				for (Subscription sub : subscriptions) {
+					// Circle check
+					if (article.getHeader(Headers.PATH)[0].contains(sub.getHost())) {
+						Log.get().info(article.getMessageID() + " skipped for host "
+							+ sub.getHost());
+						continue;
+					}
+
+					try {
+						for (String group : groups) {
+							if (sub.getGroup().equals(group)) {
+								// Delete headers that may cause problems
+								article.removeHeader(Headers.NNTP_POSTING_DATE);
+								article.removeHeader(Headers.NNTP_POSTING_HOST);
+								article.removeHeader(Headers.X_COMPLAINTS_TO);
+								article.removeHeader(Headers.X_TRACE);
+								article.removeHeader(Headers.XREF);
+
+								// POST the message to remote server
+								ArticleWriter awriter = new ArticleWriter(sub.getHost(), sub.getPort());
+								awriter.writeArticle(article);
+								break;
+							}
+						}
+					} catch (IOException ex) {
+						Log.get().warning(ex.toString());
+					}
+				}
+			} catch (StorageBackendException ex) {
+				Log.get().severe(ex.toString());
+			} catch (InterruptedException ex) {
+				Log.get().warning("PushFeeder interrupted: " + ex);
+			}
+		}
+	}
+
+	public void queueForPush(Article article)
+	{
+		this.articleQueue.add(article);
+		synchronized (this) {
+			this.notifyAll();
+		}
+	}
 }

@@ -26,15 +26,14 @@ package org.sonews.storage;
 public interface StorageProvider
 {
 
-  public boolean isSupported(String uri);
+	public boolean isSupported(String uri);
 
-  /**
-   * This method returns the reference to the associated storage.
-   * The reference MAY be unique for each thread. In any case it MUST be
-   * thread-safe to use this method.
-   * @return The reference to the associated Storage.
-   */
-  public Storage storage(Thread thread)
-    throws StorageBackendException;
-
+	/**
+	 * This method returns the reference to the associated storage.
+	 * The reference MAY be unique for each thread. In any case it MUST be
+	 * thread-safe to use this method.
+	 * @return The reference to the associated Storage.
+	 */
+	public Storage storage(Thread thread)
+		throws StorageBackendException;
 }

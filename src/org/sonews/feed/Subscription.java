@@ -24,61 +24,57 @@ package org.sonews.feed;
  * @author Christian Lins
  * @since sonews/0.5.0
  */
-public class Subscription 
+public class Subscription
 {
 
-  private String host;
-  private int    port;
-  private int    feedtype;
-  private String group;
-  
-  public Subscription(String host, int port, int feedtype, String group)
-  {
-    this.host     = host;
-    this.port     = port;
-    this.feedtype = feedtype;
-    this.group    = group;
-  }
+	private String host;
+	private int port;
+	private int feedtype;
+	private String group;
 
-  @Override
-  public boolean equals(Object obj)
-  {
-    if(obj instanceof Subscription)
-    {
-      Subscription sub = (Subscription)obj;
-      return sub.host.equals(host) && sub.group.equals(group) 
-        && sub.port == port && sub.feedtype == feedtype;
-    }
-    else
-    {
-      return false;
-    }
-  }
+	public Subscription(String host, int port, int feedtype, String group)
+	{
+		this.host = host;
+		this.port = port;
+		this.feedtype = feedtype;
+		this.group = group;
+	}
 
-  @Override
-  public int hashCode()
-  {
-    return host.hashCode() + port + feedtype + group.hashCode();
-  }
+	@Override
+	public boolean equals(Object obj)
+	{
+		if (obj instanceof Subscription) {
+			Subscription sub = (Subscription) obj;
+			return sub.host.equals(host) && sub.group.equals(group)
+				&& sub.port == port && sub.feedtype == feedtype;
+		} else {
+			return false;
+		}
+	}
 
-  public int getFeedtype()
-  {
-    return feedtype;
-  }
+	@Override
+	public int hashCode()
+	{
+		return host.hashCode() + port + feedtype + group.hashCode();
+	}
 
-  public String getGroup()
-  {
-    return group;
-  }
+	public int getFeedtype()
+	{
+		return feedtype;
+	}
 
-  public String getHost()
-  {
-    return host;
-  }
+	public String getGroup()
+	{
+		return group;
+	}
 
-  public int getPort()
-  {
-    return port;
-  }
-  
+	public String getHost()
+	{
+		return host;
+	}
+
+	public int getPort()
+	{
+		return port;
+	}
 }

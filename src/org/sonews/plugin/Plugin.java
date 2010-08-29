@@ -28,15 +28,14 @@ package org.sonews.plugin;
 public interface Plugin
 {
 
-  /**
-   * Called when the Plugin is loaded by sonews. This method can be used
-   * by implementing classes to install additional or required plugins.
-   */
-  void load();
+	/**
+	 * Called when the Plugin is loaded by sonews. This method can be used
+	 * by implementing classes to install additional or required plugins.
+	 */
+	void load();
 
-  /**
-   * Called when the Plugin is unloaded by sonews.
-   */
-  void unload();
-
+	/**
+	 * Called when the Plugin is unloaded by sonews.
+	 */
+	void unload();
 }

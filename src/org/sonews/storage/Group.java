@@ -31,154 +31,147 @@ import org.sonews.util.Pair;
 // TODO: This class should not be public!
 public class Group extends Channel
 {
-  
-  private long   id     = 0;
-  private int    flags  = -1;
-  private String name   = null;
 
-  /**
-   * @return List of all groups this server handles.
-   */
-  public static List<Channel> getAll()
-  {
-    try
-    {
-      return StorageManager.current().getGroups();
-    }
-    catch(StorageBackendException ex)
-    {
-      Log.get().severe(ex.getMessage());
-      return null;
-    }
-  }
-  
-  /**
-   * @param name
-   * @param id
-   */
-  public Group(final String name, final long id, final int flags)
-  {
-    this.id    = id;
-    this.flags = flags;
-    this.name  = name;
-  }
+	private long id = 0;
+	private int flags = -1;
+	private String name = null;
 
-  @Override
-  public boolean equals(Object obj)
-  {
-    if(obj instanceof Group)
-    {
-      return ((Group)obj).id == this.id;
-    }
-    else
-    {
-      return false;
-    }
-  }
+	/**
+	 * @return List of all groups this server handles.
+	 */
+	public static List<Channel> getAll()
+	{
+		try {
+			return StorageManager.current().getGroups();
+		} catch (StorageBackendException ex) {
+			Log.get().severe(ex.getMessage());
+			return null;
+		}
+	}
 
-  public Article getArticle(long idx)
-    throws StorageBackendException
-  {
-    return StorageManager.current().getArticle(idx, this.id);
-  }
+	/**
+	 * @param name
+	 * @param id
+	 */
+	public Group(final String name, final long id, final int flags)
+	{
+		this.id = id;
+		this.flags = flags;
+		this.name = name;
+	}
 
-  public List<Pair<Long, ArticleHead>> getArticleHeads(final long first, final long last)
-    throws StorageBackendException
-  {
-    return StorageManager.current().getArticleHeads(this, first, last);
-  }
-  
-  public List<Long> getArticleNumbers()
-    throws StorageBackendException
-  {
-    return StorageManager.current().getArticleNumbers(id);
-  }
+	@Override
+	public boolean equals(Object obj)
+	{
+		if (obj instanceof Group) {
+			return ((Group) obj).id == this.id;
+		} else {
+			return false;
+		}
+	}
 
-  public long getFirstArticleNumber()
-    throws StorageBackendException
-  {
-    return StorageManager.current().getFirstArticleNumber(this);
-  }
+	public Article getArticle(long idx)
+		throws StorageBackendException
+	{
+		return StorageManager.current().getArticle(idx, this.id);
+	}
 
-  public int getFlags()
-  {
-    return this.flags;
-  }
+	public List<Pair<Long, ArticleHead>> getArticleHeads(final long first, final long last)
+		throws StorageBackendException
+	{
+		return StorageManager.current().getArticleHeads(this, first, last);
+	}
 
-  public long getIndexOf(Article art)
-    throws StorageBackendException
-  {
-    return StorageManager.current().getArticleIndex(art, this);
-  }
+	public List<Long> getArticleNumbers()
+		throws StorageBackendException
+	{
+		return StorageManager.current().getArticleNumbers(id);
+	}
 
-  /**
-   * Returns the group id.
-   */
-  public long getInternalID()
-  {
-    assert id > 0;
+	public long getFirstArticleNumber()
+		throws StorageBackendException
+	{
+		return StorageManager.current().getFirstArticleNumber(this);
+	}
 
-    return id;
-  }
+	public int getFlags()
+	{
+		return this.flags;
+	}
 
-  public boolean isDeleted()
-  {
-    return (this.flags & DELETED) != 0;
-  }
+	public long getIndexOf(Article art)
+		throws StorageBackendException
+	{
+		return StorageManager.current().getArticleIndex(art, this);
+	}
 
-  public boolean isMailingList()
-  {
-    return (this.flags & MAILINGLIST) != 0;
-  }
+	/**
+	 * Returns the group id.
+	 */
+	public long getInternalID()
+	{
+		assert id > 0;
 
-  public boolean isWriteable()
-  {
-    return true;
-  }
+		return id;
+	}
 
-  public long getLastArticleNumber()
-    throws StorageBackendException
-  {
-    return StorageManager.current().getLastArticleNumber(this);
-  }
+	public boolean isDeleted()
+	{
+		return (this.flags & DELETED) != 0;
+	}
 
-  public String getName()
-  {
-    return name;
-  }
+	public boolean isMailingList()
+	{
+		return (this.flags & MAILINGLIST) != 0;
+	}
 
-  /**
-   * Performs this.flags |= flag to set a specified flag and updates the data
-   * in the JDBCDatabase.
-   * @param flag
-   */
-  public void setFlag(final int flag)
-  {
-    this.flags |= flag;
-  }
+	public boolean isWriteable()
+	{
+		return true;
+	}
 
-  public void setName(final String name)
-  {
-    this.name = name;
-  }
+	public long getLastArticleNumber()
+		throws StorageBackendException
+	{
+		return StorageManager.current().getLastArticleNumber(this);
+	}
 
-  /**
-   * @return Number of posted articles in this group.
-   * @throws java.sql.SQLException
-   */
-  public long getPostingsCount()
-    throws StorageBackendException
-  {
-    return StorageManager.current().getPostingsCount(this.name);
-  }
+	public String getName()
+	{
+		return name;
+	}
 
-  /**
-   * Updates flags and name in the backend.
-   */
-  public void update()
-    throws StorageBackendException
-  {
-    StorageManager.current().update(this);
-  }
+	/**
+	 * Performs this.flags |= flag to set a specified flag and updates the data
+	 * in the JDBCDatabase.
+	 * @param flag
+	 */
+	public void setFlag(final int flag)
+	{
+		this.flags |= flag;
+	}
 
+	public void setName(final String name)
+	{
+		this.name = name;
+	}
+
+	/**
+	 * @return Number of posted articles in this group.
+	 * @throws java.sql.SQLException
+	 */
+	public long getPostingsCount()
+		throws StorageBackendException
+	{
+		return StorageManager.current().getPostingsCount(this.name);
+	}
+
+	/**
+	 * Updates flags and name in the backend.
+	 */
+	public void update()
+		throws StorageBackendException
+	{
+		StorageManager.current().update(this);
+	}
 }

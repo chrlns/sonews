@@ -35,66 +35,56 @@ import org.sonews.util.io.Resource;
 public class HelpCommand implements Command
 {
 
-  @Override
-  public boolean hasFinished()
-  {
-    return true;
-  }
+	@Override
+	public boolean hasFinished()
+	{
+		return true;
+	}
 
-  @Override
-  public String impliedCapability()
-  {
-    return null;
-  }
+	@Override
+	public String impliedCapability()
+	{
+		return null;
+	}
 
-  @Override
-  public boolean isStateful()
-  {
-    return true;
-  }
+	@Override
+	public boolean isStateful()
+	{
+		return true;
+	}
 
-  @Override
-  public String[] getSupportedCommandStrings()
-  {
-    return new String[]{"HELP"};
-  }
-  
-  @Override
-  public void processLine(NNTPConnection conn, final String line, byte[] raw)
-    throws IOException
-  {
-    final String[] command = line.split(" ");
-    conn.println("100 help text follows");
+	@Override
+	public String[] getSupportedCommandStrings()
+	{
+		return new String[] {"HELP"};
+	}
 
-    if(line.length() <= 1)
-    {
-      final String[] help = Resource
-        .getAsString("helpers/helptext", true).split("\n");
-      for(String hstr : help)
-      {
-        conn.println(hstr);
-      }
+	@Override
+	public void processLine(NNTPConnection conn, final String line, byte[] raw)
+		throws IOException
+	{
+		final String[] command = line.split(" ");
+		conn.println("100 help text follows");
 
-      Set<String> commandNames = CommandSelector.getCommandNames();
-      for(String cmdName : commandNames)
-      {
-        conn.println(cmdName);
-      }
-    }
-    else
-    {
-      Command cmd = CommandSelector.getInstance().get(command[1]);
-      if(cmd instanceof HelpfulCommand)
-      {
-        conn.println(((HelpfulCommand)cmd).getHelpString());
-      }
-      else
-      {
-        conn.println("No further help information available.");
-      }
-    }
-    
-    conn.println(".");
-  }
-  
+		if (line.length() <= 1) {
+			final String[] help = Resource.getAsString("helpers/helptext", true).split("\n");
+			for (String hstr : help) {
+				conn.println(hstr);
+			}
+
+			Set<String> commandNames = CommandSelector.getCommandNames();
+			for (String cmdName : commandNames) {
+				conn.println(cmdName);
+			}
+		} else {
+			Command cmd = CommandSelector.getInstance().get(command[1]);
+			if (cmd instanceof HelpfulCommand) {
+				conn.println(((HelpfulCommand) cmd).getHelpString());
+			} else {
+				conn.println("No further help information available.");
+			}
+		}
+
+		conn.println(".");
+	}
 }

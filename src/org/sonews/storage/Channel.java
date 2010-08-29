@@ -33,79 +33,75 @@ import org.sonews.util.Pair;
 public abstract class Channel
 {
 
-  /**
-   * If this flag is set the Group is no real newsgroup but a mailing list
-   * mirror. In that case every posting and receiving mails must go through
-   * the mailing list gateway.
-   */
-  public static final int MAILINGLIST = 0x1;
+	/**
+	 * If this flag is set the Group is no real newsgroup but a mailing list
+	 * mirror. In that case every posting and receiving mails must go through
+	 * the mailing list gateway.
+	 */
+	public static final int MAILINGLIST = 0x1;
+	/**
+	 * If this flag is set the Group is marked as readonly and the posting
+	 * is prohibited. This can be useful for groups that are synced only in
+	 * one direction.
+	 */
+	public static final int READONLY = 0x2;
+	/**
+	 * If this flag is set the Group is marked as deleted and must not occur
+	 * in any output. The deletion is done lazily by a low priority daemon.
+	 */
+	public static final int DELETED = 0x80;
 
-  /**
-   * If this flag is set the Group is marked as readonly and the posting
-   * is prohibited. This can be useful for groups that are synced only in
-   * one direction.
-   */
-  public static final int READONLY    = 0x2;
+	public static List<Channel> getAll()
+	{
+		List<Channel> all = new ArrayList<Channel>();
 
-  /**
-   * If this flag is set the Group is marked as deleted and must not occur
-   * in any output. The deletion is done lazily by a low priority daemon.
-   */
-  public static final int DELETED     = 0x80;
+		/*List<Channel> agroups = AggregatedGroup.getAll();
+		if(agroups != null)
+		{
+		all.addAll(agroups);
+		}*/
 
-  public static List<Channel> getAll()
-  {
-    List<Channel> all = new ArrayList<Channel>();
+		List<Channel> groups = Group.getAll();
+		if (groups != null) {
+			all.addAll(groups);
+		}
 
-    /*List<Channel> agroups = AggregatedGroup.getAll();
-    if(agroups != null)
-    {
-      all.addAll(agroups);
-    }*/
+		return all;
+	}
 
-    List<Channel> groups = Group.getAll();
-    if(groups != null)
-    {
-      all.addAll(groups);
-    }
+	public static Channel getByName(String name)
+		throws StorageBackendException
+	{
+		return StorageManager.current().getGroup(name);
+	}
 
-    return all;
-  }
+	public abstract Article getArticle(long idx)
+		throws StorageBackendException;
 
-  public static Channel getByName(String name)
-    throws StorageBackendException
-  {
-    return StorageManager.current().getGroup(name);
-  }
+	public abstract List<Pair<Long, ArticleHead>> getArticleHeads(
+		final long first, final long last)
+		throws StorageBackendException;
 
-  public abstract Article getArticle(long idx)
-    throws StorageBackendException;
+	public abstract List<Long> getArticleNumbers()
+		throws StorageBackendException;
 
-  public abstract List<Pair<Long, ArticleHead>> getArticleHeads(
-    final long first, final long last)
-    throws StorageBackendException;
+	public abstract long getFirstArticleNumber()
+		throws StorageBackendException;
 
-  public abstract List<Long> getArticleNumbers()
-    throws StorageBackendException;
+	public abstract long getIndexOf(Article art)
+		throws StorageBackendException;
 
-  public abstract long getFirstArticleNumber()
-    throws StorageBackendException;
+	public abstract long getInternalID();
 
-  public abstract long getIndexOf(Article art)
-    throws StorageBackendException;
+	public abstract long getLastArticleNumber()
+		throws StorageBackendException;
 
-  public abstract long getInternalID();
+	public abstract String getName();
 
-  public abstract long getLastArticleNumber()
-    throws StorageBackendException;
+	public abstract long getPostingsCount()
+		throws StorageBackendException;
 
-  public abstract String getName();
-  
-  public abstract long getPostingsCount()
-    throws StorageBackendException;
+	public abstract boolean isDeleted();
 
-  public abstract boolean isDeleted();
-
-  public abstract boolean isWriteable();
-
+	public abstract boolean isWriteable();
 }

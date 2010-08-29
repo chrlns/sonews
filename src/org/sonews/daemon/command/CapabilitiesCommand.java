@@ -42,52 +42,49 @@ import org.sonews.daemon.NNTPConnection;
 public class CapabilitiesCommand implements Command
 {
 
-  static final String[] CAPABILITIES = new String[]
-    {
-      "VERSION 2", // MUST be the first one; VERSION 2 refers to RFC3977
-      "READER",    // Server implements commands for reading
-      "POST",      // Server implements POST command
-      "OVER"       // Server implements OVER command
-    };
+	static final String[] CAPABILITIES = new String[] {
+		"VERSION 2", // MUST be the first one; VERSION 2 refers to RFC3977
+		"READER", // Server implements commands for reading
+		"POST", // Server implements POST command
+		"OVER" // Server implements OVER command
+	};
 
-  @Override
-  public String[] getSupportedCommandStrings()
-  {
-    return new String[] {"CAPABILITIES"};
-  }
+	@Override
+	public String[] getSupportedCommandStrings()
+	{
+		return new String[] {"CAPABILITIES"};
+	}
 
-  /**
-   * First called after one call to processLine().
-   * @return
-   */
-  @Override
-  public boolean hasFinished()
-  {
-    return true;
-  }
+	/**
+	 * First called after one call to processLine().
+	 * @return
+	 */
+	@Override
+	public boolean hasFinished()
+	{
+		return true;
+	}
 
-  @Override
-  public String impliedCapability()
-  {
-    return null;
-  }
-  
-  @Override
-  public boolean isStateful()
-  {
-    return false;
-  }
+	@Override
+	public String impliedCapability()
+	{
+		return null;
+	}
 
-  @Override
-  public void processLine(NNTPConnection conn, final String line, byte[] raw)
-    throws IOException
-  {
-    conn.println("101 Capabilities list:");
-    for(String cap : CAPABILITIES)
-    {
-      conn.println(cap);
-    }
-    conn.println(".");
-  }
+	@Override
+	public boolean isStateful()
+	{
+		return false;
+	}
 
+	@Override
+	public void processLine(NNTPConnection conn, final String line, byte[] raw)
+		throws IOException
+	{
+		conn.println("101 Capabilities list:");
+		for (String cap : CAPABILITIES) {
+			conn.println(cap);
+		}
+		conn.println(".");
+	}
 }

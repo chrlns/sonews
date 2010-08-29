@@ -30,38 +30,37 @@ import org.sonews.storage.StorageBackendException;
 public class QuitCommand implements Command
 {
 
-  @Override
-  public String[] getSupportedCommandStrings()
-  {
-    return new String[]{"QUIT"};
-  }
-  
-  @Override
-  public boolean hasFinished()
-  {
-    return true;
-  }
+	@Override
+	public String[] getSupportedCommandStrings()
+	{
+		return new String[] {"QUIT"};
+	}
 
-  @Override
-  public String impliedCapability()
-  {
-    return null;
-  }
+	@Override
+	public boolean hasFinished()
+	{
+		return true;
+	}
 
-  @Override
-  public boolean isStateful()
-  {
-    return false;
-  }
+	@Override
+	public String impliedCapability()
+	{
+		return null;
+	}
 
-  @Override
-  public void processLine(NNTPConnection conn, final String line, byte[] raw)
-    throws IOException, StorageBackendException
-  {    
-    conn.println("205 cya");
-    
-    conn.shutdownInput();
-    conn.shutdownOutput();
-  }
+	@Override
+	public boolean isStateful()
+	{
+		return false;
+	}
 
+	@Override
+	public void processLine(NNTPConnection conn, final String line, byte[] raw)
+		throws IOException, StorageBackendException
+	{
+		conn.println("205 cya");
+
+		conn.shutdownInput();
+		conn.shutdownOutput();
+	}
 }

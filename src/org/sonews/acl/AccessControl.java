@@ -26,6 +26,5 @@ package org.sonews.acl;
 public interface AccessControl
 {
 
-  boolean hasPermission(String user, char[] secret, String permission);
-
+	boolean hasPermission(String user, char[] secret, String permission);
 }

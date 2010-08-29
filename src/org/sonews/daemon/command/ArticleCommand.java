@@ -33,142 +33,120 @@ import org.sonews.storage.StorageBackendException;
 public class ArticleCommand implements Command
 {
 
-  @Override
-  public String[] getSupportedCommandStrings()
-  {
-    return new String[] {"ARTICLE", "BODY", "HEAD"};
-  }
+	@Override
+	public String[] getSupportedCommandStrings()
+	{
+		return new String[] {"ARTICLE", "BODY", "HEAD"};
+	}
 
-  @Override
-  public boolean hasFinished()
-  {
-    return true;
-  }
+	@Override
+	public boolean hasFinished()
+	{
+		return true;
+	}
 
-  @Override
-  public String impliedCapability()
-  {
-    return null;
-  }
+	@Override
+	public String impliedCapability()
+	{
+		return null;
+	}
 
-  @Override
-  public boolean isStateful()
-  {
-    return false;
-  }
+	@Override
+	public boolean isStateful()
+	{
+		return false;
+	}
 
-  // TODO: Refactor this method to reduce its complexity!
-  @Override
-  public void processLine(NNTPConnection conn, final String line, byte[] raw)
-    throws IOException
-  {
-    final String[] command = line.split(" ");
-    
-    Article article  = null;
-    long    artIndex = -1;
-    if (command.length == 1)
-    {
-      article = conn.getCurrentArticle();
-      if (article == null)
-      {
-        conn.println("420 no current article has been selected");
-        return;
-      }
-    }
-    else if (command[1].matches(NNTPConnection.MESSAGE_ID_PATTERN))
-    {
-      // Message-ID
-      article = Article.getByMessageID(command[1]);
-      if (article == null)
-      {
-        conn.println("430 no such article found");
-        return;
-      }
-    }
-    else
-    {
-      // Message Number
-      try
-      {
-        Channel currentGroup = conn.getCurrentChannel();
-        if(currentGroup == null)
-        {
-          conn.println("400 no group selected");
-          return;
-        }
-        
-        artIndex = Long.parseLong(command[1]);
-        article  = currentGroup.getArticle(artIndex);
-      }
-      catch(NumberFormatException ex)
-      {
-        ex.printStackTrace();
-      }
-      catch(StorageBackendException ex)
-      {
-        ex.printStackTrace();
-      }
+	// TODO: Refactor this method to reduce its complexity!
+	@Override
+	public void processLine(NNTPConnection conn, final String line, byte[] raw)
+		throws IOException
+	{
+		final String[] command = line.split(" ");
 
-      if (article == null)
-      {
-        conn.println("423 no such article number in this group");
-        return;
-      }
-      conn.setCurrentArticle(article);
-    }
+		Article article = null;
+		long artIndex = -1;
+		if (command.length == 1) {
+			article = conn.getCurrentArticle();
+			if (article == null) {
+				conn.println("420 no current article has been selected");
+				return;
+			}
+		} else if (command[1].matches(NNTPConnection.MESSAGE_ID_PATTERN)) {
+			// Message-ID
+			article = Article.getByMessageID(command[1]);
+			if (article == null) {
+				conn.println("430 no such article found");
+				return;
+			}
+		} else {
+			// Message Number
+			try {
+				Channel currentGroup = conn.getCurrentChannel();
+				if (currentGroup == null) {
+					conn.println("400 no group selected");
+					return;
+				}
 
-    if(command[0].equalsIgnoreCase("ARTICLE"))
-    {
-      conn.println("220 " + artIndex + " " + article.getMessageID()
-          + " article retrieved - head and body follow");
-      conn.println(article.getHeaderSource());
-      conn.println("");
-      conn.println(article.getBody());
-      conn.println(".");
-    }
-    else if(command[0].equalsIgnoreCase("BODY"))
-    {
-      conn.println("222 " + artIndex + " " + article.getMessageID() + " body");
-      conn.println(article.getBody());
-      conn.println(".");
-    }
-    
-    /*
-     * HEAD: This command is mandatory.
-     *
-     * Syntax
-     *    HEAD message-id
-     *    HEAD number
-     *    HEAD
-     *
-     * Responses
-     *
-     * First form (message-id specified)
-     *  221 0|n message-id    Headers follow (multi-line)
-     *  430                   No article with that message-id
-     *
-     * Second form (article number specified)
-     *  221 n message-id      Headers follow (multi-line)
-     *  412                   No newsgroup selected
-     *  423                   No article with that number
-     *
-     * Third form (current article number used)
-     *  221 n message-id      Headers follow (multi-line)
-     *  412                   No newsgroup selected
-     *  420                   Current article number is invalid
-     *
-     * Parameters
-     *  number        Requested article number
-     *  n             Returned article number
-     *  message-id    Article message-id
-     */
-    else if(command[0].equalsIgnoreCase("HEAD"))
-    {
-      conn.println("221 " + artIndex + " " + article.getMessageID()
-          + " Headers follow (multi-line)");
-      conn.println(article.getHeaderSource());
-      conn.println(".");
-    }
-  }  
-  
+				artIndex = Long.parseLong(command[1]);
+				article = currentGroup.getArticle(artIndex);
+			} catch (NumberFormatException ex) {
+				ex.printStackTrace();
+			} catch (StorageBackendException ex) {
+				ex.printStackTrace();
+			}
+
+			if (article == null) {
+				conn.println("423 no such article number in this group");
+				return;
+			}
+			conn.setCurrentArticle(article);
+		}
+
+		if (command[0].equalsIgnoreCase("ARTICLE")) {
+			conn.println("220 " + artIndex + " " + article.getMessageID()
+				+ " article retrieved - head and body follow");
+			conn.println(article.getHeaderSource());
+			conn.println("");
+			conn.println(article.getBody());
+			conn.println(".");
+		} else if (command[0].equalsIgnoreCase("BODY")) {
+			conn.println("222 " + artIndex + " " + article.getMessageID() + " body");
+			conn.println(article.getBody());
+			conn.println(".");
+		} /*
+		 * HEAD: This command is mandatory.
+		 *
+		 * Syntax
+		 *    HEAD message-id
+		 *    HEAD number
+		 *    HEAD
+		 *
+		 * Responses
+		 *
+		 * First form (message-id specified)
+		 *  221 0|n message-id    Headers follow (multi-line)
+		 *  430                   No article with that message-id
+		 *
+		 * Second form (article number specified)
+		 *  221 n message-id      Headers follow (multi-line)
+		 *  412                   No newsgroup selected
+		 *  423                   No article with that number
+		 *
+		 * Third form (current article number used)
+		 *  221 n message-id      Headers follow (multi-line)
+		 *  412                   No newsgroup selected
+		 *  420                   Current article number is invalid
+		 *
+		 * Parameters
+		 *  number        Requested article number
+		 *  n             Returned article number
+		 *  message-id    Article message-id
+		 */ else if (command[0].equalsIgnoreCase("HEAD")) {
+			conn.println("221 " + artIndex + " " + article.getMessageID()
+				+ " Headers follow (multi-line)");
+			conn.println(article.getHeaderSource());
+			conn.println(".");
+		}
+	}
 }

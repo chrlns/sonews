@@ -41,213 +41,196 @@ import org.sonews.config.Config;
  */
 public class Article extends ArticleHead
 {
-  
-  /**
-   * Loads the Article identified by the given ID from the JDBCDatabase.
-   * @param messageID
-   * @return null if Article is not found or if an error occurred.
-   */
-  public static Article getByMessageID(final String messageID)
-  {
-    try
-    {
-      return StorageManager.current().getArticle(messageID);
-    }
-    catch(StorageBackendException ex)
-    {
-      ex.printStackTrace();
-      return null;
-    }
-  }
-  
-  private byte[] body       = new byte[0];
-  
-  /**
-   * Default constructor.
-   */
-  public Article()
-  {
-  }
-  
-  /**
-   * Creates a new Article object using the date from the given
-   * raw data.
-   */
-  public Article(String headers, byte[] body)
-  {
-    try
-    {
-      this.body  = body;
 
-      // Parse the header
-      this.headers = new InternetHeaders(
-        new ByteArrayInputStream(headers.getBytes()));
-      
-      this.headerSrc = headers;
-    }
-    catch(MessagingException ex)
-    {
-      ex.printStackTrace();
-    }
-  }
+	/**
+	 * Loads the Article identified by the given ID from the JDBCDatabase.
+	 * @param messageID
+	 * @return null if Article is not found or if an error occurred.
+	 */
+	public static Article getByMessageID(final String messageID)
+	{
+		try {
+			return StorageManager.current().getArticle(messageID);
+		} catch (StorageBackendException ex) {
+			ex.printStackTrace();
+			return null;
+		}
+	}
+	private byte[] body = new byte[0];
 
-  /**
-   * Creates an Article instance using the data from the javax.mail.Message
-   * object. This constructor is called by the Mailinglist gateway.
-   * @see javax.mail.Message
-   * @param msg
-   * @throws IOException
-   * @throws MessagingException
-   */
-  public Article(final Message msg)
-    throws IOException, MessagingException
-  {
-    this.headers = new InternetHeaders();
+	/**
+	 * Default constructor.
+	 */
+	public Article()
+	{
+	}
 
-    for(Enumeration e = msg.getAllHeaders() ; e.hasMoreElements();) 
-    {
-      final Header header = (Header)e.nextElement();
-      this.headers.addHeader(header.getName(), header.getValue());
-    }
+	/**
+	 * Creates a new Article object using the date from the given
+	 * raw data.
+	 */
+	public Article(String headers, byte[] body)
+	{
+		try {
+			this.body = body;
 
-	// Reads the raw byte body using Message.writeTo(OutputStream out)
-	this.body = readContent(msg);
-    
-    // Validate headers
-    validateHeaders();
-  }
+			// Parse the header
+			this.headers = new InternetHeaders(
+				new ByteArrayInputStream(headers.getBytes()));
 
-  /**
-   * Reads from the given Message into a byte array.
-   * @param in
-   * @return
-   * @throws IOException
-   */
-  private byte[] readContent(Message in)
-    throws IOException, MessagingException
-  {
-    ByteArrayOutputStream out = new ByteArrayOutputStream();
-    in.writeTo(out);
-    return out.toByteArray();
-  }
+			this.headerSrc = headers;
+		} catch (MessagingException ex) {
+			ex.printStackTrace();
+		}
+	}
 
-  /**
-   * Removes the header identified by the given key.
-   * @param headerKey
-   */
-  public void removeHeader(final String headerKey)
-  {
-    this.headers.removeHeader(headerKey);
-    this.headerSrc = null;
-  }
+	/**
+	 * Creates an Article instance using the data from the javax.mail.Message
+	 * object. This constructor is called by the Mailinglist gateway.
+	 * @see javax.mail.Message
+	 * @param msg
+	 * @throws IOException
+	 * @throws MessagingException
+	 */
+	public Article(final Message msg)
+		throws IOException, MessagingException
+	{
+		this.headers = new InternetHeaders();
 
-  /**
-   * Generates a message id for this article and sets it into
-   * the header object. You have to update the JDBCDatabase manually to make this
-   * change persistent.
-   * Note: a Message-ID should never be changed and only generated once.
-   */
-  private String generateMessageID()
-  {
-    String randomString;
-    MessageDigest md5;
-    try
-    {
-      md5 = MessageDigest.getInstance("MD5");
-      md5.reset();
-      md5.update(getBody());
-      md5.update(getHeader(Headers.SUBJECT)[0].getBytes());
-      md5.update(getHeader(Headers.FROM)[0].getBytes());
-      byte[] result = md5.digest();
-      StringBuffer hexString = new StringBuffer();
-      for (int i = 0; i < result.length; i++)
-      {
-        hexString.append(Integer.toHexString(0xFF & result[i]));
-      }
-      randomString = hexString.toString();
-    }
-    catch (NoSuchAlgorithmException e)
-    {
-      e.printStackTrace();
-      randomString = UUID.randomUUID().toString();
-    }
-    String msgID = "<" + randomString + "@"
-        + Config.inst().get(Config.HOSTNAME, "localhost") + ">";
-    
-    this.headers.setHeader(Headers.MESSAGE_ID, msgID);
-    
-    return msgID;
-  }
+		for (Enumeration e = msg.getAllHeaders(); e.hasMoreElements();) {
+			final Header header = (Header) e.nextElement();
+			this.headers.addHeader(header.getName(), header.getValue());
+		}
 
-  /**
-   * Returns the body string.
-   */
-  public byte[] getBody()
-  {
-    return body;
-  }
-  
-  /**
-   * @return Numerical IDs of the newsgroups this Article belongs to.
-   */
-  public List<Group> getGroups()
-  {
-    String[]         groupnames = getHeader(Headers.NEWSGROUPS)[0].split(",");
-    ArrayList<Group> groups     = new ArrayList<Group>();
+		// Reads the raw byte body using Message.writeTo(OutputStream out)
+		this.body = readContent(msg);
 
-    try
-    {
-      for(String newsgroup : groupnames)
-      {
-        newsgroup = newsgroup.trim();
-        Group group = StorageManager.current().getGroup(newsgroup);
-        if(group != null &&         // If the server does not provide the group, ignore it
-          !groups.contains(group))  // Yes, there may be duplicates
-        {
-          groups.add(group);
-        }
-      }
-    }
-    catch(StorageBackendException ex)
-    {
-      ex.printStackTrace();
-      return null;
-    }
-    return groups;
-  }
+		// Validate headers
+		validateHeaders();
+	}
 
-  public void setBody(byte[] body)
-  {
-    this.body = body;
-  }
-  
-  /**
-   * 
-   * @param groupname Name(s) of newsgroups
-   */
-  public void setGroup(String groupname)
-  {
-    this.headers.setHeader(Headers.NEWSGROUPS, groupname);
-  }
+	/**
+	 * Reads from the given Message into a byte array.
+	 * @param in
+	 * @return
+	 * @throws IOException
+	 */
+	private byte[] readContent(Message in)
+		throws IOException, MessagingException
+	{
+		ByteArrayOutputStream out = new ByteArrayOutputStream();
+		in.writeTo(out);
+		return out.toByteArray();
+	}
 
-  /**
-   * Returns the Message-ID of this Article. If the appropriate header
-   * is empty, a new Message-ID is created.
-   * @return Message-ID of this Article.
-   */
-  public String getMessageID()
-  {
-    String[] msgID = getHeader(Headers.MESSAGE_ID);
-    return msgID[0].equals("") ? generateMessageID() : msgID[0];
-  }
-  
-  /**
-   * @return String containing the Message-ID.
-   */
-  @Override
-  public String toString()
-  {
-    return getMessageID();
-  }
+	/**
+	 * Removes the header identified by the given key.
+	 * @param headerKey
+	 */
+	public void removeHeader(final String headerKey)
+	{
+		this.headers.removeHeader(headerKey);
+		this.headerSrc = null;
+	}
 
+	/**
+	 * Generates a message id for this article and sets it into
+	 * the header object. You have to update the JDBCDatabase manually to make this
+	 * change persistent.
+	 * Note: a Message-ID should never be changed and only generated once.
+	 */
+	private String generateMessageID()
+	{
+		String randomString;
+		MessageDigest md5;
+		try {
+			md5 = MessageDigest.getInstance("MD5");
+			md5.reset();
+			md5.update(getBody());
+			md5.update(getHeader(Headers.SUBJECT)[0].getBytes());
+			md5.update(getHeader(Headers.FROM)[0].getBytes());
+			byte[] result = md5.digest();
+			StringBuffer hexString = new StringBuffer();
+			for (int i = 0; i < result.length; i++) {
+				hexString.append(Integer.toHexString(0xFF & result[i]));
+			}
+			randomString = hexString.toString();
+		} catch (NoSuchAlgorithmException e) {
+			e.printStackTrace();
+			randomString = UUID.randomUUID().toString();
+		}
+		String msgID = "<" + randomString + "@"
+			+ Config.inst().get(Config.HOSTNAME, "localhost") + ">";
+
+		this.headers.setHeader(Headers.MESSAGE_ID, msgID);
+
+		return msgID;
+	}
+
+	/**
+	 * Returns the body string.
+	 */
+	public byte[] getBody()
+	{
+		return body;
+	}
+
+	/**
+	 * @return Numerical IDs of the newsgroups this Article belongs to.
+	 */
+	public List<Group> getGroups()
+	{
+		String[] groupnames = getHeader(Headers.NEWSGROUPS)[0].split(",");
+		ArrayList<Group> groups = new ArrayList<Group>();
+
+		try {
+			for (String newsgroup : groupnames) {
+				newsgroup = newsgroup.trim();
+				Group group = StorageManager.current().getGroup(newsgroup);
+				if (group != null && // If the server does not provide the group, ignore it
+					!groups.contains(group)) // Yes, there may be duplicates
+				{
+					groups.add(group);
+				}
+			}
+		} catch (StorageBackendException ex) {
+			ex.printStackTrace();
+			return null;
+		}
+		return groups;
+	}
+
+	public void setBody(byte[] body)
+	{
+		this.body = body;
+	}
+
+	/**
+	 *
+	 * @param groupname Name(s) of newsgroups
+	 */
+	public void setGroup(String groupname)
+	{
+		this.headers.setHeader(Headers.NEWSGROUPS, groupname);
+	}
+
+	/**
+	 * Returns the Message-ID of this Article. If the appropriate header
+	 * is empty, a new Message-ID is created.
+	 * @return Message-ID of this Article.
+	 */
+	public String getMessageID()
+	{
+		String[] msgID = getHeader(Headers.MESSAGE_ID);
+		return msgID[0].equals("") ? generateMessageID() : msgID[0];
+	}
+
+	/**
+	 * @return String containing the Message-ID.
+	 */
+	@Override
+	public String toString()
+	{
+		return getMessageID();
+	}
 }

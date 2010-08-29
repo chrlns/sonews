@@ -33,48 +33,46 @@ import java.nio.charset.CoderResult;
 class LineEncoder
 {
 
-  private CharBuffer    characters;
-  private Charset       charset;
-  
-  /**
-   * Constructs new LineEncoder.
-   * @param characters
-   * @param charset
-   */
-  public LineEncoder(CharBuffer characters, Charset charset)
-  {
-    this.characters = characters;
-    this.charset    = charset;
-  }
-  
-  /**
-   * Encodes the characters of this instance to the given ChannelLineBuffers
-   * using the Charset of this instance.
-   * @param buffer
-   * @throws java.nio.channels.ClosedChannelException
-   */
-  public void encode(ChannelLineBuffers buffer)
-    throws ClosedChannelException
-  {
-    CharsetEncoder encoder = charset.newEncoder();
-    while (characters.hasRemaining())
-    {
-      ByteBuffer buf = ChannelLineBuffers.newLineBuffer();
-      assert buf.position() == 0;
-      assert buf.capacity() >= 512;
+	private CharBuffer characters;
+	private Charset charset;
 
-      CoderResult res = encoder.encode(characters, buf, true);
+	/**
+	 * Constructs new LineEncoder.
+	 * @param characters
+	 * @param charset
+	 */
+	public LineEncoder(CharBuffer characters, Charset charset)
+	{
+		this.characters = characters;
+		this.charset = charset;
+	}
 
-      // Set limit to current position and current position to 0;
-      // means make ready for read from buffer
-      buf.flip();
-      buffer.addOutputBuffer(buf);
+	/**
+	 * Encodes the characters of this instance to the given ChannelLineBuffers
+	 * using the Charset of this instance.
+	 * @param buffer
+	 * @throws java.nio.channels.ClosedChannelException
+	 */
+	public void encode(ChannelLineBuffers buffer)
+		throws ClosedChannelException
+	{
+		CharsetEncoder encoder = charset.newEncoder();
+		while (characters.hasRemaining()) {
+			ByteBuffer buf = ChannelLineBuffers.newLineBuffer();
+			assert buf.position() == 0;
+			assert buf.capacity() >= 512;
 
-      if (res.isUnderflow()) // All input processed
-      {
-        break;
-      }
-    }
-  }
-  
+			CoderResult res = encoder.encode(characters, buf, true);
+
+			// Set limit to current position and current position to 0;
+			// means make ready for read from buffer
+			buf.flip();
+			buffer.addOutputBuffer(buf);
+
+			if (res.isUnderflow()) // All input processed
+			{
+				break;
+			}
+		}
+	}
 }

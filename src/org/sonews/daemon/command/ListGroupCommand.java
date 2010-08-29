@@ -33,62 +33,56 @@ import org.sonews.storage.StorageBackendException;
 public class ListGroupCommand implements Command
 {
 
-  @Override
-  public String[] getSupportedCommandStrings()
-  {
-    return new String[]{"LISTGROUP"};
-  }
+	@Override
+	public String[] getSupportedCommandStrings()
+	{
+		return new String[] {"LISTGROUP"};
+	}
 
-  @Override
-  public boolean hasFinished()
-  {
-    return true;
-  }
+	@Override
+	public boolean hasFinished()
+	{
+		return true;
+	}
 
-  @Override
-  public String impliedCapability()
-  {
-    return null;
-  }
+	@Override
+	public String impliedCapability()
+	{
+		return null;
+	}
 
-  @Override
-  public boolean isStateful()
-  {
-    return false;
-  }
+	@Override
+	public boolean isStateful()
+	{
+		return false;
+	}
 
-  @Override
-  public void processLine(NNTPConnection conn, final String commandName, byte[] raw)
-    throws IOException, StorageBackendException
-  {
-    final String[] command = commandName.split(" ");
+	@Override
+	public void processLine(NNTPConnection conn, final String commandName, byte[] raw)
+		throws IOException, StorageBackendException
+	{
+		final String[] command = commandName.split(" ");
 
-    Channel group;
-    if(command.length >= 2)
-    {
-      group = Channel.getByName(command[1]);
-    }
-    else
-    {
-      group = conn.getCurrentChannel();
-    }
+		Channel group;
+		if (command.length >= 2) {
+			group = Channel.getByName(command[1]);
+		} else {
+			group = conn.getCurrentChannel();
+		}
 
-    if (group == null)
-    {
-      conn.println("412 no group selected; use GROUP <group> command");
-      return;
-    }
+		if (group == null) {
+			conn.println("412 no group selected; use GROUP <group> command");
+			return;
+		}
 
-    List<Long> ids = group.getArticleNumbers();
-    conn.println("211 " + ids.size() + " " +
-      group.getFirstArticleNumber() + " " + 
-      group.getLastArticleNumber() + " list of article numbers follow");
-    for(long id : ids)
-    {
-      // One index number per line
-      conn.println(Long.toString(id));
-    }
-    conn.println(".");
-  }
-
+		List<Long> ids = group.getArticleNumbers();
+		conn.println("211 " + ids.size() + " "
+			+ group.getFirstArticleNumber() + " "
+			+ group.getLastArticleNumber() + " list of article numbers follow");
+		for (long id : ids) {
+			// One index number per line
+			conn.println(Long.toString(id));
+		}
+		conn.println(".");
+	}
 }

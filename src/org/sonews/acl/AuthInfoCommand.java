@@ -31,34 +31,34 @@ import org.sonews.storage.StorageBackendException;
 public class AuthInfoCommand implements Command
 {
 
-  @Override
-  public String[] getSupportedCommandStrings()
-  {
-    throw new UnsupportedOperationException("Not supported yet.");
-  }
+	@Override
+	public String[] getSupportedCommandStrings()
+	{
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
 
-  @Override
-  public boolean hasFinished()
-  {
-    throw new UnsupportedOperationException("Not supported yet.");
-  }
+	@Override
+	public boolean hasFinished()
+	{
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
 
-  @Override
-  public String impliedCapability()
-  {
-    throw new UnsupportedOperationException("Not supported yet.");
-  }
+	@Override
+	public String impliedCapability()
+	{
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
 
-  @Override
-  public boolean isStateful()
-  {
-    throw new UnsupportedOperationException("Not supported yet.");
-  }
+	@Override
+	public boolean isStateful()
+	{
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
 
-  @Override
-  public void processLine(NNTPConnection conn, String line, byte[] rawLine) throws IOException, StorageBackendException
-  {
-    throw new UnsupportedOperationException("Not supported yet.");
-  }
-
+	@Override
+	public void processLine(NNTPConnection conn, String line, byte[] rawLine)
+		throws IOException, StorageBackendException
+	{
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
 }

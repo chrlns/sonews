@@ -29,39 +29,38 @@ import org.sonews.daemon.NNTPConnection;
  */
 public class UnsupportedCommand implements Command
 {
-  
-  /**
-   * @return Always returns null.
-   */
-  @Override
-  public String[] getSupportedCommandStrings()
-  {
-    return null;
-  }
 
-  @Override
-  public boolean hasFinished()
-  {
-    return true;
-  }
+	/**
+	 * @return Always returns null.
+	 */
+	@Override
+	public String[] getSupportedCommandStrings()
+	{
+		return null;
+	}
 
-  @Override
-  public String impliedCapability()
-  {
-    return null;
-  }
+	@Override
+	public boolean hasFinished()
+	{
+		return true;
+	}
 
-  @Override
-  public boolean isStateful()
-  {
-    return false;
-  }
+	@Override
+	public String impliedCapability()
+	{
+		return null;
+	}
 
-  @Override
-  public void processLine(NNTPConnection conn, final String line, byte[] raw)
-    throws IOException
-  {
-    conn.println("500 command not supported");
-  }
-  
+	@Override
+	public boolean isStateful()
+	{
+		return false;
+	}
+
+	@Override
+	public void processLine(NNTPConnection conn, final String line, byte[] raw)
+		throws IOException
+	{
+		conn.println("500 command not supported");
+	}
 }

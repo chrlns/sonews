@@ -25,5 +25,6 @@ package org.sonews.daemon.command;
  */
 enum PostState
 {
-  WaitForLineOne, ReadingHeaders, ReadingBody, Finished
+
+	WaitForLineOne, ReadingHeaders, ReadingBody, Finished
 }

@@ -27,30 +27,30 @@ package org.sonews.storage;
 public final class Headers
 {
 
-  public static final String BYTES             = "bytes";
-  public static final String CONTENT_TYPE      = "content-type";
-  public static final String CONTROL           = "control";
-  public static final String DATE              = "date";
-  public static final String FROM              = "from";
-  public static final String LINES             = "lines";
-  public static final String LIST_POST         = "list-post";
-  public static final String MESSAGE_ID        = "message-id";
-  public static final String NEWSGROUPS        = "newsgroups";
-  public static final String NNTP_POSTING_DATE = "nntp-posting-date";
-  public static final String NNTP_POSTING_HOST = "nntp-posting-host";
-  public static final String PATH              = "path";
-  public static final String REFERENCES        = "references";
-  public static final String REPLY_TO          = "reply-to";
-  public static final String SENDER            = "sender";
-  public static final String SUBJECT           = "subject";
-  public static final String SUPERSEDES        = "subersedes";
-  public static final String TO                = "to";
-  public static final String X_COMPLAINTS_TO   = "x-complaints-to";
-  public static final String X_LIST_POST       = "x-list-post";
-  public static final String X_TRACE           = "x-trace";
-  public static final String XREF              = "xref";
+	public static final String BYTES = "bytes";
+	public static final String CONTENT_TYPE = "content-type";
+	public static final String CONTROL = "control";
+	public static final String DATE = "date";
+	public static final String FROM = "from";
+	public static final String LINES = "lines";
+	public static final String LIST_POST = "list-post";
+	public static final String MESSAGE_ID = "message-id";
+	public static final String NEWSGROUPS = "newsgroups";
+	public static final String NNTP_POSTING_DATE = "nntp-posting-date";
+	public static final String NNTP_POSTING_HOST = "nntp-posting-host";
+	public static final String PATH = "path";
+	public static final String REFERENCES = "references";
+	public static final String REPLY_TO = "reply-to";
+	public static final String SENDER = "sender";
+	public static final String SUBJECT = "subject";
+	public static final String SUPERSEDES = "subersedes";
+	public static final String TO = "to";
+	public static final String X_COMPLAINTS_TO = "x-complaints-to";
+	public static final String X_LIST_POST = "x-list-post";
+	public static final String X_TRACE = "x-trace";
+	public static final String XREF = "xref";
 
-  private Headers()
-  {}
-
+	private Headers()
+	{
+	}
 }

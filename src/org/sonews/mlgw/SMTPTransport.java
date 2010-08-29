@@ -36,98 +36,90 @@ import org.sonews.util.io.ArticleInputStream;
 class SMTPTransport
 {
 
-  protected BufferedReader       in;
-  protected BufferedOutputStream out;
-  protected Socket               socket;
+	protected BufferedReader in;
+	protected BufferedOutputStream out;
+	protected Socket socket;
 
-  public SMTPTransport(String host, int port)
-    throws IOException, UnknownHostException
-  {
-    socket = new Socket(host, port);
-    this.in  = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-    this.out = new BufferedOutputStream(socket.getOutputStream());
+	public SMTPTransport(String host, int port)
+		throws IOException, UnknownHostException
+	{
+		socket = new Socket(host, port);
+		this.in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+		this.out = new BufferedOutputStream(socket.getOutputStream());
 
-    // Read helo from server
-    String line = this.in.readLine();
-    if(line == null || !line.startsWith("220 "))
-    {
-      throw new IOException("Invalid helo from server: " + line);
-    }
+		// Read helo from server
+		String line = this.in.readLine();
+		if (line == null || !line.startsWith("220 ")) {
+			throw new IOException("Invalid helo from server: " + line);
+		}
 
-    // Send HELO to server
-    this.out.write(
-      ("HELO " + Config.inst().get(Config.HOSTNAME, "localhost") + "\r\n").getBytes("UTF-8"));
-    this.out.flush();
-    line = this.in.readLine();
-    if(line == null || !line.startsWith("250 "))
-    {
-      throw new IOException("Unexpected reply: " + line);
-    }
-  }
+		// Send HELO to server
+		this.out.write(
+			("HELO " + Config.inst().get(Config.HOSTNAME, "localhost") + "\r\n").getBytes("UTF-8"));
+		this.out.flush();
+		line = this.in.readLine();
+		if (line == null || !line.startsWith("250 ")) {
+			throw new IOException("Unexpected reply: " + line);
+		}
+	}
 
-  public SMTPTransport(String host)
-    throws IOException
-  {
-    this(host, 25);
-  }
+	public SMTPTransport(String host)
+		throws IOException
+	{
+		this(host, 25);
+	}
 
-  public void close()
-    throws IOException
-  {
-    this.out.write("QUIT".getBytes("UTF-8"));
-    this.out.flush();
-    this.in.readLine();
+	public void close()
+		throws IOException
+	{
+		this.out.write("QUIT".getBytes("UTF-8"));
+		this.out.flush();
+		this.in.readLine();
 
-    this.socket.close();
-  }
+		this.socket.close();
+	}
 
-  public void send(Article article, String mailFrom, String rcptTo)
-    throws IOException
-  {
-    assert(article != null);
-    assert(mailFrom != null);
-    assert(rcptTo != null);
+	public void send(Article article, String mailFrom, String rcptTo)
+		throws IOException
+	{
+		assert (article != null);
+		assert (mailFrom != null);
+		assert (rcptTo != null);
 
-    this.out.write(("MAIL FROM: " + mailFrom).getBytes("UTF-8"));
-    this.out.flush();
-    String line = this.in.readLine();
-    if(line == null || !line.startsWith("250 "))
-    {
-      throw new IOException("Unexpected reply: " + line);
-    }
+		this.out.write(("MAIL FROM: " + mailFrom).getBytes("UTF-8"));
+		this.out.flush();
+		String line = this.in.readLine();
+		if (line == null || !line.startsWith("250 ")) {
+			throw new IOException("Unexpected reply: " + line);
+		}
 
-    this.out.write(("RCPT TO: " + rcptTo).getBytes("UTF-8"));
-    this.out.flush();
-    line  = this.in.readLine();
-    if(line == null || !line.startsWith("250 "))
-    {
-      throw new IOException("Unexpected reply: " + line);
-    }
+		this.out.write(("RCPT TO: " + rcptTo).getBytes("UTF-8"));
+		this.out.flush();
+		line = this.in.readLine();
+		if (line == null || !line.startsWith("250 ")) {
+			throw new IOException("Unexpected reply: " + line);
+		}
 
-    this.out.write("DATA".getBytes("UTF-8"));
-    this.out.flush();
-    line = this.in.readLine();
-    if(line == null || !line.startsWith("354 "))
-    {
-      throw new IOException("Unexpected reply: " + line);
-    }
+		this.out.write("DATA".getBytes("UTF-8"));
+		this.out.flush();
+		line = this.in.readLine();
+		if (line == null || !line.startsWith("354 ")) {
+			throw new IOException("Unexpected reply: " + line);
+		}
 
-    ArticleInputStream   artStream = new ArticleInputStream(article);
-    for(int b = artStream.read(); b >= 0; b = artStream.read())
-    {
-      this.out.write(b);
-    }
+		ArticleInputStream artStream = new ArticleInputStream(article);
+		for (int b = artStream.read(); b >= 0; b = artStream.read()) {
+			this.out.write(b);
+		}
 
-    // Flush the binary stream; important because otherwise the output
-    // will be mixed with the PrintWriter.
-    this.out.flush();
-    this.out.write("\r\n.\r\n".getBytes("UTF-8"));
-    this.out.flush();
-    line = this.in.readLine();
-    if(line == null || !line.startsWith("250 "))
-    {
-      throw new IOException("Unexpected reply: " + line);
-    }
-  }
-
+		// Flush the binary stream; important because otherwise the output
+		// will be mixed with the PrintWriter.
+		this.out.flush();
+		this.out.write("\r\n.\r\n".getBytes("UTF-8"));
+		this.out.flush();
+		line = this.in.readLine();
+		if (line == null || !line.startsWith("250 ")) {
+			throw new IOException("Unexpected reply: " + line);
+		}
+	}
 }

@@ -47,286 +47,237 @@ import org.sonews.util.Stats;
  */
 public class PostCommand implements Command
 {
-  
-  private final Article article   = new Article();
-  private int           lineCount = 0;
-  private long          bodySize  = 0;
-  private InternetHeaders headers = null;
-  private long          maxBodySize  = 
-    Config.inst().get(Config.ARTICLE_MAXSIZE, 128) * 1024L; // Size in bytes
-  private PostState     state     = PostState.WaitForLineOne;
-  private final ByteArrayOutputStream bufBody   = new ByteArrayOutputStream();
-  private final StringBuilder         strHead   = new StringBuilder();
 
-  @Override
-  public String[] getSupportedCommandStrings()
-  {
-    return new String[]{"POST"};
-  }
+	private final Article article = new Article();
+	private int lineCount = 0;
+	private long bodySize = 0;
+	private InternetHeaders headers = null;
+	private long maxBodySize =
+		Config.inst().get(Config.ARTICLE_MAXSIZE, 128) * 1024L; // Size in bytes
+	private PostState state = PostState.WaitForLineOne;
+	private final ByteArrayOutputStream bufBody = new ByteArrayOutputStream();
+	private final StringBuilder strHead = new StringBuilder();
 
-  @Override
-  public boolean hasFinished()
-  {
-    return this.state == PostState.Finished;
-  }
+	@Override
+	public String[] getSupportedCommandStrings()
+	{
+		return new String[] {"POST"};
+	}
 
-  @Override
-  public String impliedCapability()
-  {
-    return null;
-  }
+	@Override
+	public boolean hasFinished()
+	{
+		return this.state == PostState.Finished;
+	}
 
-  @Override
-  public boolean isStateful()
-  {
-    return true;
-  }
+	@Override
+	public String impliedCapability()
+	{
+		return null;
+	}
 
-  /**
-   * Process the given line String. line.trim() was called by NNTPConnection.
-   * @param line
-   * @throws java.io.IOException
-   * @throws java.sql.SQLException
-   */
-  @Override // TODO: Refactor this method to reduce complexity!
-  public void processLine(NNTPConnection conn, String line, byte[] raw)
-    throws IOException, StorageBackendException
-  {
-    switch(state)
-    {
-      case WaitForLineOne:
-      {
-        if(line.equalsIgnoreCase("POST"))
-        {
-          conn.println("340 send article to be posted. End with <CR-LF>.<CR-LF>");
-          state = PostState.ReadingHeaders;
-        }
-        else
-        {
-          conn.println("500 invalid command usage");
-        }
-        break;
-      }
-      case ReadingHeaders:
-      {
-        strHead.append(line);
-        strHead.append(NNTPConnection.NEWLINE);
-        
-        if("".equals(line) || ".".equals(line))
-        {
-          // we finally met the blank line
-          // separating headers from body
-          
-          try
-          {
-            // Parse the header using the InternetHeader class from JavaMail API
-            headers = new InternetHeaders(
-              new ByteArrayInputStream(strHead.toString().trim()
-                .getBytes(conn.getCurrentCharset())));
+	@Override
+	public boolean isStateful()
+	{
+		return true;
+	}
 
-            // add the header entries for the article
-            article.setHeaders(headers);
-          }
-          catch (MessagingException e)
-          {
-            e.printStackTrace();
-            conn.println("500 posting failed - invalid header");
-            state = PostState.Finished;
-            break;
-          }
+	/**
+	 * Process the given line String. line.trim() was called by NNTPConnection.
+	 * @param line
+	 * @throws java.io.IOException
+	 * @throws java.sql.SQLException
+	 */
+	@Override // TODO: Refactor this method to reduce complexity!
+	public void processLine(NNTPConnection conn, String line, byte[] raw)
+		throws IOException, StorageBackendException
+	{
+		switch (state) {
+			case WaitForLineOne: {
+				if (line.equalsIgnoreCase("POST")) {
+					conn.println("340 send article to be posted. End with <CR-LF>.<CR-LF>");
+					state = PostState.ReadingHeaders;
+				} else {
+					conn.println("500 invalid command usage");
+				}
+				break;
+			}
+			case ReadingHeaders: {
+				strHead.append(line);
+				strHead.append(NNTPConnection.NEWLINE);
 
-          // Change charset for reading body; 
-          // for multipart messages UTF-8 is returned
-          //conn.setCurrentCharset(article.getBodyCharset());
-          
-          state = PostState.ReadingBody;
-          
-          if(".".equals(line))
-          {
-            // Post an article without body
-            postArticle(conn, article);
-            state = PostState.Finished;
-          }
-        }
-        break;
-      }
-      case ReadingBody:
-      {
-        if(".".equals(line))
-        {    
-          // Set some headers needed for Over command
-          headers.setHeader(Headers.LINES, Integer.toString(lineCount));
-          headers.setHeader(Headers.BYTES, Long.toString(bodySize));
+				if ("".equals(line) || ".".equals(line)) {
+					// we finally met the blank line
+					// separating headers from body
 
-          byte[] body = bufBody.toByteArray();
-          if(body.length >= 2)
-          {
-            // Remove trailing CRLF
-            body = Arrays.copyOf(body, body.length - 2);
-          }
-          article.setBody(body); // set the article body
-          
-          postArticle(conn, article);
-          state = PostState.Finished;
-        }
-        else
-        {
-          bodySize += line.length() + 1;
-          lineCount++;
-          
-          // Add line to body buffer
-          bufBody.write(raw, 0, raw.length);
-          bufBody.write(NNTPConnection.NEWLINE.getBytes());
-          
-          if(bodySize > maxBodySize)
-          {
-            conn.println("500 article is too long");
-            state = PostState.Finished;
-            break;
-          }
-        }
-        break;
-      }
-      default:
-      {
-        // Should never happen
-        Log.get().severe("PostCommand::processLine(): already finished...");
-      }
-    }
-  }
-  
-  /**
-   * Article is a control message and needs special handling.
-   * @param article
-   */
-  private void controlMessage(NNTPConnection conn, Article article)
-    throws IOException
-  {
-    String[] ctrl = article.getHeader(Headers.CONTROL)[0].split(" ");
-    if(ctrl.length == 2) // "cancel <mid>"
-    {
-      try
-      {
-        StorageManager.current().delete(ctrl[1]);
-        
-        // Move cancel message to "control" group
-        article.setHeader(Headers.NEWSGROUPS, "control");
-        StorageManager.current().addArticle(article);
-        conn.println("240 article cancelled");
-      }
-      catch(StorageBackendException ex)
-      {
-        Log.get().severe(ex.toString());
-        conn.println("500 internal server error");
-      }
-    }
-    else
-    {
-      conn.println("441 unknown control header");
-    }
-  }
-  
-  private void supersedeMessage(NNTPConnection conn, Article article)
-    throws IOException
-  {
-    try
-    {
-      String oldMsg = article.getHeader(Headers.SUPERSEDES)[0];
-      StorageManager.current().delete(oldMsg);
-      StorageManager.current().addArticle(article);
-      conn.println("240 article replaced");
-    }
-    catch(StorageBackendException ex)
-    {
-      Log.get().severe(ex.toString());
-      conn.println("500 internal server error");
-    }
-  }
-  
-  private void postArticle(NNTPConnection conn, Article article)
-    throws IOException
-  {
-    if(article.getHeader(Headers.CONTROL)[0].length() > 0)
-    {
-      controlMessage(conn, article);
-    }
-    else if(article.getHeader(Headers.SUPERSEDES)[0].length() > 0)
-    {
-      supersedeMessage(conn, article);
-    }
-    else // Post the article regularily
-    {
-      // Circle check; note that Path can already contain the hostname here
-      String host = Config.inst().get(Config.HOSTNAME, "localhost");
-      if(article.getHeader(Headers.PATH)[0].indexOf(host + "!", 1) > 0)
-      {
-        Log.get().info(article.getMessageID() + " skipped for host " + host);
-        conn.println("441 I know this article already");
-        return;
-      }
+					try {
+						// Parse the header using the InternetHeader class from JavaMail API
+						headers = new InternetHeaders(
+							new ByteArrayInputStream(strHead.toString().trim().getBytes(conn.getCurrentCharset())));
 
-      // Try to create the article in the database or post it to
-      // appropriate mailing list
-      try
-      {
-        boolean success = false;
-        String[] groupnames = article.getHeader(Headers.NEWSGROUPS)[0].split(",");
-        for(String groupname : groupnames)
-        {          
-          Group group = StorageManager.current().getGroup(groupname);
-          if(group != null && !group.isDeleted())
-          {
-            if(group.isMailingList() && !conn.isLocalConnection())
-            {
-              // Send to mailing list; the Dispatcher writes 
-              // statistics to database
-              Dispatcher.toList(article, group.getName());
-              success = true;
-            }
-            else
-            {
-              // Store in database
-              if(!StorageManager.current().isArticleExisting(article.getMessageID()))
-              {
-                StorageManager.current().addArticle(article);
+						// add the header entries for the article
+						article.setHeaders(headers);
+					} catch (MessagingException e) {
+						e.printStackTrace();
+						conn.println("500 posting failed - invalid header");
+						state = PostState.Finished;
+						break;
+					}
 
-                // Log this posting to statistics
-                Stats.getInstance().mailPosted(
-                  article.getHeader(Headers.NEWSGROUPS)[0]);
-              }
-              success = true;
-            }
-          }
-        } // end for
+					// Change charset for reading body;
+					// for multipart messages UTF-8 is returned
+					//conn.setCurrentCharset(article.getBodyCharset());
 
-        if(success)
-        {
-          conn.println("240 article posted ok");
-          FeedManager.queueForPush(article);
-        }
-        else
-        {
-          conn.println("441 newsgroup not found");
-        }
-      }
-      catch(AddressException ex)
-      {
-        Log.get().warning(ex.getMessage());
-        conn.println("441 invalid sender address");
-      }
-      catch(MessagingException ex)
-      {
-        // A MessageException is thrown when the sender email address is
-        // invalid or something is wrong with the SMTP server.
-        System.err.println(ex.getLocalizedMessage());
-        conn.println("441 " + ex.getClass().getCanonicalName() + ": " + ex.getLocalizedMessage());
-      }
-      catch(StorageBackendException ex)
-      {
-        ex.printStackTrace();
-        conn.println("500 internal server error");
-      }
-    }
-  }
+					state = PostState.ReadingBody;
 
+					if (".".equals(line)) {
+						// Post an article without body
+						postArticle(conn, article);
+						state = PostState.Finished;
+					}
+				}
+				break;
+			}
+			case ReadingBody: {
+				if (".".equals(line)) {
+					// Set some headers needed for Over command
+					headers.setHeader(Headers.LINES, Integer.toString(lineCount));
+					headers.setHeader(Headers.BYTES, Long.toString(bodySize));
+
+					byte[] body = bufBody.toByteArray();
+					if (body.length >= 2) {
+						// Remove trailing CRLF
+						body = Arrays.copyOf(body, body.length - 2);
+					}
+					article.setBody(body); // set the article body
+
+					postArticle(conn, article);
+					state = PostState.Finished;
+				} else {
+					bodySize += line.length() + 1;
+					lineCount++;
+
+					// Add line to body buffer
+					bufBody.write(raw, 0, raw.length);
+					bufBody.write(NNTPConnection.NEWLINE.getBytes());
+
+					if (bodySize > maxBodySize) {
+						conn.println("500 article is too long");
+						state = PostState.Finished;
+						break;
+					}
+				}
+				break;
+			}
+			default: {
+				// Should never happen
+				Log.get().severe("PostCommand::processLine(): already finished...");
+			}
+		}
+	}
+
+	/**
+	 * Article is a control message and needs special handling.
+	 * @param article
+	 */
+	private void controlMessage(NNTPConnection conn, Article article)
+		throws IOException
+	{
+		String[] ctrl = article.getHeader(Headers.CONTROL)[0].split(" ");
+		if (ctrl.length == 2) // "cancel <mid>"
+		{
+			try {
+				StorageManager.current().delete(ctrl[1]);
+
+				// Move cancel message to "control" group
+				article.setHeader(Headers.NEWSGROUPS, "control");
+				StorageManager.current().addArticle(article);
+				conn.println("240 article cancelled");
+			} catch (StorageBackendException ex) {
+				Log.get().severe(ex.toString());
+				conn.println("500 internal server error");
+			}
+		} else {
+			conn.println("441 unknown control header");
+		}
+	}
+
+	private void supersedeMessage(NNTPConnection conn, Article article)
+		throws IOException
+	{
+		try {
+			String oldMsg = article.getHeader(Headers.SUPERSEDES)[0];
+			StorageManager.current().delete(oldMsg);
+			StorageManager.current().addArticle(article);
+			conn.println("240 article replaced");
+		} catch (StorageBackendException ex) {
+			Log.get().severe(ex.toString());
+			conn.println("500 internal server error");
+		}
+	}
+
+	private void postArticle(NNTPConnection conn, Article article)
+		throws IOException
+	{
+		if (article.getHeader(Headers.CONTROL)[0].length() > 0) {
+			controlMessage(conn, article);
+		} else if (article.getHeader(Headers.SUPERSEDES)[0].length() > 0) {
+			supersedeMessage(conn, article);
+		} else // Post the article regularily
+		{
+			// Circle check; note that Path can already contain the hostname here
+			String host = Config.inst().get(Config.HOSTNAME, "localhost");
+			if (article.getHeader(Headers.PATH)[0].indexOf(host + "!", 1) > 0) {
+				Log.get().info(article.getMessageID() + " skipped for host " + host);
+				conn.println("441 I know this article already");
+				return;
+			}
+
+			// Try to create the article in the database or post it to
+			// appropriate mailing list
+			try {
+				boolean success = false;
+				String[] groupnames = article.getHeader(Headers.NEWSGROUPS)[0].split(",");
+				for (String groupname : groupnames) {
+					Group group = StorageManager.current().getGroup(groupname);
+					if (group != null && !group.isDeleted()) {
+						if (group.isMailingList() && !conn.isLocalConnection()) {
+							// Send to mailing list; the Dispatcher writes
+							// statistics to database
+							Dispatcher.toList(article, group.getName());
+							success = true;
+						} else {
+							// Store in database
+							if (!StorageManager.current().isArticleExisting(article.getMessageID())) {
+								StorageManager.current().addArticle(article);
+
+								// Log this posting to statistics
+								Stats.getInstance().mailPosted(
+									article.getHeader(Headers.NEWSGROUPS)[0]);
+							}
+							success = true;
+						}
+					}
+				} // end for
+
+				if (success) {
+					conn.println("240 article posted ok");
+					FeedManager.queueForPush(article);
+				} else {
+					conn.println("441 newsgroup not found");
+				}
+			} catch (AddressException ex) {
+				Log.get().warning(ex.getMessage());
+				conn.println("441 invalid sender address");
+			} catch (MessagingException ex) {
+				// A MessageException is thrown when the sender email address is
+				// invalid or something is wrong with the SMTP server.
+				System.err.println(ex.getLocalizedMessage());
+				conn.println("441 " + ex.getClass().getCanonicalName() + ": " + ex.getLocalizedMessage());
+			} catch (StorageBackendException ex) {
+				ex.printStackTrace();
+				conn.println("500 internal server error");
+			}
+		}
+	}
 }

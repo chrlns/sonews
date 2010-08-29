@@ -32,102 +32,97 @@ import org.sonews.storage.Article;
  * @author Christian Lins
  * @since sonews/0.5.0
  */
-public class ArticleWriter 
+public class ArticleWriter
 {
-  
-  private BufferedOutputStream out;
-  private BufferedReader       inr;
 
-  public ArticleWriter(String host, int port)
-    throws IOException, UnknownHostException
-  {
-    // Connect to NNTP server
-    Socket socket = new Socket(host, port);
-    this.out = new BufferedOutputStream(socket.getOutputStream());
-    this.inr = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-    String line = inr.readLine();
-    if(line == null || !line.startsWith("200 "))
-    {
-      throw new IOException("Invalid hello from server: " + line);
-    }
-  }
-  
-  public void close()
-    throws IOException, UnsupportedEncodingException
-  {
-    this.out.write("QUIT\r\n".getBytes("UTF-8"));
-    this.out.flush();
-  }
+	private BufferedOutputStream out;
+	private BufferedReader inr;
 
-  protected void finishPOST()
-    throws IOException
-  {
-    this.out.write("\r\n.\r\n".getBytes());
-    this.out.flush();
-    String line = inr.readLine();
-    if(line == null || !line.startsWith("240 ") || !line.startsWith("441 "))
-    {
-      throw new IOException(line);
-    }
-  }
+	public ArticleWriter(String host, int port)
+		throws IOException, UnknownHostException
+	{
+		// Connect to NNTP server
+		Socket socket = new Socket(host, port);
+		this.out = new BufferedOutputStream(socket.getOutputStream());
+		this.inr = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+		String line = inr.readLine();
+		if (line == null || !line.startsWith("200 ")) {
+			throw new IOException("Invalid hello from server: " + line);
+		}
+	}
 
-  protected void preparePOST()
-    throws IOException
-  {
-    this.out.write("POST\r\n".getBytes("UTF-8"));
-    this.out.flush();
+	public void close()
+		throws IOException, UnsupportedEncodingException
+	{
+		this.out.write("QUIT\r\n".getBytes("UTF-8"));
+		this.out.flush();
+	}
 
-    String line = this.inr.readLine();
-    if(line == null || !line.startsWith("340 "))
-    {
-      throw new IOException(line);
-    }
-  }
+	protected void finishPOST()
+		throws IOException
+	{
+		this.out.write("\r\n.\r\n".getBytes());
+		this.out.flush();
+		String line = inr.readLine();
+		if (line == null || !line.startsWith("240 ") || !line.startsWith("441 ")) {
+			throw new IOException(line);
+		}
+	}
 
-  public void writeArticle(Article article)
-    throws IOException, UnsupportedEncodingException
-  {
-    byte[] buf = new byte[512];
-    ArticleInputStream in = new ArticleInputStream(article);
+	protected void preparePOST()
+		throws IOException
+	{
+		this.out.write("POST\r\n".getBytes("UTF-8"));
+		this.out.flush();
 
-    preparePOST();
-    
-    int len = in.read(buf);
-    while(len != -1)
-    {
-      writeLine(buf, len);
-      len = in.read(buf);
-    }
+		String line = this.inr.readLine();
+		if (line == null || !line.startsWith("340 ")) {
+			throw new IOException(line);
+		}
+	}
 
-    finishPOST();
-  }
+	public void writeArticle(Article article)
+		throws IOException, UnsupportedEncodingException
+	{
+		byte[] buf = new byte[512];
+		ArticleInputStream in = new ArticleInputStream(article);
 
-  /**
-   * Writes the raw content of an article to the remote server. This method
-   * does no charset conversion/handling of any kind so its the preferred
-   * method for sending an article to remote peers.
-   * @param rawArticle
-   * @throws IOException
-   */
-  public void writeArticle(byte[] rawArticle)
-    throws IOException
-  {
-    preparePOST();
-    writeLine(rawArticle, rawArticle.length);
-    finishPOST();
-  }
+		preparePOST();
 
-  /**
-   * Writes the given buffer to the connect remote server.
-   * @param buffer
-   * @param len
-   * @throws IOException
-   */
-  protected void writeLine(byte[] buffer, int len)
-    throws IOException
-  {
-    this.out.write(buffer, 0, len);
-    this.out.flush();
-  }
+		int len = in.read(buf);
+		while (len != -1) {
+			writeLine(buf, len);
+			len = in.read(buf);
+		}
 
+		finishPOST();
+	}
+
+	/**
+	 * Writes the raw content of an article to the remote server. This method
+	 * does no charset conversion/handling of any kind so its the preferred
+	 * method for sending an article to remote peers.
+	 * @param rawArticle
+	 * @throws IOException
+	 */
+	public void writeArticle(byte[] rawArticle)
+		throws IOException
+	{
+		preparePOST();
+		writeLine(rawArticle, rawArticle.length);
+		finishPOST();
+	}
+
+	/**
+	 * Writes the given buffer to the connect remote server.
+	 * @param buffer
+	 * @param len
+	 * @throws IOException
+	 */
+	protected void writeLine(byte[] buffer, int len)
+		throws IOException
+	{
+		this.out.write(buffer, 0, len);
+		this.out.flush();
+	}
 }

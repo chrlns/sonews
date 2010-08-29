@@ -48,55 +48,48 @@ import org.sonews.storage.StorageBackendException;
 public class GroupCommand implements Command
 {
 
-  @Override
-  public String[] getSupportedCommandStrings()
-  {
-    return new String[]{"GROUP"};
-  }
+	@Override
+	public String[] getSupportedCommandStrings()
+	{
+		return new String[] {"GROUP"};
+	}
 
-  @Override
-  public boolean hasFinished()
-  {
-    return true;
-  }
+	@Override
+	public boolean hasFinished()
+	{
+		return true;
+	}
 
-  @Override
-  public String impliedCapability()
-  {
-    return null;
-  }
+	@Override
+	public String impliedCapability()
+	{
+		return null;
+	}
 
-  @Override
-  public boolean isStateful()
-  {
-    return true;
-  }
-  
-  @Override
-  public void processLine(NNTPConnection conn, final String line, byte[] raw)
-    throws IOException, StorageBackendException
-  {
-    final String[] command = line.split(" ");
+	@Override
+	public boolean isStateful()
+	{
+		return true;
+	}
 
-    Channel group;
-    if(command.length >= 2)
-    {
-      group = Channel.getByName(command[1]);
-      if(group == null || group.isDeleted())
-      {
-        conn.println("411 no such news group");
-      }
-      else
-      {
-        conn.setCurrentGroup(group);
-        conn.println("211 " + group.getPostingsCount() + " " + group.getFirstArticleNumber()
-          + " " + group.getLastArticleNumber() + " " + group.getName() + " group selected");
-      }
-    }
-    else
-    {
-      conn.println("500 no group name given");
-    }
-  }
+	@Override
+	public void processLine(NNTPConnection conn, final String line, byte[] raw)
+		throws IOException, StorageBackendException
+	{
+		final String[] command = line.split(" ");
 
+		Channel group;
+		if (command.length >= 2) {
+			group = Channel.getByName(command[1]);
+			if (group == null || group.isDeleted()) {
+				conn.println("411 no such news group");
+			} else {
+				conn.setCurrentGroup(group);
+				conn.println("211 " + group.getPostingsCount() + " " + group.getFirstArticleNumber()
+					+ " " + group.getLastArticleNumber() + " " + group.getName() + " group selected");
+			}
+		} else {
+			conn.println("500 no group name given");
+		}
+	}
 }

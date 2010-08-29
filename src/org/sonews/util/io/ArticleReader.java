@@ -34,102 +34,87 @@ import org.sonews.util.Log;
  * @author Christian Lins
  * @since sonews/0.5.0
  */
-public class ArticleReader 
+public class ArticleReader
 {
 
-  private BufferedOutputStream out;
-  private BufferedInputStream  in;
-  private String               messageID;
-  
-  public ArticleReader(String host, int port, String messageID)
-    throws IOException, UnknownHostException
-  {
-    this.messageID = messageID;
+	private BufferedOutputStream out;
+	private BufferedInputStream in;
+	private String messageID;
 
-    // Connect to NNTP server
-    Socket socket = new Socket(host, port);
-    this.out = new BufferedOutputStream(socket.getOutputStream());
-    this.in  = new BufferedInputStream(socket.getInputStream());
-    String line = readln(this.in);
-    if(!line.startsWith("200 "))
-    {
-      throw new IOException("Invalid hello from server: " + line);
-    }
-  }
-  
-  private boolean eofArticle(byte[] buf)
-  {
-    if(buf.length < 4)
-    {
-      return false;
-    }
-    
-    int l = buf.length - 1;
-    return buf[l-3] == 10 // '*\n'
-        && buf[l-2] == '.'                   // '.'
-        && buf[l-1] == 13 && buf[l] == 10;  // '\r\n'
-  }
-  
-  public byte[] getArticleData()
-    throws IOException, UnsupportedEncodingException
-  {
-    long maxSize = Config.inst().get(Config.ARTICLE_MAXSIZE, 1024) * 1024L;
+	public ArticleReader(String host, int port, String messageID)
+		throws IOException, UnknownHostException
+	{
+		this.messageID = messageID;
 
-    try
-    {
-      this.out.write(("ARTICLE " + this.messageID + "\r\n").getBytes("UTF-8"));
-      this.out.flush();
+		// Connect to NNTP server
+		Socket socket = new Socket(host, port);
+		this.out = new BufferedOutputStream(socket.getOutputStream());
+		this.in = new BufferedInputStream(socket.getInputStream());
+		String line = readln(this.in);
+		if (!line.startsWith("200 ")) {
+			throw new IOException("Invalid hello from server: " + line);
+		}
+	}
 
-      String line = readln(this.in);
-      if(line.startsWith("220 "))
-      {
-        ByteArrayOutputStream buf = new ByteArrayOutputStream();
-        
-        while(!eofArticle(buf.toByteArray()))
-        {
-          for(int b = in.read(); b != 10; b = in.read())
-          {
-            buf.write(b);
-          }
+	private boolean eofArticle(byte[] buf)
+	{
+		if (buf.length < 4) {
+			return false;
+		}
 
-          buf.write(10);
-          if(buf.size() > maxSize)
-          {
-            Log.get().warning("Skipping message that is too large: " + buf.size());
-            return null;
-          }
-        }
-        
-        return buf.toByteArray();
-      }
-      else
-      {
-        Log.get().warning("ArticleReader: " + line);
-        return null;
-      }
-    }
-    catch(IOException ex)
-    {
-      throw ex;
-    }
-    finally
-    {
-      this.out.write("QUIT\r\n".getBytes("UTF-8"));
-      this.out.flush();
-      this.out.close();
-    }
-  }
-  
-  private String readln(InputStream in)
-    throws IOException
-  {
-    ByteArrayOutputStream buf = new ByteArrayOutputStream();
-    for(int b = in.read(); b != 10 /* \n */; b = in.read())
-    {
-      buf.write(b);
-    }
-    
-    return new String(buf.toByteArray());
-  }
+		int l = buf.length - 1;
+		return buf[l - 3] == 10 // '*\n'
+			&& buf[l - 2] == '.' // '.'
+			&& buf[l - 1] == 13 && buf[l] == 10;  // '\r\n'
+	}
 
+	public byte[] getArticleData()
+		throws IOException, UnsupportedEncodingException
+	{
+		long maxSize = Config.inst().get(Config.ARTICLE_MAXSIZE, 1024) * 1024L;
+
+		try {
+			this.out.write(("ARTICLE " + this.messageID + "\r\n").getBytes("UTF-8"));
+			this.out.flush();
+
+			String line = readln(this.in);
+			if (line.startsWith("220 ")) {
+				ByteArrayOutputStream buf = new ByteArrayOutputStream();
+
+				while (!eofArticle(buf.toByteArray())) {
+					for (int b = in.read(); b != 10; b = in.read()) {
+						buf.write(b);
+					}
+
+					buf.write(10);
+					if (buf.size() > maxSize) {
+						Log.get().warning("Skipping message that is too large: " + buf.size());
+						return null;
+					}
+				}
+
+				return buf.toByteArray();
+			} else {
+				Log.get().warning("ArticleReader: " + line);
+				return null;
+			}
+		} catch (IOException ex) {
+			throw ex;
+		} finally {
+			this.out.write("QUIT\r\n".getBytes("UTF-8"));
+			this.out.flush();
+			this.out.close();
+		}
+	}
+
+	private String readln(InputStream in)
+		throws IOException
+	{
+		ByteArrayOutputStream buf = new ByteArrayOutputStream();
+		for (int b = in.read(); b != 10 /* \n */; b = in.read()) {
+			buf.write(b);
+		}
+
+		return new String(buf.toByteArray());
+	}
 }

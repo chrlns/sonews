@@ -32,40 +32,36 @@ import org.sonews.storage.Article;
 public class ArticleInputStream extends InputStream
 {
 
-  private byte[] buf;
-  private int    pos = 0;
-  
-  public ArticleInputStream(final Article art)
-    throws IOException, UnsupportedEncodingException
-  {
-    final ByteArrayOutputStream out = new ByteArrayOutputStream();
-    out.write(art.getHeaderSource().getBytes("UTF-8"));
-    out.write("\r\n\r\n".getBytes());
-    out.write(art.getBody()); // Without CRLF
-    out.flush();
-    this.buf = out.toByteArray();
-  }
+	private byte[] buf;
+	private int pos = 0;
 
-  /**
-   * This method reads one byte from the stream.  The <code>pos</code>
-   * counter is advanced to the next byte to be read.  The byte read is
-   * returned as an int in the range of 0-255.  If the stream position
-   * is already at the end of the buffer, no byte is read and a -1 is
-   * returned in order to indicate the end of the stream.
-   *
-   * @return The byte read, or -1 if end of stream
-   */
-  @Override
-  public synchronized int read()
-  {
-    if(pos < buf.length)
-    {
-      return ((int)buf[pos++]) & 0xFF;
-    }
-    else
-    {
-      return -1;
-    }
-  }
-  
+	public ArticleInputStream(final Article art)
+		throws IOException, UnsupportedEncodingException
+	{
+		final ByteArrayOutputStream out = new ByteArrayOutputStream();
+		out.write(art.getHeaderSource().getBytes("UTF-8"));
+		out.write("\r\n\r\n".getBytes());
+		out.write(art.getBody()); // Without CRLF
+		out.flush();
+		this.buf = out.toByteArray();
+	}
+
+	/**
+	 * This method reads one byte from the stream.  The <code>pos</code>
+	 * counter is advanced to the next byte to be read.  The byte read is
+	 * returned as an int in the range of 0-255.  If the stream position
+	 * is already at the end of the buffer, no byte is read and a -1 is
+	 * returned in order to indicate the end of the stream.
+	 *
+	 * @return The byte read, or -1 if end of stream
+	 */
+	@Override
+	public synchronized int read()
+	{
+		if (pos < buf.length) {
+			return ((int) buf[pos++]) & 0xFF;
+		} else {
+			return -1;
+		}
+	}
 }

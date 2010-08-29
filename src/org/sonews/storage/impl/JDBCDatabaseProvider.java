@@ -33,37 +33,29 @@ import org.sonews.storage.StorageProvider;
 public class JDBCDatabaseProvider implements StorageProvider
 {
 
-  protected static final Map<Thread, JDBCDatabase> instances
-    = new ConcurrentHashMap<Thread, JDBCDatabase>();
+	protected static final Map<Thread, JDBCDatabase> instances = new ConcurrentHashMap<Thread, JDBCDatabase>();
 
-  @Override
-  public boolean isSupported(String uri)
-  {
-    throw new UnsupportedOperationException("Not supported yet.");
-  }
+	@Override
+	public boolean isSupported(String uri)
+	{
+		throw new UnsupportedOperationException("Not supported yet.");
+	}
 
-  @Override
-  public Storage storage(Thread thread)
-    throws StorageBackendException
-  {
-    try
-    {
-    if(!instances.containsKey(Thread.currentThread()))
-    {
-      JDBCDatabase db = new JDBCDatabase();
-      db.arise();
-      instances.put(Thread.currentThread(), db);
-      return db;
-    }
-    else
-    {
-      return instances.get(Thread.currentThread());
-    }
-    }
-    catch(SQLException ex)
-    {
-      throw new StorageBackendException(ex);
-    }
-  }
-
+	@Override
+	public Storage storage(Thread thread)
+		throws StorageBackendException
+	{
+		try {
+			if (!instances.containsKey(Thread.currentThread())) {
+				JDBCDatabase db = new JDBCDatabase();
+				db.arise();
+				instances.put(Thread.currentThread(), db);
+				return db;
+			} else {
+				return instances.get(Thread.currentThread());
+			}
+		} catch (SQLException ex) {
+			throw new StorageBackendException(ex);
+		}
+	}
 }
