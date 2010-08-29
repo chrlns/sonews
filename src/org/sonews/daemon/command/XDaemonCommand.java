@@ -127,6 +127,16 @@ public class XDaemonCommand implements Command
 					group.update();
 					conn.println("200 group " + commands[2] + " marked as deleted");
 				}
+			} else if(commands.length == 5 && commands[1].equalsIgnoreCase("GROUPFLAG")) {
+				Group group = StorageManager.current().getGroup(commands[2]);
+				String flagName = commands[4];
+				if(commands[3].equalsIgnoreCase("SET")) {
+					
+				} else if(commands[3].equalsIgnoreCase("UNSET")) {
+					
+				} else {
+					conn.println("500 invalid command usage");
+				}
 			} else if (commands.length == 4 && commands[1].equalsIgnoreCase("SET")) {
 				String key = commands[2];
 				String val = commands[3];
@@ -194,6 +204,7 @@ public class XDaemonCommand implements Command
 					conn.println("401 unknown sub command");
 				}
 			} else if (commands.length >= 3 && commands[1].equalsIgnoreCase("PLUGIN")) {
+				conn.println("400 invalid command usage");
 			} else {
 				conn.println("400 invalid command usage");
 			}

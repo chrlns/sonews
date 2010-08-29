@@ -39,12 +39,14 @@ public abstract class Channel
 	 * the mailing list gateway.
 	 */
 	public static final int MAILINGLIST = 0x1;
+
 	/**
 	 * If this flag is set the Group is marked as readonly and the posting
 	 * is prohibited. This can be useful for groups that are synced only in
 	 * one direction.
 	 */
 	public static final int READONLY = 0x2;
+
 	/**
 	 * If this flag is set the Group is marked as deleted and must not occur
 	 * in any output. The deletion is done lazily by a low priority daemon.
