@@ -1,10 +1,13 @@
 Source: sonews
 Section: news
 Priority: optional
-Maintainer: Christian Lins <cli@openoffice.org>
+Maintainer: Christian Lins <christian@lins.me>
 Homepage: http://www.sonews.org/
 Package: sonews
-Version: 1.0.0
+Standards-Version: 3.9.1.0
+Build-Depends: debhelper (>= 7.0.50~), openjdk-6-jdk, ant, glassfish-mail
+
+Package: sonews-server
 Architecture: all
 Depends: openjdk-6-jre-headless | openjdk-6-jre | sun-java6-jre | cacao | jamvm, glassfish-mail, libmysql-java
 Suggests: sonews-web, libpg-java, mysql-server, libjchart2d-java
