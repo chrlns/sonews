@@ -142,7 +142,41 @@ public class Article extends ArticleHead
       Log.msg("Skipping message due to unknown content. Throwing exception...", true);
       throw new MessagingException("Unknown content: " + content);
     }
-    
+
+    // dot stuffing 
+    byte[]b=this.body;
+    boolean f=true;
+    int i=0;
+    int j=0;
+    for ( i=0; i<b.length; i++) {
+	if ( f && b[i]=='.' ) {
+		j++;
+	}
+	if ( b[i]=='\n' ) {
+		f=true;
+	} else {
+		f=false;
+	}
+	j++;
+    }
+    if ( i != j ) {
+      this.body=new byte[j];
+      f=true;
+      j=0;
+	
+      for ( i=0; i<b.length; i++) {
+	if ( f && b[i]=='.' ) {
+		this.body[j++]='.';
+	}
+	if ( b[i]=='\n' ) {
+		f=true;
+	} else {
+		f=false;
+	}
+	this.body[j++]=b[i];
+     }
+   }
+
     // Validate headers
     validateHeaders();
   }

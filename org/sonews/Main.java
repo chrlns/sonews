@@ -48,7 +48,7 @@ public final class Main
   }
 
   /** Version information of the sonews daemon */
-  public static final String VERSION   = "sonews/1.0.3";
+  public static final String VERSION   = "sonews/1.0.4";
   public static final Date   STARTDATE = new Date();
   
   /**
