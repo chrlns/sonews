@@ -15,7 +15,6 @@
  *   You should have received a copy of the GNU General Public License
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 package org.sonews.util.io;
 
 import java.io.ByteArrayOutputStream;
@@ -29,15 +28,13 @@ import org.sonews.storage.Article;
  * @author Christian Lins
  * @since sonews/0.5.0
  */
-public class ArticleInputStream extends InputStream
-{
+public class ArticleInputStream extends InputStream {
 
 	private byte[] buf;
 	private int pos = 0;
 
 	public ArticleInputStream(final Article art)
-		throws IOException, UnsupportedEncodingException
-	{
+			throws IOException, UnsupportedEncodingException {
 		final ByteArrayOutputStream out = new ByteArrayOutputStream();
 		out.write(art.getHeaderSource().getBytes("UTF-8"));
 		out.write("\r\n\r\n".getBytes());
@@ -56,8 +53,7 @@ public class ArticleInputStream extends InputStream
 	 * @return The byte read, or -1 if end of stream
 	 */
 	@Override
-	public synchronized int read()
-	{
+	public synchronized int read() {
 		if (pos < buf.length) {
 			return ((int) buf[pos++]) & 0xFF;
 		} else {

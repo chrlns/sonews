@@ -15,7 +15,6 @@
  *   You should have received a copy of the GNU General Public License
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 package org.sonews.storage;
 
 import java.util.ArrayList;
@@ -30,8 +29,7 @@ import org.sonews.util.Pair;
  * @author Christian Lins
  * @since sonews/1.0
  */
-public abstract class Channel
-{
+public abstract class Channel {
 
 	/**
 	 * If this flag is set the Group is no real newsgroup but a mailing list
@@ -39,22 +37,19 @@ public abstract class Channel
 	 * the mailing list gateway.
 	 */
 	public static final int MAILINGLIST = 0x1;
-
 	/**
 	 * If this flag is set the Group is marked as readonly and the posting
 	 * is prohibited. This can be useful for groups that are synced only in
 	 * one direction.
 	 */
 	public static final int READONLY = 0x2;
-
 	/**
 	 * If this flag is set the Group is marked as deleted and must not occur
 	 * in any output. The deletion is done lazily by a low priority daemon.
 	 */
 	public static final int DELETED = 0x80;
 
-	public static List<Channel> getAll()
-	{
+	public static List<Channel> getAll() {
 		List<Channel> all = new ArrayList<Channel>();
 
 		/*List<Channel> agroups = AggregatedGroup.getAll();
@@ -72,36 +67,35 @@ public abstract class Channel
 	}
 
 	public static Channel getByName(String name)
-		throws StorageBackendException
-	{
+			throws StorageBackendException {
 		return StorageManager.current().getGroup(name);
 	}
 
 	public abstract Article getArticle(long idx)
-		throws StorageBackendException;
+			throws StorageBackendException;
 
 	public abstract List<Pair<Long, ArticleHead>> getArticleHeads(
-		final long first, final long last)
-		throws StorageBackendException;
+			final long first, final long last)
+			throws StorageBackendException;
 
 	public abstract List<Long> getArticleNumbers()
-		throws StorageBackendException;
+			throws StorageBackendException;
 
 	public abstract long getFirstArticleNumber()
-		throws StorageBackendException;
+			throws StorageBackendException;
 
 	public abstract long getIndexOf(Article art)
-		throws StorageBackendException;
+			throws StorageBackendException;
 
 	public abstract long getInternalID();
 
 	public abstract long getLastArticleNumber()
-		throws StorageBackendException;
+			throws StorageBackendException;
 
 	public abstract String getName();
 
 	public abstract long getPostingsCount()
-		throws StorageBackendException;
+			throws StorageBackendException;
 
 	public abstract boolean isDeleted();
 

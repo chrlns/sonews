@@ -15,7 +15,6 @@
  *   You should have received a copy of the GNU General Public License
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 package org.sonews.daemon.command;
 
 import java.io.IOException;
@@ -45,40 +44,35 @@ import org.sonews.util.Stats;
  * @author Christian Lins
  * @since sonews/0.5.0
  */
-public class PostCommand implements Command
-{
+public class PostCommand implements Command {
 
 	private final Article article = new Article();
 	private int lineCount = 0;
 	private long bodySize = 0;
 	private InternetHeaders headers = null;
 	private long maxBodySize =
-		Config.inst().get(Config.ARTICLE_MAXSIZE, 128) * 1024L; // Size in bytes
+			Config.inst().get(Config.ARTICLE_MAXSIZE, 128) * 1024L; // Size in bytes
 	private PostState state = PostState.WaitForLineOne;
 	private final ByteArrayOutputStream bufBody = new ByteArrayOutputStream();
 	private final StringBuilder strHead = new StringBuilder();
 
 	@Override
-	public String[] getSupportedCommandStrings()
-	{
-		return new String[] {"POST"};
+	public String[] getSupportedCommandStrings() {
+		return new String[]{"POST"};
 	}
 
 	@Override
-	public boolean hasFinished()
-	{
+	public boolean hasFinished() {
 		return this.state == PostState.Finished;
 	}
 
 	@Override
-	public String impliedCapability()
-	{
+	public String impliedCapability() {
 		return null;
 	}
 
 	@Override
-	public boolean isStateful()
-	{
+	public boolean isStateful() {
 		return true;
 	}
 
@@ -90,8 +84,7 @@ public class PostCommand implements Command
 	 */
 	@Override // TODO: Refactor this method to reduce complexity!
 	public void processLine(NNTPConnection conn, String line, byte[] raw)
-		throws IOException, StorageBackendException
-	{
+			throws IOException, StorageBackendException {
 		switch (state) {
 			case WaitForLineOne: {
 				if (line.equalsIgnoreCase("POST")) {
@@ -113,7 +106,7 @@ public class PostCommand implements Command
 					try {
 						// Parse the header using the InternetHeader class from JavaMail API
 						headers = new InternetHeaders(
-							new ByteArrayInputStream(strHead.toString().trim().getBytes(conn.getCurrentCharset())));
+								new ByteArrayInputStream(strHead.toString().trim().getBytes(conn.getCurrentCharset())));
 
 						// add the header entries for the article
 						article.setHeaders(headers);
@@ -181,8 +174,7 @@ public class PostCommand implements Command
 	 * @param article
 	 */
 	private void controlMessage(NNTPConnection conn, Article article)
-		throws IOException
-	{
+			throws IOException {
 		String[] ctrl = article.getHeader(Headers.CONTROL)[0].split(" ");
 		if (ctrl.length == 2) // "cancel <mid>"
 		{
@@ -203,8 +195,7 @@ public class PostCommand implements Command
 	}
 
 	private void supersedeMessage(NNTPConnection conn, Article article)
-		throws IOException
-	{
+			throws IOException {
 		try {
 			String oldMsg = article.getHeader(Headers.SUPERSEDES)[0];
 			StorageManager.current().delete(oldMsg);
@@ -217,8 +208,7 @@ public class PostCommand implements Command
 	}
 
 	private void postArticle(NNTPConnection conn, Article article)
-		throws IOException
-	{
+			throws IOException {
 		if (article.getHeader(Headers.CONTROL)[0].length() > 0) {
 			controlMessage(conn, article);
 		} else if (article.getHeader(Headers.SUPERSEDES)[0].length() > 0) {
@@ -253,7 +243,7 @@ public class PostCommand implements Command
 
 								// Log this posting to statistics
 								Stats.getInstance().mailPosted(
-									article.getHeader(Headers.NEWSGROUPS)[0]);
+										article.getHeader(Headers.NEWSGROUPS)[0]);
 							}
 							success = true;
 						}

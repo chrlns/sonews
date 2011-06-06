@@ -15,7 +15,6 @@
  *   You should have received a copy of the GNU General Public License
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 package org.sonews.storage;
 
 /**
@@ -23,8 +22,7 @@ package org.sonews.storage;
  * @author Christian Lins
  * @since sonews/1.0
  */
-public interface StorageProvider
-{
+public interface StorageProvider {
 
 	public boolean isSupported(String uri);
 
@@ -35,5 +33,5 @@ public interface StorageProvider
 	 * @return The reference to the associated Storage.
 	 */
 	public Storage storage(Thread thread)
-		throws StorageBackendException;
+			throws StorageBackendException;
 }

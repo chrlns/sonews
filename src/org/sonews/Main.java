@@ -15,7 +15,6 @@
  *   You should have received a copy of the GNU General Public License
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 package org.sonews;
 
 import java.sql.Driver;
@@ -42,8 +41,7 @@ import org.sonews.util.io.Resource;
  * @author Christian Lins
  * @since sonews/0.5.0
  */
-public final class Main
-{
+public final class Main {
 
 	/** Version information of the sonews daemon */
 	public static final String VERSION = "sonews/1.1.0";
@@ -54,8 +52,7 @@ public final class Main
 	 * @param args
 	 * @throws Exception
 	 */
-	public static void main(String[] args) throws Exception
-	{
+	public static void main(String[] args) throws Exception {
 		System.out.println(VERSION);
 		Thread.currentThread().setName("Mainthread");
 
@@ -106,7 +103,7 @@ public final class Main
 		// a working JDBCDatabase connection.
 		try {
 			StorageProvider sprov =
-				StorageManager.loadProvider("org.sonews.storage.impl.JDBCDatabaseProvider");
+					StorageManager.loadProvider("org.sonews.storage.impl.JDBCDatabaseProvider");
 			StorageManager.enableProvider(sprov);
 
 			// Make sure some elementary groups are existing
@@ -118,7 +115,7 @@ public final class Main
 			ex.printStackTrace();
 			System.err.println("Database initialization failed with " + ex.toString());
 			System.err.println("Make sure you have specified the correct database"
-				+ " settings in sonews.conf!");
+					+ " settings in sonews.conf!");
 			return;
 		}
 
@@ -154,13 +151,11 @@ public final class Main
 		daemon.join();
 	}
 
-	private static void printArguments()
-	{
+	private static void printArguments() {
 		String usage = Resource.getAsString("helpers/usage", true);
 		System.out.println(usage);
 	}
 
-	private Main()
-	{
+	private Main() {
 	}
 }

@@ -15,22 +15,19 @@
  *   You should have received a copy of the GNU General Public License
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 package org.sonews.storage;
 
 /**
- *
+ * Provides access to a storage backend.
  * @author Christian Lins
  * @since sonews/1.0
  */
-public final class StorageManager
-{
+public final class StorageManager {
 
 	private static StorageProvider provider;
 
 	public static Storage current()
-		throws StorageBackendException
-	{
+			throws StorageBackendException {
 		synchronized (StorageManager.class) {
 			if (provider == null) {
 				return null;
@@ -40,8 +37,7 @@ public final class StorageManager
 		}
 	}
 
-	public static StorageProvider loadProvider(String pluginClassName)
-	{
+	public static StorageProvider loadProvider(String pluginClassName) {
 		try {
 			Class<?> clazz = Class.forName(pluginClassName);
 			Object inst = clazz.newInstance();
@@ -56,8 +52,7 @@ public final class StorageManager
 	 * Sets the current storage provider.
 	 * @param provider
 	 */
-	public static void enableProvider(StorageProvider provider)
-	{
+	public static void enableProvider(StorageProvider provider) {
 		synchronized (StorageManager.class) {
 			if (StorageManager.provider != null) {
 				disableProvider();
@@ -69,8 +64,7 @@ public final class StorageManager
 	/**
 	 * Disables the current provider.
 	 */
-	public static void disableProvider()
-	{
+	public static void disableProvider() {
 		synchronized (StorageManager.class) {
 			provider = null;
 		}

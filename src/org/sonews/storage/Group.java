@@ -15,7 +15,6 @@
  *   You should have received a copy of the GNU General Public License
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 package org.sonews.storage;
 
 import java.sql.SQLException;
@@ -29,8 +28,7 @@ import org.sonews.util.Pair;
  * @since sonews/0.5.0
  */
 // TODO: This class should not be public!
-public class Group extends Channel
-{
+public class Group extends Channel {
 
 	private long id = 0;
 	private int flags = -1;
@@ -39,8 +37,7 @@ public class Group extends Channel
 	/**
 	 * @return List of all groups this server handles.
 	 */
-	public static List<Channel> getAll()
-	{
+	public static List<Channel> getAll() {
 		try {
 			return StorageManager.current().getGroups();
 		} catch (StorageBackendException ex) {
@@ -53,16 +50,14 @@ public class Group extends Channel
 	 * @param name
 	 * @param id
 	 */
-	public Group(final String name, final long id, final int flags)
-	{
+	public Group(final String name, final long id, final int flags) {
 		this.id = id;
 		this.flags = flags;
 		this.name = name;
 	}
 
 	@Override
-	public boolean equals(Object obj)
-	{
+	public boolean equals(Object obj) {
 		if (obj instanceof Group) {
 			return ((Group) obj).id == this.id;
 		} else {
@@ -71,73 +66,61 @@ public class Group extends Channel
 	}
 
 	public Article getArticle(long idx)
-		throws StorageBackendException
-	{
+			throws StorageBackendException {
 		return StorageManager.current().getArticle(idx, this.id);
 	}
 
 	public List<Pair<Long, ArticleHead>> getArticleHeads(final long first, final long last)
-		throws StorageBackendException
-	{
+			throws StorageBackendException {
 		return StorageManager.current().getArticleHeads(this, first, last);
 	}
 
 	public List<Long> getArticleNumbers()
-		throws StorageBackendException
-	{
+			throws StorageBackendException {
 		return StorageManager.current().getArticleNumbers(id);
 	}
 
 	public long getFirstArticleNumber()
-		throws StorageBackendException
-	{
+			throws StorageBackendException {
 		return StorageManager.current().getFirstArticleNumber(this);
 	}
 
-	public int getFlags()
-	{
+	public int getFlags() {
 		return this.flags;
 	}
 
 	public long getIndexOf(Article art)
-		throws StorageBackendException
-	{
+			throws StorageBackendException {
 		return StorageManager.current().getArticleIndex(art, this);
 	}
 
 	/**
 	 * Returns the group id.
 	 */
-	public long getInternalID()
-	{
+	public long getInternalID() {
 		assert id > 0;
 
 		return id;
 	}
 
-	public boolean isDeleted()
-	{
+	public boolean isDeleted() {
 		return (this.flags & DELETED) != 0;
 	}
 
-	public boolean isMailingList()
-	{
+	public boolean isMailingList() {
 		return (this.flags & MAILINGLIST) != 0;
 	}
 
-	public boolean isWriteable()
-	{
+	public boolean isWriteable() {
 		return true;
 	}
 
 	public long getLastArticleNumber()
-		throws StorageBackendException
-	{
+			throws StorageBackendException {
 		return StorageManager.current().getLastArticleNumber(this);
 	}
 
-	public String getName()
-	{
+	public String getName() {
 		return name;
 	}
 
@@ -146,13 +129,11 @@ public class Group extends Channel
 	 * in the JDBCDatabase.
 	 * @param flag
 	 */
-	public void setFlag(final int flag)
-	{
+	public void setFlag(final int flag) {
 		this.flags |= flag;
 	}
 
-	public void setName(final String name)
-	{
+	public void setName(final String name) {
 		this.name = name;
 	}
 
@@ -161,8 +142,7 @@ public class Group extends Channel
 	 * @throws java.sql.SQLException
 	 */
 	public long getPostingsCount()
-		throws StorageBackendException
-	{
+			throws StorageBackendException {
 		return StorageManager.current().getPostingsCount(this.name);
 	}
 
@@ -170,8 +150,7 @@ public class Group extends Channel
 	 * Updates flags and name in the backend.
 	 */
 	public void update()
-		throws StorageBackendException
-	{
+			throws StorageBackendException {
 		StorageManager.current().update(this);
 	}
 }

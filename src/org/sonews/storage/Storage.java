@@ -15,7 +15,6 @@
  *   You should have received a copy of the GNU General Public License
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 package org.sonews.storage;
 
 import java.util.List;
@@ -27,8 +26,7 @@ import org.sonews.util.Pair;
  * @author Christian Lins
  * @since sonews/1.0
  */
-public interface Storage
-{
+public interface Storage {
 
 	/**
 	 * Stores the given Article in the storage.
@@ -36,60 +34,60 @@ public interface Storage
 	 * @throws StorageBackendException
 	 */
 	void addArticle(Article art)
-		throws StorageBackendException;
+			throws StorageBackendException;
 
 	void addEvent(long timestamp, int type, long groupID)
-		throws StorageBackendException;
+			throws StorageBackendException;
 
 	void addGroup(String groupname, int flags)
-		throws StorageBackendException;
+			throws StorageBackendException;
 
 	int countArticles()
-		throws StorageBackendException;
+			throws StorageBackendException;
 
 	int countGroups()
-		throws StorageBackendException;
+			throws StorageBackendException;
 
 	void delete(String messageID)
-		throws StorageBackendException;
+			throws StorageBackendException;
 
 	Article getArticle(String messageID)
-		throws StorageBackendException;
+			throws StorageBackendException;
 
 	Article getArticle(long articleIndex, long groupID)
-		throws StorageBackendException;
+			throws StorageBackendException;
 
 	List<Pair<Long, ArticleHead>> getArticleHeads(Group group, long first, long last)
-		throws StorageBackendException;
+			throws StorageBackendException;
 
 	List<Pair<Long, String>> getArticleHeaders(Channel channel, long start, long end,
-		String header, String pattern)
-		throws StorageBackendException;
+			String header, String pattern)
+			throws StorageBackendException;
 
 	long getArticleIndex(Article art, Group group)
-		throws StorageBackendException;
+			throws StorageBackendException;
 
 	List<Long> getArticleNumbers(long groupID)
-		throws StorageBackendException;
+			throws StorageBackendException;
 
 	String getConfigValue(String key)
-		throws StorageBackendException;
+			throws StorageBackendException;
 
 	int getEventsCount(int eventType, long startTimestamp, long endTimestamp,
-		Channel channel)
-		throws StorageBackendException;
+			Channel channel)
+			throws StorageBackendException;
 
 	double getEventsPerHour(int key, long gid)
-		throws StorageBackendException;
+			throws StorageBackendException;
 
 	int getFirstArticleNumber(Group group)
-		throws StorageBackendException;
+			throws StorageBackendException;
 
 	Group getGroup(String name)
-		throws StorageBackendException;
+			throws StorageBackendException;
 
 	List<Channel> getGroups()
-		throws StorageBackendException;
+			throws StorageBackendException;
 
 	/**
 	 * Retrieves the collection of groupnames that are associated with the
@@ -99,10 +97,10 @@ public interface Storage
 	 * @throws StorageBackendException
 	 */
 	List<String> getGroupsForList(String listAddress)
-		throws StorageBackendException;
+			throws StorageBackendException;
 
 	int getLastArticleNumber(Group group)
-		throws StorageBackendException;
+			throws StorageBackendException;
 
 	/**
 	 * Returns a list of email addresses that are related to the given
@@ -112,28 +110,28 @@ public interface Storage
 	 * @throws StorageBackendException
 	 */
 	List<String> getListsForGroup(String groupname)
-		throws StorageBackendException;
+			throws StorageBackendException;
 
 	String getOldestArticle()
-		throws StorageBackendException;
+			throws StorageBackendException;
 
 	int getPostingsCount(String groupname)
-		throws StorageBackendException;
+			throws StorageBackendException;
 
 	List<Subscription> getSubscriptions(int type)
-		throws StorageBackendException;
+			throws StorageBackendException;
 
 	boolean isArticleExisting(String messageID)
-		throws StorageBackendException;
+			throws StorageBackendException;
 
 	boolean isGroupExisting(String groupname)
-		throws StorageBackendException;
+			throws StorageBackendException;
 
 	void purgeGroup(Group group)
-		throws StorageBackendException;
+			throws StorageBackendException;
 
 	void setConfigValue(String key, String value)
-		throws StorageBackendException;
+			throws StorageBackendException;
 
 	/**
 	 * Updates headers and channel references of the given article.
@@ -142,8 +140,8 @@ public interface Storage
 	 * @throws StorageBackendException
 	 */
 	boolean update(Article article)
-		throws StorageBackendException;
+			throws StorageBackendException;
 
 	boolean update(Group group)
-		throws StorageBackendException;
+			throws StorageBackendException;
 }

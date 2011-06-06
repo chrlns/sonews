@@ -17,9 +17,6 @@
  */
 package org.sonews.storage.impl;
 
-import java.sql.SQLException;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import org.sonews.storage.Storage;
 import org.sonews.storage.StorageBackendException;
 import org.sonews.storage.StorageProvider;
@@ -27,31 +24,16 @@ import org.sonews.storage.StorageProvider;
 /**
  *
  * @author Christian Lins
- * @since sonews/1.0
+ * @since sonews/1.1
  */
-public class JDBCDatabaseProvider implements StorageProvider {
+public class HSQLDBProvider implements StorageProvider {
 
-	protected static final Map<Thread, JDBCDatabase> instances = new ConcurrentHashMap<Thread, JDBCDatabase>();
-
-	@Override
 	public boolean isSupported(String uri) {
 		throw new UnsupportedOperationException("Not supported yet.");
 	}
 
-	@Override
-	public Storage storage(Thread thread)
-			throws StorageBackendException {
-		try {
-			if (!instances.containsKey(Thread.currentThread())) {
-				JDBCDatabase db = new JDBCDatabase();
-				db.arise();
-				instances.put(Thread.currentThread(), db);
-				return db;
-			} else {
-				return instances.get(Thread.currentThread());
-			}
-		} catch (SQLException ex) {
-			throw new StorageBackendException(ex);
-		}
+	public Storage storage(Thread thread) throws StorageBackendException {
+		throw new UnsupportedOperationException("Not supported yet.");
 	}
+
 }
