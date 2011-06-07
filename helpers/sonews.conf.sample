@@ -1,4 +1,4 @@
 sonews.storage.database=jdbc:hsqldb:file:sonewsdb
-sonews.storage.user=
+sonews.storage.user=SA
 sonews.storage.dbmsdriver=org.hsqldb.jdbcDriver
 sonews.storage.password=

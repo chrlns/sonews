@@ -29,7 +29,7 @@ import org.sonews.storage.StorageProvider;
 public class HSQLDBProvider implements StorageProvider {
 
 	public boolean isSupported(String uri) {
-		throw new UnsupportedOperationException("Not supported yet.");
+		return uri.startsWith("jdbc:hsqldb");
 	}
 
 	public Storage storage(Thread thread) throws StorageBackendException {

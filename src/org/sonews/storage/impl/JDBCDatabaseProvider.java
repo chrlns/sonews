@@ -35,7 +35,7 @@ public class JDBCDatabaseProvider implements StorageProvider {
 
 	@Override
 	public boolean isSupported(String uri) {
-		throw new UnsupportedOperationException("Not supported yet.");
+		return uri.startsWith("jdbc:mysql") || uri.startsWith("jdbc:postgresql");
 	}
 
 	@Override
