@@ -131,9 +131,21 @@ public class XDaemonCommand implements Command
 				Group group = StorageManager.current().getGroup(commands[2]);
 				String flagName = commands[4];
 				if(commands[3].equalsIgnoreCase("SET")) {
-					
+					if(flagName.equals("MAILINGLIST")) {
+
+					} else if(flagName.equals("DELETED")) {
+
+					} else if(flagName.equals("READONLY")) {
+
+					}
 				} else if(commands[3].equalsIgnoreCase("UNSET")) {
-					
+					if(flagName.equals("MAILINGLIST")) {
+
+					} else if(flagName.equals("DELETED")) {
+
+					} else if(flagName.equals("READONLY")) {
+
+					}
 				} else {
 					conn.println("500 invalid command usage");
 				}
