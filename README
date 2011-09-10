@@ -1,6 +1,9 @@
 sonews README
 =============
 
+sonews is an Usenet News Server written in Java. It uses a relation database as
+backend, currently supported is MySQL, PostgreSQL and HSQLDB.
+
 Prerequisites:
 --------------
 
@@ -23,5 +26,5 @@ Installation:
 Bugs and other Issues:
 ----------------------
 
-Please mail them to christian.lins@fh-osnabrueck.de or better issue them
-into the bugtracker at http://bugs.xerxys.info/ .
+Please mail them to mail(at)sonews.org or better issue them
+into the bugtracker at https://bitbucket.org/cli/sonews/ .

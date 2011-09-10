@@ -26,8 +26,7 @@ public final class StorageManager {
 
 	private static StorageProvider provider;
 
-	public static Storage current()
-			throws StorageBackendException {
+	public static Storage current() throws StorageBackendException {
 		synchronized (StorageManager.class) {
 			if (provider == null) {
 				return null;
@@ -41,7 +40,7 @@ public final class StorageManager {
 		try {
 			Class<?> clazz = Class.forName(pluginClassName);
 			Object inst = clazz.newInstance();
-			return (StorageProvider) inst;
+			return (StorageProvider)inst;
 		} catch (Exception ex) {
 			System.err.println(ex);
 			return null;

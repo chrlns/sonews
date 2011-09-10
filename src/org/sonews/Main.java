@@ -102,8 +102,9 @@ public final class Main {
 		// Do NOT USE BackendConfig or Log classes before this point because they require
 		// a working JDBCDatabase connection.
 		try {
-			StorageProvider sprov =
-					StorageManager.loadProvider("org.sonews.storage.impl.JDBCDatabaseProvider");
+			String provName = Config.inst().get(Config.LEVEL_FILE,
+					Config.STORAGE_PROVIDER, "org.sonews.storage.impl.JDBCDatabaseProvider");
+			StorageProvider sprov = StorageManager.loadProvider(provName);
 			StorageManager.enableProvider(sprov);
 
 			// Make sure some elementary groups are existing

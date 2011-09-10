@@ -52,8 +52,7 @@ public class Config extends AbstractConfig
 	public static final String MLSEND_PORT = "sonews.mlsend.port";
 	public static final String MLSEND_USER = "sonews.mlsend.user";
 	/** Key constant. If value is "true" every I/O is written to logfile
-	 * (which is a lot!)
-	 */
+	 * (which is a lot!) */
 	public static final String DEBUG = "sonews.debug";
 	/** Key constant. Value is classname of the JDBC driver */
 	public static final String STORAGE_DBMSDRIVER = "sonews.storage.dbmsdriver";
@@ -63,6 +62,7 @@ public class Config extends AbstractConfig
 	public static final String STORAGE_USER = "sonews.storage.user";
 	/** Key constant. Value is the password for the DBMS. */
 	public static final String STORAGE_PASSWORD = "sonews.storage.password";
+	public static final String STORAGE_PROVIDER = "sonews.storage.provider";
 	/** Key constant. Value is the name of the host which is allowed to use the
 	 *  XDAEMON command; default: "localhost" */
 	public static final String XDAEMON_HOST = "sonews.xdaemon.host";

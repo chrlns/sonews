@@ -27,6 +27,7 @@ import java.sql.PreparedStatement;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
@@ -97,6 +98,29 @@ public class JDBCDatabase implements Storage
 	/** How many times the database connection was reinitialized */
 	protected int restarts = 0;
 
+	protected void prepareAddGroupStatement() throws SQLException {
+		this.pstmtAddGroup0 = conn.prepareStatement(
+				"INSERT INTO groups (name, flags) VALUES (?, ?)");
+	}
+
+	protected void prepareCountGroupsStatement() throws SQLException {
+		this.pstmtCountGroups = conn.prepareStatement(
+				"SELECT Count(group_id) FROM groups WHERE "
+				+ "flags & " + Channel.DELETED + " = 0");
+	}
+
+	protected void prepareGetPostingsCountStatement() throws SQLException {
+		this.pstmtGetPostingsCount = conn.prepareStatement(
+				"SELECT Count(*) FROM postings NATURAL JOIN groups "
+				+ "WHERE groups.name = ?");
+	}
+
+	protected void prepareGetSubscriptionsStatement() throws SQLException {
+		this.pstmtGetSubscriptions = conn.prepareStatement(
+				"SELECT host, port, name FROM peers NATURAL JOIN "
+				+ "peer_subscriptions NATURAL JOIN groups WHERE feedtype = ?");
+	}
+
 	/**
 	 * Rises the database: reconnect and recreate all prepared statements.
 	 * @throws java.lang.SQLException
@@ -137,17 +161,14 @@ public class JDBCDatabase implements Storage
 				"INSERT INTO events VALUES (?, ?, ?)");
 
 			// Prepare statement for method addGroup()
-			this.pstmtAddGroup0 = conn.prepareStatement(
-				"INSERT INTO groups (name, flags) VALUES (?, ?)");
+			prepareAddGroupStatement();
 
 			// Prepare statement for method countArticles()
 			this.pstmtCountArticles = conn.prepareStatement(
 				"SELECT Count(article_id) FROM article_ids");
 
 			// Prepare statement for method countGroups()
-			this.pstmtCountGroups = conn.prepareStatement(
-				"SELECT Count(group_id) FROM groups WHERE "
-				+ "flags & " + Channel.DELETED + " = 0");
+			prepareCountGroupsStatement();
 
 			// Prepare statements for method delete(article)
 			this.pstmtDeleteArticle0 = conn.prepareStatement(
@@ -254,14 +275,10 @@ public class JDBCDatabase implements Storage
 				"SELECT Min(article_index) FROM postings WHERE group_id = ?");
 
 			// Prepare statement for method getPostingsCount()
-			this.pstmtGetPostingsCount = conn.prepareStatement(
-				"SELECT Count(*) FROM postings NATURAL JOIN groups "
-				+ "WHERE groups.name = ?");
+			prepareGetPostingsCountStatement();
 
 			// Prepare statement for method getSubscriptions()
-			this.pstmtGetSubscriptions = conn.prepareStatement(
-				"SELECT host, port, name FROM peers NATURAL JOIN "
-				+ "peer_subscriptions NATURAL JOIN groups WHERE feedtype = ?");
+			prepareGetSubscriptionsStatement();
 
 			// Prepare statement for method isArticleExisting()
 			this.pstmtIsArticleExisting = conn.prepareStatement(
@@ -1364,12 +1381,12 @@ public class JDBCDatabase implements Storage
 		}
 	}
 
-	private void restartConnection(SQLException cause)
+	protected void restartConnection(SQLException cause)
 		throws StorageBackendException
 	{
 		restarts++;
-		Log.get().severe(Thread.currentThread()
-			+ ": Database connection was closed (restart " + restarts + ").");
+		Log.get().log(Level.SEVERE, Thread.currentThread()
+			+ ": Database connection was closed (restart " + restarts + ").", cause);
 
 		if (restarts >= MAX_RESTARTS) {
 			// Delete the current, probably broken JDBCDatabase instance.
