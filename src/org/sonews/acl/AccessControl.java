@@ -15,7 +15,6 @@
  *   You should have received a copy of the GNU General Public License
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 package org.sonews.acl;
 
 /**
@@ -23,8 +22,7 @@ package org.sonews.acl;
  * @author Christian Lins
  * @since sonews/1.1
  */
-public interface AccessControl
-{
+public interface AccessControl {
 
 	boolean hasPermission(String user, char[] secret, String permission);
 }

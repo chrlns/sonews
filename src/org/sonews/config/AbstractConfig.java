@@ -15,7 +15,6 @@
  *   You should have received a copy of the GNU General Public License
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 package org.sonews.config;
 
 /**
@@ -23,19 +22,16 @@ package org.sonews.config;
  * @author Christian Lins
  * @since sonews/0.5.0
  */
-public abstract class AbstractConfig
-{
+public abstract class AbstractConfig {
 
 	public abstract String get(String key, String defVal);
 
-	public int get(final String key, final int defVal)
-	{
+	public int get(final String key, final int defVal) {
 		return Integer.parseInt(
-			get(key, Integer.toString(defVal)));
+				get(key, Integer.toString(defVal)));
 	}
 
-	public boolean get(String key, boolean defVal)
-	{
+	public boolean get(String key, boolean defVal) {
 		String val = get(key, Boolean.toString(defVal));
 		return Boolean.parseBoolean(val);
 	}
@@ -46,8 +42,7 @@ public abstract class AbstractConfig
 	 * @param defVal
 	 * @return
 	 */
-	public long get(String key, long defVal)
-	{
+	public long get(String key, long defVal) {
 		String val = get(key, Long.toString(defVal));
 		return Long.parseLong(val);
 	}

@@ -15,7 +15,6 @@
  *   You should have received a copy of the GNU General Public License
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 package org.sonews.config;
 
 import java.util.logging.Level;
@@ -30,19 +29,16 @@ import org.sonews.util.TimeoutMap;
  * @author Christian Lins
  * @since sonews/0.5.0
  */
-class BackendConfig extends AbstractConfig
-{
+class BackendConfig extends AbstractConfig {
 
 	private static BackendConfig instance = new BackendConfig();
 
-	public static BackendConfig getInstance()
-	{
+	public static BackendConfig getInstance() {
 		return instance;
 	}
 	private final TimeoutMap<String, String> values = new TimeoutMap<String, String>();
 
-	private BackendConfig()
-	{
+	private BackendConfig() {
 		super();
 	}
 
@@ -54,8 +50,7 @@ class BackendConfig extends AbstractConfig
 	 * @return
 	 */
 	@Override
-	public String get(String key, String defaultValue)
-	{
+	public String get(String key, String defaultValue) {
 		try {
 			String configValue = values.get(key);
 			if (configValue == null) {
@@ -85,8 +80,7 @@ class BackendConfig extends AbstractConfig
 	 * @param key
 	 * @param value
 	 */
-	public void set(String key, String value)
-	{
+	public void set(String key, String value) {
 		values.put(key, value);
 
 		try {

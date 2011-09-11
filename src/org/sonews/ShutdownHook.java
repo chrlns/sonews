@@ -15,7 +15,6 @@
  *   You should have received a copy of the GNU General Public License
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 package org.sonews;
 
 import java.sql.SQLException;
@@ -27,15 +26,13 @@ import org.sonews.daemon.AbstractDaemon;
  * @author Christian Lins
  * @since sonews/0.5.0
  */
-class ShutdownHook extends Thread
-{
+class ShutdownHook extends Thread {
 
 	/**
 	 * Called when the JVM exits.
 	 */
 	@Override
-	public void run()
-	{
+	public void run() {
 		System.out.println("sonews: Trying to shutdown all threads...");
 
 		Map<Thread, StackTraceElement[]> threadsMap = Thread.getAllStackTraces();

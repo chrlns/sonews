@@ -45,6 +45,8 @@ public final class Main {
 
 	/** Version information of the sonews daemon */
 	public static final String VERSION = "sonews/1.1.0";
+
+	/** The server's startup date */
 	public static final Date STARTDATE = new Date();
 
 	/**
@@ -81,13 +83,16 @@ public final class Main {
 				mlgw = true;
 			} else if (args[n].equals("-p")) {
 				port = Integer.parseInt(args[++n]);
-			} else if (args[n].equals("-plugin")) {
+			} else if (args[n].equals("-plugin-storage")) {
 				System.out.println("Warning: -plugin-storage is not implemented!");
 			} else if (args[n].equals("-plugin-command")) {
 				try {
 					CommandSelector.addCommandHandler(args[++n]);
 				} catch (Exception ex) {
-					Log.get().warning("Could not load command plugin: " + args[n]);
+					StringBuilder strBuf = new StringBuilder();
+					strBuf.append("Could not load command plugin: ");
+					strBuf.append(args[n]);
+					Log.get().warning(strBuf.toString());
 					Log.get().log(Level.INFO, "Main.java", ex);
 				}
 			} else if (args[n].equals("-plugin-storage")) {
@@ -113,10 +118,10 @@ public final class Main {
 				Log.get().info("Group 'control' created.");
 			}
 		} catch (StorageBackendException ex) {
-			ex.printStackTrace();
+			Log.get().log(Level.SEVERE, ex.getLocalizedMessage(), ex);
 			System.err.println("Database initialization failed with " + ex.toString());
 			System.err.println("Make sure you have specified the correct database"
-					+ " settings in sonews.conf!");
+							+ " settings in sonews.conf!");
 			return;
 		}
 

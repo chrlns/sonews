@@ -15,7 +15,6 @@
  *   You should have received a copy of the GNU General Public License
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 package org.sonews.daemon.command;
 
 import java.io.IOException;
@@ -34,37 +33,31 @@ import org.sonews.util.Log;
  * @author Dennis Schwerdel
  * @since n3tpd/0.1
  */
-public class ListCommand implements Command
-{
+public class ListCommand implements Command {
 
 	@Override
-	public String[] getSupportedCommandStrings()
-	{
-		return new String[] {"LIST"};
+	public String[] getSupportedCommandStrings() {
+		return new String[]{"LIST"};
 	}
 
 	@Override
-	public boolean hasFinished()
-	{
+	public boolean hasFinished() {
 		return true;
 	}
 
 	@Override
-	public String impliedCapability()
-	{
+	public String impliedCapability() {
 		return null;
 	}
 
 	@Override
-	public boolean isStateful()
-	{
+	public boolean isStateful() {
 		return false;
 	}
 
 	@Override
 	public void processLine(NNTPConnection conn, final String line, byte[] raw)
-		throws IOException, StorageBackendException
-	{
+			throws IOException, StorageBackendException {
 		final String[] command = line.split(" ");
 
 		if (command.length >= 2) {
@@ -90,7 +83,7 @@ public class ListCommand implements Command
 				conn.println(".");
 			} else if (command[1].equalsIgnoreCase("ACTIVE")) {
 				String pattern = command.length == 2
-					? null : command[2].replace("*", "\\w*");
+						? null : command[2].replace("*", "\\w*");
 				printGroupInfo(conn, pattern);
 			} else {
 				conn.println("500 unknown argument to LIST command");
@@ -101,21 +94,20 @@ public class ListCommand implements Command
 	}
 
 	private void printGroupInfo(NNTPConnection conn, String pattern)
-		throws IOException, StorageBackendException
-	{
+			throws IOException, StorageBackendException {
 		final List<Group> groups = Group.getAll();
 		if (groups != null) {
 			conn.println("215 list of newsgroups follows");
 			for (Group g : groups) {
 				try {
 					Matcher matcher = pattern == null
-						? null : Pattern.compile(pattern).matcher(g.getName());
+							? null : Pattern.compile(pattern).matcher(g.getName());
 					if (!g.isDeleted()
-						&& (matcher == null || matcher.find())) {
+							&& (matcher == null || matcher.find())) {
 						String writeable = g.isWriteable() ? " y" : " n";
 						// Indeed first the higher article number then the lower
 						conn.println(g.getName() + " " + g.getLastArticleNumber() + " "
-							+ g.getFirstArticleNumber() + writeable);
+								+ g.getFirstArticleNumber() + writeable);
 					}
 				} catch (PatternSyntaxException ex) {
 					Log.get().info(ex.toString());

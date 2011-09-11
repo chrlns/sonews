@@ -15,7 +15,6 @@
  *   You should have received a copy of the GNU General Public License
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 package org.sonews.config;
 
 /**
@@ -23,8 +22,7 @@ package org.sonews.config;
  * @author Christian Lins
  * @since sonews/1.0
  */
-public class Config extends AbstractConfig
-{
+public class Config extends AbstractConfig {
 
 	public static final int LEVEL_CLI = 1;
 	public static final int LEVEL_FILE = 2;
@@ -91,18 +89,15 @@ public class Config extends AbstractConfig
 	};
 	private static Config instance = new Config();
 
-	public static Config inst()
-	{
+	public static Config inst() {
 		return instance;
 	}
 
-	private Config()
-	{
+	private Config() {
 	}
 
 	@Override
-	public String get(String key, String def)
-	{
+	public String get(String key, String def) {
 		String val = CommandLineConfig.getInstance().get(key, null);
 
 		if (val == null) {
@@ -116,8 +111,7 @@ public class Config extends AbstractConfig
 		return val;
 	}
 
-	public String get(int maxLevel, String key, String def)
-	{
+	public String get(int maxLevel, String key, String def) {
 		String val = CommandLineConfig.getInstance().get(key, null);
 
 		if (val == null && maxLevel >= LEVEL_FILE) {
@@ -131,13 +125,11 @@ public class Config extends AbstractConfig
 	}
 
 	@Override
-	public void set(String key, String val)
-	{
+	public void set(String key, String val) {
 		set(LEVEL_BACKEND, key, val);
 	}
 
-	public void set(int level, String key, String val)
-	{
+	public void set(int level, String key, String val) {
 		switch (level) {
 			case LEVEL_CLI: {
 				CommandLineConfig.getInstance().set(key, val);

@@ -15,7 +15,6 @@
  *   You should have received a copy of the GNU General Public License
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 package org.sonews.acl;
 
 import java.io.IOException;
@@ -28,37 +27,31 @@ import org.sonews.storage.StorageBackendException;
  * @author Christian Lins
  * @since sonews/1.1
  */
-public class AuthInfoCommand implements Command
-{
+public class AuthInfoCommand implements Command {
 
 	@Override
-	public String[] getSupportedCommandStrings()
-	{
+	public String[] getSupportedCommandStrings() {
 		throw new UnsupportedOperationException("Not supported yet.");
 	}
 
 	@Override
-	public boolean hasFinished()
-	{
+	public boolean hasFinished() {
 		throw new UnsupportedOperationException("Not supported yet.");
 	}
 
 	@Override
-	public String impliedCapability()
-	{
+	public String impliedCapability() {
 		throw new UnsupportedOperationException("Not supported yet.");
 	}
 
 	@Override
-	public boolean isStateful()
-	{
+	public boolean isStateful() {
 		throw new UnsupportedOperationException("Not supported yet.");
 	}
 
 	@Override
 	public void processLine(NNTPConnection conn, String line, byte[] rawLine)
-		throws IOException, StorageBackendException
-	{
+			throws IOException, StorageBackendException {
 		throw new UnsupportedOperationException("Not supported yet.");
 	}
 }

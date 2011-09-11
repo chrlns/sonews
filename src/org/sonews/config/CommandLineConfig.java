@@ -15,7 +15,6 @@
  *   You should have received a copy of the GNU General Public License
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 package org.sonews.config;
 
 import java.util.Map;
@@ -25,24 +24,20 @@ import java.util.HashMap;
  *
  * @author Christian Lins
  */
-class CommandLineConfig extends AbstractConfig
-{
+class CommandLineConfig extends AbstractConfig {
 
 	private static final CommandLineConfig instance = new CommandLineConfig();
 
-	public static CommandLineConfig getInstance()
-	{
+	public static CommandLineConfig getInstance() {
 		return instance;
 	}
 	private final Map<String, String> values = new HashMap<String, String>();
 
-	private CommandLineConfig()
-	{
+	private CommandLineConfig() {
 	}
 
 	@Override
-	public String get(String key, String def)
-	{
+	public String get(String key, String def) {
 		synchronized (this.values) {
 			if (this.values.containsKey(key)) {
 				def = this.values.get(key);
@@ -52,8 +47,7 @@ class CommandLineConfig extends AbstractConfig
 	}
 
 	@Override
-	public void set(String key, String val)
-	{
+	public void set(String key, String val) {
 		synchronized (this.values) {
 			this.values.put(key, val);
 		}

@@ -18,6 +18,7 @@
 package org.sonews.util;
 
 import java.util.Calendar;
+import java.util.logging.Level;
 import org.sonews.config.Config;
 import org.sonews.storage.Group;
 import org.sonews.storage.StorageBackendException;
@@ -63,10 +64,14 @@ public final class Stats {
 							System.currentTimeMillis(), type, group.getInternalID());
 				}
 			} else {
-				Log.get().info("Group " + groupname + " does not exist.");
+				StringBuilder strBuf = new StringBuilder();
+				strBuf.append("Group ");
+				strBuf.append(groupname);
+				strBuf.append(" does not exist.");
+				Log.get().info(strBuf.toString());
 			}
 		} catch (StorageBackendException ex) {
-			ex.printStackTrace();
+			Log.get().log(Level.SEVERE, ex.getLocalizedMessage(), ex);
 		}
 	}
 
@@ -86,7 +91,7 @@ public final class Stats {
 		try {
 			return StorageManager.current().countGroups();
 		} catch (StorageBackendException ex) {
-			ex.printStackTrace();
+			Log.get().log(Level.SEVERE, ex.getLocalizedMessage(), ex);
 			return -1;
 		}
 	}
@@ -95,7 +100,7 @@ public final class Stats {
 		try {
 			return StorageManager.current().countArticles();
 		} catch (StorageBackendException ex) {
-			ex.printStackTrace();
+			Log.get().log(Level.SEVERE, ex.getLocalizedMessage(), ex);
 			return -1;
 		}
 	}
@@ -117,7 +122,7 @@ public final class Stats {
 		try {
 			return StorageManager.current().getEventsCount(eventType, startTimestamp, endTimestamp, group);
 		} catch (StorageBackendException ex) {
-			ex.printStackTrace();
+			Log.get().log(Level.SEVERE, ex.getLocalizedMessage(), ex);
 			return -1;
 		}
 	}
@@ -146,7 +151,7 @@ public final class Stats {
 		try {
 			return StorageManager.current().getEventsPerHour(key, gid);
 		} catch (StorageBackendException ex) {
-			ex.printStackTrace();
+			Log.get().log(Level.SEVERE, ex.getLocalizedMessage(), ex);
 			return -1;
 		}
 	}

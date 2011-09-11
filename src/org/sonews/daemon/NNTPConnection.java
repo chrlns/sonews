@@ -15,7 +15,6 @@
  *   You should have received a copy of the GNU General Public License
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 package org.sonews.daemon;
 
 import java.io.IOException;
@@ -30,6 +29,7 @@ import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.logging.Level;
 import org.sonews.daemon.command.Command;
 import org.sonews.storage.Article;
 import org.sonews.storage.Group;
@@ -43,8 +43,7 @@ import org.sonews.util.Stats;
  * @author Christian Lins
  * @since sonews/0.5.0
  */
-public final class NNTPConnection
-{
+public final class NNTPConnection {
 
 	public static final String NEWLINE = "\r\n";    // RFC defines this as newline
 	public static final String MESSAGE_ID_PATTERN = "<[^>]+>";
@@ -62,8 +61,7 @@ public final class NNTPConnection
 	private SelectionKey writeSelKey = null;
 
 	public NNTPConnection(final SocketChannel channel)
-		throws IOException
-	{
+			throws IOException {
 		if (channel == null) {
 			throw new IllegalArgumentException("channel is null");
 		}
@@ -77,8 +75,7 @@ public final class NNTPConnection
 	 * safe and returns true of the read lock was successfully set. If the lock
 	 * is still hold by another Thread the method returns false.
 	 */
-	boolean tryReadLock()
-	{
+	boolean tryReadLock() {
 		// As synchronizing simple types may cause deadlocks,
 		// we use a gate object.
 		synchronized (readLockGate) {
@@ -96,8 +93,7 @@ public final class NNTPConnection
 	 * @throws IllegalMonitorStateException if a Thread not holding the lock
 	 * tries to release it.
 	 */
-	void unlockReadLock()
-	{
+	void unlockReadLock() {
 		synchronized (readLockGate) {
 			if (readLock == Thread.currentThread().hashCode()) {
 				readLock = 0;
@@ -110,8 +106,7 @@ public final class NNTPConnection
 	/**
 	 * @return Current input buffer of this NNTPConnection instance.
 	 */
-	public ByteBuffer getInputBuffer()
-	{
+	public ByteBuffer getInputBuffer() {
 		return this.lineBuffers.getInputBuffer();
 	}
 
@@ -119,34 +114,29 @@ public final class NNTPConnection
 	 * @return Output buffer of this NNTPConnection which has at least one byte
 	 * free storage.
 	 */
-	public ByteBuffer getOutputBuffer()
-	{
+	public ByteBuffer getOutputBuffer() {
 		return this.lineBuffers.getOutputBuffer();
 	}
 
 	/**
 	 * @return ChannelLineBuffers instance associated with this NNTPConnection.
 	 */
-	public ChannelLineBuffers getBuffers()
-	{
+	public ChannelLineBuffers getBuffers() {
 		return this.lineBuffers;
 	}
 
 	/**
 	 * @return true if this connection comes from a local remote address.
 	 */
-	public boolean isLocalConnection()
-	{
+	public boolean isLocalConnection() {
 		return ((InetSocketAddress) this.channel.socket().getRemoteSocketAddress()).getHostName().equalsIgnoreCase("localhost");
 	}
 
-	void setWriteSelectionKey(SelectionKey selKey)
-	{
+	void setWriteSelectionKey(SelectionKey selKey) {
 		this.writeSelKey = selKey;
 	}
 
-	public void shutdownInput()
-	{
+	public void shutdownInput() {
 		try {
 			// Closes the input line of the channel's socket, so no new data
 			// will be received and a timeout can be triggered.
@@ -156,14 +146,10 @@ public final class NNTPConnection
 		}
 	}
 
-	public void shutdownOutput()
-	{
-		cancelTimer.schedule(new TimerTask()
-		{
-
+	public void shutdownOutput() {
+		cancelTimer.schedule(new TimerTask() {
 			@Override
-			public void run()
-			{
+			public void run() {
 				try {
 					// Closes the output line of the channel's socket.
 					channel.socket().shutdownOutput();
@@ -178,41 +164,34 @@ public final class NNTPConnection
 		}, 3000);
 	}
 
-	public SocketChannel getSocketChannel()
-	{
+	public SocketChannel getSocketChannel() {
 		return this.channel;
 	}
 
-	public Article getCurrentArticle()
-	{
+	public Article getCurrentArticle() {
 		return this.currentArticle;
 	}
 
-	public Charset getCurrentCharset()
-	{
+	public Charset getCurrentCharset() {
 		return this.charset;
 	}
 
 	/**
 	 * @return The currently selected communication channel (not SocketChannel)
 	 */
-	public Group getCurrentChannel()
-	{
+	public Group getCurrentChannel() {
 		return this.currentGroup;
 	}
 
-	public void setCurrentArticle(final Article article)
-	{
+	public void setCurrentArticle(final Article article) {
 		this.currentArticle = article;
 	}
 
-	public void setCurrentGroup(final Group group)
-	{
+	public void setCurrentGroup(final Group group) {
 		this.currentGroup = group;
 	}
 
-	public long getLastActivity()
-	{
+	public long getLastActivity() {
 		return this.lastActivity;
 	}
 
@@ -222,8 +201,7 @@ public final class NNTPConnection
 	 * @throws IllegalArgumentException if raw is null.
 	 * @throws IllegalStateException if calling thread does not own the readLock.
 	 */
-	void lineReceived(byte[] raw)
-	{
+	void lineReceived(byte[] raw) {
 		if (raw == null) {
 			throw new IllegalArgumentException("raw is null");
 		}
@@ -262,17 +240,25 @@ public final class NNTPConnection
 			}
 		} catch (ClosedChannelException ex0) {
 			try {
-				Log.get().info("Connection to " + channel.socket().getRemoteSocketAddress()
-					+ " closed: " + ex0);
+				StringBuilder strBuf = new StringBuilder();
+				strBuf.append("Connection to ");
+				strBuf.append(channel.socket().getRemoteSocketAddress());
+				strBuf.append(" closed: ");
+				strBuf.append(ex0);
+				Log.get().info(strBuf.toString());
 			} catch (Exception ex0a) {
 				ex0a.printStackTrace();
 			}
-		} catch (Exception ex1) // This will catch a second StorageBackendException
-		{
+		} catch (Exception ex1) { // This will catch a second StorageBackendException
 			try {
 				command = null;
-				ex1.printStackTrace();
-				println("500 Internal server error");
+				Log.get().log(Level.WARNING, ex1.getLocalizedMessage(), ex1);
+				println("403 Internal server error");
+
+				// Should we end the connection here?
+				// RFC says we MUST return 400 before closing the connection
+				shutdownInput();
+				shutdownOutput();
 			} catch (Exception ex2) {
 				ex2.printStackTrace();
 			}
@@ -289,8 +275,7 @@ public final class NNTPConnection
 	 * @param line
 	 * @return
 	 */
-	private Command parseCommandLine(String line)
-	{
+	private Command parseCommandLine(String line) {
 		String cmdStr = line.split(" ")[0];
 		return CommandSelector.getInstance().get(cmdStr);
 	}
@@ -303,8 +288,7 @@ public final class NNTPConnection
 	 * @param line
 	 */
 	public void println(final CharSequence line, final Charset charset)
-		throws IOException
-	{
+			throws IOException {
 		writeToChannel(CharBuffer.wrap(line), charset, line);
 		writeToChannel(CharBuffer.wrap(NEWLINE), charset, null);
 	}
@@ -315,8 +299,7 @@ public final class NNTPConnection
 	 * @param rawLines
 	 */
 	public void println(final byte[] rawLines)
-		throws IOException
-	{
+			throws IOException {
 		this.lineBuffers.addOutputBuffer(ByteBuffer.wrap(rawLines));
 		writeToChannel(CharBuffer.wrap(NEWLINE), charset, null);
 	}
@@ -328,9 +311,8 @@ public final class NNTPConnection
 	 * @throws java.io.IOException
 	 */
 	private void writeToChannel(CharBuffer characters, final Charset charset,
-		CharSequence debugLine)
-		throws IOException
-	{
+			CharSequence debugLine)
+			throws IOException {
 		if (!charset.canEncode()) {
 			Log.get().severe("FATAL: Charset " + charset + " cannot encode!");
 			return;
@@ -343,8 +325,7 @@ public final class NNTPConnection
 		enableWriteEvents(debugLine);
 	}
 
-	private void enableWriteEvents(CharSequence debugLine)
-	{
+	private void enableWriteEvents(CharSequence debugLine) {
 		// Enable OP_WRITE events so that the buffers are processed
 		try {
 			this.writeSelKey.interestOps(SelectionKey.OP_WRITE);
@@ -363,24 +344,20 @@ public final class NNTPConnection
 	}
 
 	public void println(final CharSequence line)
-		throws IOException
-	{
+			throws IOException {
 		println(line, charset);
 	}
 
 	public void print(final String line)
-		throws IOException
-	{
+			throws IOException {
 		writeToChannel(CharBuffer.wrap(line), charset, line);
 	}
 
-	public void setCurrentCharset(final Charset charset)
-	{
+	public void setCurrentCharset(final Charset charset) {
 		this.charset = charset;
 	}
 
-	void setLastActivity(long timestamp)
-	{
+	void setLastActivity(long timestamp) {
 		this.lastActivity = timestamp;
 	}
 }
