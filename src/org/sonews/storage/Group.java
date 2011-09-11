@@ -27,8 +27,27 @@ import org.sonews.util.Pair;
  * @author Christian Lins
  * @since sonews/0.5.0
  */
-// TODO: This class should not be public!
 public class Group extends Channel {
+
+	/**
+	 * If this flag is set the Group is no real newsgroup but a mailing list
+	 * mirror. In that case every posting and receiving mails must go through
+	 * the mailing list gateway.
+	 */
+	public static final int MAILINGLIST = 0x1;
+
+	/**
+	 * If this flag is set the Group is marked as readonly and the posting
+	 * is prohibited. This can be useful for groups that are synced only in
+	 * one direction.
+	 */
+	public static final int READONLY = 0x2;
+
+	/**
+	 * If this flag is set the Group is marked as deleted and must not occur
+	 * in any output. The deletion is done lazily by a low priority daemon.
+	 */
+	public static final int DELETED = 0x80;
 
 	private long id = 0;
 	private int flags = -1;
@@ -47,8 +66,10 @@ public class Group extends Channel {
 	}
 
 	/**
+	 * Constructor.
 	 * @param name
 	 * @param id
+	 * @param flags
 	 */
 	public Group(final String name, final long id, final int flags) {
 		this.id = id;
@@ -99,7 +120,6 @@ public class Group extends Channel {
 	 */
 	public long getInternalID() {
 		assert id > 0;
-
 		return id;
 	}
 
@@ -131,6 +151,10 @@ public class Group extends Channel {
 	 */
 	public void setFlag(final int flag) {
 		this.flags |= flag;
+	}
+
+	public void unsetFlag(final int flag) {
+		this.flags &= ~flag;
 	}
 
 	public void setName(final String name) {

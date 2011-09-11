@@ -132,23 +132,24 @@ public class XDaemonCommand implements Command
 				String flagName = commands[4];
 				if(commands[3].equalsIgnoreCase("SET")) {
 					if(flagName.equals("MAILINGLIST")) {
-
+						group.setFlag(Channel.MAILINGLIST);
 					} else if(flagName.equals("DELETED")) {
-
+						group.setFlag(Channel.DELETED);
 					} else if(flagName.equals("READONLY")) {
-
+						group.setFlag(Channel.READONLY);
 					}
 				} else if(commands[3].equalsIgnoreCase("UNSET")) {
 					if(flagName.equals("MAILINGLIST")) {
-
+						group.unsetFlag(Channel.MAILINGLIST);
 					} else if(flagName.equals("DELETED")) {
-
+						group.unsetFlag(Channel.DELETED);
 					} else if(flagName.equals("READONLY")) {
-
+						group.unsetFlag(Channel.READONLY);
 					}
 				} else {
 					conn.println("500 invalid command usage");
 				}
+				StorageManager.current().update(group);
 			} else if (commands.length == 4 && commands[1].equalsIgnoreCase("SET")) {
 				String key = commands[2];
 				String val = commands[3];
