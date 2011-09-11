@@ -15,7 +15,6 @@
  *   You should have received a copy of the GNU General Public License
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 package org.sonews.storage;
 
 import java.io.ByteArrayInputStream;
@@ -27,11 +26,13 @@ import java.util.UUID;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.logging.Level;
 import javax.mail.Header;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.internet.InternetHeaders;
 import org.sonews.config.Config;
+import org.sonews.util.Log;
 
 /**
  * Represents a newsgroup article.
@@ -39,20 +40,18 @@ import org.sonews.config.Config;
  * @author Denis Schwerdel
  * @since n3tpd/0.1
  */
-public class Article extends ArticleHead
-{
+public class Article extends ArticleHead {
 
 	/**
 	 * Loads the Article identified by the given ID from the JDBCDatabase.
 	 * @param messageID
 	 * @return null if Article is not found or if an error occurred.
 	 */
-	public static Article getByMessageID(final String messageID)
-	{
+	public static Article getByMessageID(final String messageID) {
 		try {
 			return StorageManager.current().getArticle(messageID);
 		} catch (StorageBackendException ex) {
-			ex.printStackTrace();
+			Log.get().log(Level.WARNING, ex.getLocalizedMessage(), ex);
 			return null;
 		}
 	}
@@ -61,26 +60,24 @@ public class Article extends ArticleHead
 	/**
 	 * Default constructor.
 	 */
-	public Article()
-	{
+	public Article() {
 	}
 
 	/**
 	 * Creates a new Article object using the date from the given
 	 * raw data.
 	 */
-	public Article(String headers, byte[] body)
-	{
+	public Article(String headers, byte[] body) {
 		try {
 			this.body = body;
 
 			// Parse the header
 			this.headers = new InternetHeaders(
-				new ByteArrayInputStream(headers.getBytes()));
+					new ByteArrayInputStream(headers.getBytes()));
 
 			this.headerSrc = headers;
 		} catch (MessagingException ex) {
-			ex.printStackTrace();
+			Log.get().log(Level.WARNING, ex.getLocalizedMessage(), ex);
 		}
 	}
 
@@ -93,8 +90,7 @@ public class Article extends ArticleHead
 	 * @throws MessagingException
 	 */
 	public Article(final Message msg)
-		throws IOException, MessagingException
-	{
+			throws IOException, MessagingException {
 		this.headers = new InternetHeaders();
 
 		for (Enumeration e = msg.getAllHeaders(); e.hasMoreElements();) {
@@ -116,8 +112,7 @@ public class Article extends ArticleHead
 	 * @throws IOException
 	 */
 	private byte[] readContent(Message in)
-		throws IOException, MessagingException
-	{
+			throws IOException, MessagingException {
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
 		in.writeTo(out);
 		return out.toByteArray();
@@ -127,8 +122,7 @@ public class Article extends ArticleHead
 	 * Removes the header identified by the given key.
 	 * @param headerKey
 	 */
-	public void removeHeader(final String headerKey)
-	{
+	public void removeHeader(final String headerKey) {
 		this.headers.removeHeader(headerKey);
 		this.headerSrc = null;
 	}
@@ -139,8 +133,7 @@ public class Article extends ArticleHead
 	 * change persistent.
 	 * Note: a Message-ID should never be changed and only generated once.
 	 */
-	private String generateMessageID()
-	{
+	private String generateMessageID() {
 		String randomString;
 		MessageDigest md5;
 		try {
@@ -150,17 +143,17 @@ public class Article extends ArticleHead
 			md5.update(getHeader(Headers.SUBJECT)[0].getBytes());
 			md5.update(getHeader(Headers.FROM)[0].getBytes());
 			byte[] result = md5.digest();
-			StringBuffer hexString = new StringBuffer();
+			StringBuilder hexString = new StringBuilder();
 			for (int i = 0; i < result.length; i++) {
 				hexString.append(Integer.toHexString(0xFF & result[i]));
 			}
 			randomString = hexString.toString();
-		} catch (NoSuchAlgorithmException e) {
-			e.printStackTrace();
+		} catch (NoSuchAlgorithmException ex) {
+			Log.get().log(Level.WARNING, ex.getLocalizedMessage(), ex);
 			randomString = UUID.randomUUID().toString();
 		}
 		String msgID = "<" + randomString + "@"
-			+ Config.inst().get(Config.HOSTNAME, "localhost") + ">";
+				+ Config.inst().get(Config.HOSTNAME, "localhost") + ">";
 
 		this.headers.setHeader(Headers.MESSAGE_ID, msgID);
 
@@ -170,16 +163,14 @@ public class Article extends ArticleHead
 	/**
 	 * Returns the body string.
 	 */
-	public byte[] getBody()
-	{
+	public byte[] getBody() {
 		return body;
 	}
 
 	/**
 	 * @return Numerical IDs of the newsgroups this Article belongs to.
 	 */
-	public List<Group> getGroups()
-	{
+	public List<Group> getGroups() {
 		String[] groupnames = getHeader(Headers.NEWSGROUPS)[0].split(",");
 		ArrayList<Group> groups = new ArrayList<Group>();
 
@@ -188,20 +179,19 @@ public class Article extends ArticleHead
 				newsgroup = newsgroup.trim();
 				Group group = StorageManager.current().getGroup(newsgroup);
 				if (group != null && // If the server does not provide the group, ignore it
-					!groups.contains(group)) // Yes, there may be duplicates
+						!groups.contains(group)) // Yes, there may be duplicates
 				{
 					groups.add(group);
 				}
 			}
 		} catch (StorageBackendException ex) {
-			ex.printStackTrace();
+			Log.get().log(Level.WARNING, ex.getLocalizedMessage(), ex);
 			return null;
 		}
 		return groups;
 	}
 
-	public void setBody(byte[] body)
-	{
+	public void setBody(byte[] body) {
 		this.body = body;
 	}
 
@@ -209,8 +199,7 @@ public class Article extends ArticleHead
 	 *
 	 * @param groupname Name(s) of newsgroups
 	 */
-	public void setGroup(String groupname)
-	{
+	public void setGroup(String groupname) {
 		this.headers.setHeader(Headers.NEWSGROUPS, groupname);
 	}
 
@@ -219,8 +208,7 @@ public class Article extends ArticleHead
 	 * is empty, a new Message-ID is created.
 	 * @return Message-ID of this Article.
 	 */
-	public String getMessageID()
-	{
+	public String getMessageID() {
 		String[] msgID = getHeader(Headers.MESSAGE_ID);
 		return msgID[0].equals("") ? generateMessageID() : msgID[0];
 	}
@@ -229,8 +217,7 @@ public class Article extends ArticleHead
 	 * @return String containing the Message-ID.
 	 */
 	@Override
-	public String toString()
-	{
+	public String toString() {
 		return getMessageID();
 	}
 }
