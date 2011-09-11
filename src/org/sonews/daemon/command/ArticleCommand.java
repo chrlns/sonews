@@ -15,13 +15,12 @@
  *   You should have received a copy of the GNU General Public License
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 package org.sonews.daemon.command;
 
 import java.io.IOException;
 import org.sonews.storage.Article;
 import org.sonews.daemon.NNTPConnection;
-import org.sonews.storage.Channel;
+import org.sonews.storage.Group;
 import org.sonews.storage.StorageBackendException;
 
 /**
@@ -30,38 +29,32 @@ import org.sonews.storage.StorageBackendException;
  * @author Dennis Schwerdel
  * @since n3tpd/0.1
  */
-public class ArticleCommand implements Command
-{
+public class ArticleCommand implements Command {
 
 	@Override
-	public String[] getSupportedCommandStrings()
-	{
-		return new String[] {"ARTICLE", "BODY", "HEAD"};
+	public String[] getSupportedCommandStrings() {
+		return new String[]{"ARTICLE", "BODY", "HEAD"};
 	}
 
 	@Override
-	public boolean hasFinished()
-	{
+	public boolean hasFinished() {
 		return true;
 	}
 
 	@Override
-	public String impliedCapability()
-	{
+	public String impliedCapability() {
 		return null;
 	}
 
 	@Override
-	public boolean isStateful()
-	{
+	public boolean isStateful() {
 		return false;
 	}
 
 	// TODO: Refactor this method to reduce its complexity!
 	@Override
 	public void processLine(NNTPConnection conn, final String line, byte[] raw)
-		throws IOException
-	{
+			throws IOException {
 		final String[] command = line.split(" ");
 
 		Article article = null;
@@ -82,7 +75,7 @@ public class ArticleCommand implements Command
 		} else {
 			// Message Number
 			try {
-				Channel currentGroup = conn.getCurrentChannel();
+				Group currentGroup = conn.getCurrentChannel();
 				if (currentGroup == null) {
 					conn.println("400 no group selected");
 					return;
@@ -105,7 +98,7 @@ public class ArticleCommand implements Command
 
 		if (command[0].equalsIgnoreCase("ARTICLE")) {
 			conn.println("220 " + artIndex + " " + article.getMessageID()
-				+ " article retrieved - head and body follow");
+					+ " article retrieved - head and body follow");
 			conn.println(article.getHeaderSource());
 			conn.println("");
 			conn.println(article.getBody());
@@ -144,7 +137,7 @@ public class ArticleCommand implements Command
 		 *  message-id    Article message-id
 		 */ else if (command[0].equalsIgnoreCase("HEAD")) {
 			conn.println("221 " + artIndex + " " + article.getMessageID()
-				+ " Headers follow (multi-line)");
+					+ " Headers follow (multi-line)");
 			conn.println(article.getHeaderSource());
 			conn.println(".");
 		}

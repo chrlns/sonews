@@ -18,9 +18,8 @@
 package org.sonews.storage.impl;
 
 import java.sql.SQLException;
-import org.sonews.storage.Channel;
+import org.sonews.storage.Group;
 import org.sonews.storage.Storage;
-import org.sonews.storage.StorageBackendException;
 
 /**
  * A specialized JDBCDatabase supporting HSQLDB.
@@ -39,7 +38,7 @@ public class HSQLDB extends JDBCDatabase implements Storage {
 	protected void prepareCountGroupsStatement() throws SQLException {
 		this.pstmtCountGroups = conn.prepareStatement(
 				"SELECT Count(group_id) FROM groups WHERE "
-				+ "BITAND(flags, " + Channel.DELETED + ") = 0");
+				+ "BITAND(flags, " + Group.DELETED + ") = 0");
 	}
 
 	@Override

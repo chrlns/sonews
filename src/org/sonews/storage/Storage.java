@@ -60,7 +60,7 @@ public interface Storage {
 	List<Pair<Long, ArticleHead>> getArticleHeads(Group group, long first, long last)
 			throws StorageBackendException;
 
-	List<Pair<Long, String>> getArticleHeaders(Channel channel, long start, long end,
+	List<Pair<Long, String>> getArticleHeaders(Group group, long start, long end,
 			String header, String pattern)
 			throws StorageBackendException;
 
@@ -74,7 +74,7 @@ public interface Storage {
 			throws StorageBackendException;
 
 	int getEventsCount(int eventType, long startTimestamp, long endTimestamp,
-			Channel channel)
+			Group group)
 			throws StorageBackendException;
 
 	double getEventsPerHour(int key, long gid)
@@ -86,7 +86,7 @@ public interface Storage {
 	Group getGroup(String name)
 			throws StorageBackendException;
 
-	List<Channel> getGroups()
+	List<Group> getGroups()
 			throws StorageBackendException;
 
 	/**

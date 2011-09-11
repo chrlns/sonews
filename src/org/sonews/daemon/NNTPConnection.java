@@ -32,7 +32,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 import org.sonews.daemon.command.Command;
 import org.sonews.storage.Article;
-import org.sonews.storage.Channel;
+import org.sonews.storage.Group;
 import org.sonews.storage.StorageBackendException;
 import org.sonews.util.Log;
 import org.sonews.util.Stats;
@@ -54,7 +54,7 @@ public final class NNTPConnection
 	private Charset charset = Charset.forName("UTF-8");
 	private Command command = null;
 	private Article currentArticle = null;
-	private Channel currentGroup = null;
+	private Group currentGroup = null;
 	private volatile long lastActivity = System.currentTimeMillis();
 	private ChannelLineBuffers lineBuffers = new ChannelLineBuffers();
 	private int readLock = 0;
@@ -196,7 +196,7 @@ public final class NNTPConnection
 	/**
 	 * @return The currently selected communication channel (not SocketChannel)
 	 */
-	public Channel getCurrentChannel()
+	public Group getCurrentChannel()
 	{
 		return this.currentGroup;
 	}
@@ -206,7 +206,7 @@ public final class NNTPConnection
 		this.currentArticle = article;
 	}
 
-	public void setCurrentGroup(final Channel group)
+	public void setCurrentGroup(final Group group)
 	{
 		this.currentGroup = group;
 	}

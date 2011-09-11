@@ -27,7 +27,6 @@ import org.sonews.storage.StorageBackendException;
 import org.sonews.storage.StorageManager;
 import org.sonews.feed.FeedManager;
 import org.sonews.feed.Subscription;
-import org.sonews.storage.Channel;
 import org.sonews.storage.Group;
 import org.sonews.util.Stats;
 
@@ -132,19 +131,19 @@ public class XDaemonCommand implements Command
 				String flagName = commands[4];
 				if(commands[3].equalsIgnoreCase("SET")) {
 					if(flagName.equals("MAILINGLIST")) {
-						group.setFlag(Channel.MAILINGLIST);
+						group.setFlag(Group.MAILINGLIST);
 					} else if(flagName.equals("DELETED")) {
-						group.setFlag(Channel.DELETED);
+						group.setFlag(Group.DELETED);
 					} else if(flagName.equals("READONLY")) {
-						group.setFlag(Channel.READONLY);
+						group.setFlag(Group.READONLY);
 					}
 				} else if(commands[3].equalsIgnoreCase("UNSET")) {
 					if(flagName.equals("MAILINGLIST")) {
-						group.unsetFlag(Channel.MAILINGLIST);
+						group.unsetFlag(Group.MAILINGLIST);
 					} else if(flagName.equals("DELETED")) {
-						group.unsetFlag(Channel.DELETED);
+						group.unsetFlag(Group.DELETED);
 					} else if(flagName.equals("READONLY")) {
-						group.unsetFlag(Channel.READONLY);
+						group.unsetFlag(Group.READONLY);
 					}
 				} else {
 					conn.println("500 invalid command usage");
@@ -168,7 +167,7 @@ public class XDaemonCommand implements Command
 			} else if (commands.length >= 3 && commands[1].equalsIgnoreCase("LOG")) {
 				Group group = null;
 				if (commands.length > 3) {
-					group = (Group) Channel.getByName(commands[3]);
+					group = StorageManager.current().getGroup(commands[3]);
 				}
 
 				if (commands[2].equalsIgnoreCase("CONNECTED_CLIENTS")) {

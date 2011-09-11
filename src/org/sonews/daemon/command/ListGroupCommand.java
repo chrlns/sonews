@@ -15,14 +15,14 @@
  *   You should have received a copy of the GNU General Public License
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 package org.sonews.daemon.command;
 
 import java.io.IOException;
 import java.util.List;
 import org.sonews.daemon.NNTPConnection;
-import org.sonews.storage.Channel;
+import org.sonews.storage.Group;
 import org.sonews.storage.StorageBackendException;
+import org.sonews.storage.StorageManager;
 
 /**
  * Class handling the LISTGROUP command.
@@ -30,42 +30,36 @@ import org.sonews.storage.StorageBackendException;
  * @author Dennis Schwerdel
  * @since n3tpd/0.1
  */
-public class ListGroupCommand implements Command
-{
+public class ListGroupCommand implements Command {
 
 	@Override
-	public String[] getSupportedCommandStrings()
-	{
-		return new String[] {"LISTGROUP"};
+	public String[] getSupportedCommandStrings() {
+		return new String[]{"LISTGROUP"};
 	}
 
 	@Override
-	public boolean hasFinished()
-	{
+	public boolean hasFinished() {
 		return true;
 	}
 
 	@Override
-	public String impliedCapability()
-	{
+	public String impliedCapability() {
 		return null;
 	}
 
 	@Override
-	public boolean isStateful()
-	{
+	public boolean isStateful() {
 		return false;
 	}
 
 	@Override
 	public void processLine(NNTPConnection conn, final String commandName, byte[] raw)
-		throws IOException, StorageBackendException
-	{
+			throws IOException, StorageBackendException {
 		final String[] command = commandName.split(" ");
 
-		Channel group;
+		Group group;
 		if (command.length >= 2) {
-			group = Channel.getByName(command[1]);
+			group = StorageManager.current().getGroup(command[1]);
 		} else {
 			group = conn.getCurrentChannel();
 		}
@@ -77,8 +71,8 @@ public class ListGroupCommand implements Command
 
 		List<Long> ids = group.getArticleNumbers();
 		conn.println("211 " + ids.size() + " "
-			+ group.getFirstArticleNumber() + " "
-			+ group.getLastArticleNumber() + " list of article numbers follow");
+				+ group.getFirstArticleNumber() + " "
+				+ group.getLastArticleNumber() + " list of article numbers follow");
 		for (long id : ids) {
 			// One index number per line
 			conn.println(Long.toString(id));

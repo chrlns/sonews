@@ -20,8 +20,9 @@ package org.sonews.daemon.command;
 
 import java.io.IOException;
 import org.sonews.daemon.NNTPConnection;
-import org.sonews.storage.Channel;
+import org.sonews.storage.Group;
 import org.sonews.storage.StorageBackendException;
+import org.sonews.storage.StorageManager;
 
 /**
  * Class handling the GROUP command.
@@ -78,9 +79,9 @@ public class GroupCommand implements Command
 	{
 		final String[] command = line.split(" ");
 
-		Channel group;
+		Group group;
 		if (command.length >= 2) {
-			group = Channel.getByName(command[1]);
+			group = StorageManager.current().getGroup(command[1]);
 			if (group == null || group.isDeleted()) {
 				conn.println("411 no such news group");
 			} else {

@@ -15,13 +15,12 @@
  *   You should have received a copy of the GNU General Public License
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 package org.sonews.daemon.command;
 
 import java.io.IOException;
 import org.sonews.daemon.NNTPConnection;
 import org.sonews.storage.Article;
-import org.sonews.storage.Channel;
+import org.sonews.storage.Group;
 import org.sonews.storage.StorageBackendException;
 
 /**
@@ -30,39 +29,33 @@ import org.sonews.storage.StorageBackendException;
  * @author Dennis Schwerdel
  * @since n3tpd/0.1
  */
-public class NextPrevCommand implements Command
-{
+public class NextPrevCommand implements Command {
 
 	@Override
-	public String[] getSupportedCommandStrings()
-	{
-		return new String[] {"NEXT", "PREV"};
+	public String[] getSupportedCommandStrings() {
+		return new String[]{"NEXT", "PREV"};
 	}
 
 	@Override
-	public boolean hasFinished()
-	{
+	public boolean hasFinished() {
 		return true;
 	}
 
 	@Override
-	public String impliedCapability()
-	{
+	public String impliedCapability() {
 		return null;
 	}
 
 	@Override
-	public boolean isStateful()
-	{
+	public boolean isStateful() {
 		return false;
 	}
 
 	@Override
 	public void processLine(NNTPConnection conn, final String line, byte[] raw)
-		throws IOException, StorageBackendException
-	{
+			throws IOException, StorageBackendException {
 		final Article currA = conn.getCurrentArticle();
-		final Channel currG = conn.getCurrentChannel();
+		final Group currG = conn.getCurrentChannel();
 
 		if (currA == null) {
 			conn.println("420 no current article has been selected");
@@ -85,10 +78,9 @@ public class NextPrevCommand implements Command
 		}
 	}
 
-	private void selectNewArticle(NNTPConnection conn, Article article, Channel grp,
-		final int delta)
-		throws IOException, StorageBackendException
-	{
+	private void selectNewArticle(NNTPConnection conn, Article article, Group grp,
+			final int delta)
+			throws IOException, StorageBackendException {
 		assert article != null;
 
 		article = grp.getArticle(grp.getIndexOf(article) + delta);
@@ -98,8 +90,8 @@ public class NextPrevCommand implements Command
 		} else {
 			conn.setCurrentArticle(article);
 			conn.println("223 " + conn.getCurrentChannel().getIndexOf(article)
-				+ " " + article.getMessageID()
-				+ " article retrieved - request text separately");
+					+ " " + article.getMessageID()
+					+ " article retrieved - request text separately");
 		}
 	}
 }

@@ -38,7 +38,6 @@ import org.sonews.util.Log;
 import org.sonews.feed.Subscription;
 import org.sonews.storage.Article;
 import org.sonews.storage.ArticleHead;
-import org.sonews.storage.Channel;
 import org.sonews.storage.Group;
 import org.sonews.storage.Storage;
 import org.sonews.storage.StorageBackendException;
@@ -106,7 +105,7 @@ public class JDBCDatabase implements Storage
 	protected void prepareCountGroupsStatement() throws SQLException {
 		this.pstmtCountGroups = conn.prepareStatement(
 				"SELECT Count(group_id) FROM groups WHERE "
-				+ "flags & " + Channel.DELETED + " = 0");
+				+ "flags & " + Group.DELETED + " = 0");
 	}
 
 	protected void prepareGetPostingsCountStatement() throws SQLException {
@@ -610,7 +609,7 @@ public class JDBCDatabase implements Storage
 	 * @throws StorageBackendException
 	 */
 	@Override
-	public List<Pair<Long, String>> getArticleHeaders(Channel group, long start,
+	public List<Pair<Long, String>> getArticleHeaders(Group group, long start,
 		long end, String headerKey, String patStr)
 		throws StorageBackendException, PatternSyntaxException
 	{
@@ -824,7 +823,7 @@ public class JDBCDatabase implements Storage
 	}
 
 	@Override
-	public int getEventsCount(int type, long start, long end, Channel channel)
+	public int getEventsCount(int type, long start, long end, Group channel)
 		throws StorageBackendException
 	{
 		ResultSet rs = null;
@@ -868,11 +867,11 @@ public class JDBCDatabase implements Storage
 	 * @throws StorageBackendException
 	 */
 	@Override
-	public List<Channel> getGroups()
+	public List<Group> getGroups()
 		throws StorageBackendException
 	{
 		ResultSet rs;
-		List<Channel> buffer = new ArrayList<Channel>();
+		List<Group> buffer = new ArrayList<Group>();
 		Statement stmt = null;
 
 		try {

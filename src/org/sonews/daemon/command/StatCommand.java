@@ -15,7 +15,6 @@
  *   You should have received a copy of the GNU General Public License
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 package org.sonews.daemon.command;
 
 import java.io.IOException;
@@ -28,38 +27,32 @@ import org.sonews.storage.StorageBackendException;
  * @author Christian Lins
  * @since sonews/0.5.0
  */
-public class StatCommand implements Command
-{
+public class StatCommand implements Command {
 
 	@Override
-	public String[] getSupportedCommandStrings()
-	{
-		return new String[] {"STAT"};
+	public String[] getSupportedCommandStrings() {
+		return new String[]{"STAT"};
 	}
 
 	@Override
-	public boolean hasFinished()
-	{
+	public boolean hasFinished() {
 		return true;
 	}
 
 	@Override
-	public String impliedCapability()
-	{
+	public String impliedCapability() {
 		return null;
 	}
 
 	@Override
-	public boolean isStateful()
-	{
+	public boolean isStateful() {
 		return false;
 	}
 
 	// TODO: Method has various exit points => Refactor!
 	@Override
 	public void processLine(NNTPConnection conn, final String line, byte[] raw)
-		throws IOException, StorageBackendException
-	{
+			throws IOException, StorageBackendException {
 		final String[] command = line.split(" ");
 
 		Article article = null;
@@ -94,7 +87,7 @@ public class StatCommand implements Command
 		}
 
 		conn.println("223 " + conn.getCurrentChannel().getIndexOf(article) + " "
-			+ article.getMessageID()
-			+ " article retrieved - request text separately");
+				+ article.getMessageID()
+				+ " article retrieved - request text separately");
 	}
 }

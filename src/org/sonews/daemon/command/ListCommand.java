@@ -24,7 +24,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 import org.sonews.daemon.NNTPConnection;
-import org.sonews.storage.Channel;
+import org.sonews.storage.Group;
 import org.sonews.storage.StorageBackendException;
 import org.sonews.util.Log;
 
@@ -74,8 +74,8 @@ public class ListCommand implements Command
 				conn.println(".");
 			} else if (command[1].equalsIgnoreCase("NEWSGROUPS")) {
 				conn.println("215 information follows");
-				final List<Channel> list = Channel.getAll();
-				for (Channel g : list) {
+				final List<Group> list = Group.getAll();
+				for (Group g : list) {
 					conn.println(g.getName() + "\t" + "-");
 				}
 				conn.println(".");
@@ -103,10 +103,10 @@ public class ListCommand implements Command
 	private void printGroupInfo(NNTPConnection conn, String pattern)
 		throws IOException, StorageBackendException
 	{
-		final List<Channel> groups = Channel.getAll();
+		final List<Group> groups = Group.getAll();
 		if (groups != null) {
 			conn.println("215 list of newsgroups follows");
-			for (Channel g : groups) {
+			for (Group g : groups) {
 				try {
 					Matcher matcher = pattern == null
 						? null : Pattern.compile(pattern).matcher(g.getName());

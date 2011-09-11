@@ -27,7 +27,7 @@ import org.sonews.util.Pair;
  * @author Christian Lins
  * @since sonews/0.5.0
  */
-public class Group extends Channel {
+public class Group {
 
 	/**
 	 * If this flag is set the Group is no real newsgroup but a mailing list
@@ -56,7 +56,7 @@ public class Group extends Channel {
 	/**
 	 * @return List of all groups this server handles.
 	 */
-	public static List<Channel> getAll() {
+	public static List<Group> getAll() {
 		try {
 			return StorageManager.current().getGroups();
 		} catch (StorageBackendException ex) {

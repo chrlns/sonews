@@ -15,12 +15,11 @@
  *   You should have received a copy of the GNU General Public License
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 package org.sonews.util;
 
 import java.util.Calendar;
 import org.sonews.config.Config;
-import org.sonews.storage.Channel;
+import org.sonews.storage.Group;
 import org.sonews.storage.StorageBackendException;
 import org.sonews.storage.StorageManager;
 
@@ -29,8 +28,7 @@ import org.sonews.storage.StorageManager;
  * @author Christian Lins
  * @since sonews/0.5.0
  */
-public final class Stats
-{
+public final class Stats {
 
 	public static final byte CONNECTIONS = 1;
 	public static final byte POSTED_NEWS = 2;
@@ -40,15 +38,14 @@ public final class Stats
 	public static final byte MLGW_RUNEND = 6;
 	private static Stats instance = new Stats();
 
-	public static Stats getInstance()
-	{
+	public static Stats getInstance() {
 		return Stats.instance;
 	}
 
-	private Stats()
-	{
-	}
 	private volatile int connectedClients = 0;
+
+	private Stats() {
+	}
 
 	/**
 	 * A generic method that writes event data to the storage backend.
@@ -57,15 +54,13 @@ public final class Stats
 	 * @param type
 	 * @param groupname
 	 */
-	private void addEvent(byte type, String groupname)
-	{
+	private void addEvent(byte type, String groupname) {
 		try {
 			if (Config.inst().get(Config.EVENTLOG, true)) {
-
-				Channel group = Channel.getByName(groupname);
+				Group group = StorageManager.current().getGroup(groupname);
 				if (group != null) {
 					StorageManager.current().addEvent(
-						System.currentTimeMillis(), type, group.getInternalID());
+							System.currentTimeMillis(), type, group.getInternalID());
 				}
 			} else {
 				Log.get().info("Group " + groupname + " does not exist.");
@@ -75,23 +70,19 @@ public final class Stats
 		}
 	}
 
-	public void clientConnect()
-	{
+	public void clientConnect() {
 		this.connectedClients++;
 	}
 
-	public void clientDisconnect()
-	{
+	public void clientDisconnect() {
 		this.connectedClients--;
 	}
 
-	public int connectedClients()
-	{
+	public int connectedClients() {
 		return this.connectedClients;
 	}
 
-	public int getNumberOfGroups()
-	{
+	public int getNumberOfGroups() {
 		try {
 			return StorageManager.current().countGroups();
 		} catch (StorageBackendException ex) {
@@ -100,8 +91,7 @@ public final class Stats
 		}
 	}
 
-	public int getNumberOfNews()
-	{
+	public int getNumberOfNews() {
 		try {
 			return StorageManager.current().countArticles();
 		} catch (StorageBackendException ex) {
@@ -111,8 +101,7 @@ public final class Stats
 	}
 
 	public int getYesterdaysEvents(final byte eventType, final int hour,
-		final Channel group)
-	{
+			final Group group) {
 		// Determine the timestamp values for yesterday and the given hour
 		Calendar cal = Calendar.getInstance();
 		int year = cal.get(Calendar.YEAR);
@@ -133,33 +122,27 @@ public final class Stats
 		}
 	}
 
-	public void mailPosted(String groupname)
-	{
+	public void mailPosted(String groupname) {
 		addEvent(POSTED_NEWS, groupname);
 	}
 
-	public void mailGatewayed(String groupname)
-	{
+	public void mailGatewayed(String groupname) {
 		addEvent(GATEWAYED_NEWS, groupname);
 	}
 
-	public void mailFeeded(String groupname)
-	{
+	public void mailFeeded(String groupname) {
 		addEvent(FEEDED_NEWS, groupname);
 	}
 
-	public void mlgwRunStart()
-	{
+	public void mlgwRunStart() {
 		addEvent(MLGW_RUNSTART, "control");
 	}
 
-	public void mlgwRunEnd()
-	{
+	public void mlgwRunEnd() {
 		addEvent(MLGW_RUNEND, "control");
 	}
 
-	private double perHour(int key, long gid)
-	{
+	private double perHour(int key, long gid) {
 		try {
 			return StorageManager.current().getEventsPerHour(key, gid);
 		} catch (StorageBackendException ex) {
@@ -168,18 +151,15 @@ public final class Stats
 		}
 	}
 
-	public double postedPerHour(long gid)
-	{
+	public double postedPerHour(long gid) {
 		return perHour(POSTED_NEWS, gid);
 	}
 
-	public double gatewayedPerHour(long gid)
-	{
+	public double gatewayedPerHour(long gid) {
 		return perHour(GATEWAYED_NEWS, gid);
 	}
 
-	public double feededPerHour(long gid)
-	{
+	public double feededPerHour(long gid) {
 		return perHour(FEEDED_NEWS, gid);
 	}
 }

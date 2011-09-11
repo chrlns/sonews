@@ -15,7 +15,6 @@
  *   You should have received a copy of the GNU General Public License
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 package org.sonews.util;
 
 import java.util.Date;
@@ -24,7 +23,6 @@ import org.sonews.daemon.AbstractDaemon;
 import org.sonews.config.Config;
 import org.sonews.storage.Article;
 import org.sonews.storage.Headers;
-import org.sonews.storage.Channel;
 import org.sonews.storage.Group;
 import org.sonews.storage.StorageBackendException;
 import org.sonews.storage.StorageManager;
@@ -37,16 +35,14 @@ import org.sonews.storage.StorageManager;
  * @author Christian Lins
  * @since sonews/0.5.0
  */
-public class Purger extends AbstractDaemon
-{
+public class Purger extends AbstractDaemon {
 
 	/**
 	 * Loops through all messages and deletes them if their time
 	 * has come.
 	 */
 	@Override
-	public void run()
-	{
+	public void run() {
 		try {
 			while (isRunning()) {
 				purgeDeleted();
@@ -62,10 +58,9 @@ public class Purger extends AbstractDaemon
 	}
 
 	private void purgeDeleted()
-		throws StorageBackendException
-	{
-		List<Channel> groups = StorageManager.current().getGroups();
-		for (Channel channel : groups) {
+			throws StorageBackendException {
+		List<Group> groups = StorageManager.current().getGroups();
+		for (Group channel : groups) {
 			if (!(channel instanceof Group)) {
 				continue;
 			}
@@ -89,12 +84,11 @@ public class Purger extends AbstractDaemon
 	}
 
 	private void purgeOutdated()
-		throws InterruptedException, StorageBackendException
-	{
+			throws InterruptedException, StorageBackendException {
 		long articleMaximum =
-			Config.inst().get("sonews.article.maxnum", Long.MAX_VALUE);
+				Config.inst().get("sonews.article.maxnum", Long.MAX_VALUE);
 		long lifetime =
-			Config.inst().get("sonews.article.lifetime", -1);
+				Config.inst().get("sonews.article.lifetime", -1);
 
 		if (lifetime > 0 || articleMaximum < Stats.getInstance().getNumberOfNews()) {
 			Log.get().info("Purging old messages...");
