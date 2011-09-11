@@ -22,6 +22,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.sql.SQLException;
 import java.util.Arrays;
+import java.util.logging.Level;
 import javax.mail.MessagingException;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetHeaders;
@@ -110,8 +111,8 @@ public class PostCommand implements Command {
 
 						// add the header entries for the article
 						article.setHeaders(headers);
-					} catch (MessagingException e) {
-						e.printStackTrace();
+					} catch (MessagingException ex) {
+						Log.get().log(Level.INFO, ex.getLocalizedMessage(), ex);
 						conn.println("500 posting failed - invalid header");
 						state = PostState.Finished;
 						break;
@@ -213,8 +214,7 @@ public class PostCommand implements Command {
 			controlMessage(conn, article);
 		} else if (article.getHeader(Headers.SUPERSEDES)[0].length() > 0) {
 			supersedeMessage(conn, article);
-		} else // Post the article regularily
-		{
+		} else { // Post the article regularily
 			// Circle check; note that Path can already contain the hostname here
 			String host = Config.inst().get(Config.HOSTNAME, "localhost");
 			if (article.getHeader(Headers.PATH)[0].indexOf(host + "!", 1) > 0) {
@@ -234,8 +234,7 @@ public class PostCommand implements Command {
 						if (group.isMailingList() && !conn.isLocalConnection()) {
 							// Send to mailing list; the Dispatcher writes
 							// statistics to database
-							Dispatcher.toList(article, group.getName());
-							success = true;
+							success = Dispatcher.toList(article, group.getName());
 						} else {
 							// Store in database
 							if (!StorageManager.current().isArticleExisting(article.getMessageID())) {
@@ -254,7 +253,7 @@ public class PostCommand implements Command {
 					conn.println("240 article posted ok");
 					FeedManager.queueForPush(article);
 				} else {
-					conn.println("441 newsgroup not found");
+					conn.println("441 newsgroup not found or configuration error");
 				}
 			} catch (AddressException ex) {
 				Log.get().warning(ex.getMessage());

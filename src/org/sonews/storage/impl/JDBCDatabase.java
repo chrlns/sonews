@@ -49,10 +49,9 @@ import org.sonews.util.Pair;
  * @since sonews/0.5.0
  */
 // TODO: Refactor this class to reduce size (e.g. ArticleDatabase GroupDatabase)
-public class JDBCDatabase implements Storage
-{
-
+public class JDBCDatabase implements Storage {
 	public static final int MAX_RESTARTS = 2;
+
 	protected Connection conn = null;
 	protected PreparedStatement pstmtAddArticle1 = null;
 	protected PreparedStatement pstmtAddArticle2 = null;

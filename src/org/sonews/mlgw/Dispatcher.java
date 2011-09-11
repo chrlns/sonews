@@ -15,12 +15,12 @@
  *   You should have received a copy of the GNU General Public License
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 package org.sonews.mlgw;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.mail.Address;
@@ -43,19 +43,16 @@ import org.sonews.util.Stats;
  * @author Christian Lins
  * @since sonews/0.5.0
  */
-public class Dispatcher
-{
+public class Dispatcher {
 
-	static class PasswordAuthenticator extends Authenticator
-	{
+	static class PasswordAuthenticator extends Authenticator {
 
 		@Override
-		public PasswordAuthentication getPasswordAuthentication()
-		{
+		public PasswordAuthentication getPasswordAuthentication() {
 			final String username =
-				Config.inst().get(Config.MLSEND_USER, "user");
+					Config.inst().get(Config.MLSEND_USER, "user");
 			final String password =
-				Config.inst().get(Config.MLSEND_PASSWORD, "mysecret");
+					Config.inst().get(Config.MLSEND_PASSWORD, "mysecret");
 
 			return new PasswordAuthentication(username, password);
 		}
@@ -66,8 +63,7 @@ public class Dispatcher
 	 * @param listPostValue
 	 * @return The matching email address or null
 	 */
-	private static String chunkListPost(String listPostValue)
-	{
+	private static String chunkListPost(String listPostValue) {
 		// listPostValue is of form "<mailto:dev@openoffice.org>"
 		Pattern mailPattern = Pattern.compile("(\\w+[-|.])*\\w+@(\\w+.)+\\w+");
 		Matcher mailMatcher = mailPattern.matcher(listPostValue);
@@ -87,8 +83,7 @@ public class Dispatcher
 	 * @return null or fitting group name for the given message.
 	 */
 	private static List<String> getGroupFor(final Message msg, final boolean fallback)
-		throws MessagingException, StorageBackendException
-	{
+			throws MessagingException, StorageBackendException {
 		List<String> groups = null;
 
 		// Is there a List-Post header?
@@ -101,13 +96,16 @@ public class Dispatcher
 		}
 
 		if (listPost != null && listPost.length > 0
-			&& !"".equals(listPost[0]) && chunkListPost(listPost[0]) != null) {
+				&& !"".equals(listPost[0]) && chunkListPost(listPost[0]) != null) {
 			// listPost[0] is of form "<mailto:dev@openoffice.org>"
 			listPost[0] = chunkListPost(listPost[0]);
 			listPostAddr = new InternetAddress(listPost[0], false);
 			groups = StorageManager.current().getGroupsForList(listPostAddr.getAddress());
 		} else if (fallback) {
-			Log.get().info("Using fallback recipient discovery for: " + msg.getSubject());
+			StringBuilder strBuf = new StringBuilder();
+			strBuf.append("Using fallback recipient discovery for: ");
+			strBuf.append(msg.getSubject());
+			Log.get().info(strBuf.toString());
 			groups = new ArrayList<String>();
 			// Fallback to TO/CC/BCC addresses
 			Address[] to = msg.getAllRecipients();
@@ -131,8 +129,7 @@ public class Dispatcher
 	 * crosspostings in different mailing lists.
 	 * @param msg
 	 */
-	public static boolean toGroup(final Message msg)
-	{
+	public static boolean toGroup(final Message msg) {
 		if (msg == null) {
 			throw new IllegalArgumentException("Argument 'msg' must not be null!");
 		}
@@ -144,7 +141,7 @@ public class Dispatcher
 
 			// Check if this mail is already existing the storage
 			boolean updateReq =
-				StorageManager.current().isArticleExisting(article.getMessageID());
+					StorageManager.current().isArticleExisting(article.getMessageID());
 
 			List<String> newsgroups = getGroupFor(msg, !updateReq);
 			List<String> oldgroups = new ArrayList<String>();
@@ -170,7 +167,11 @@ public class Dispatcher
 						groups.append(',');
 					}
 				}
-				Log.get().info("Posting to group " + groups.toString());
+
+				StringBuilder strBuf = new StringBuilder();
+				strBuf.append("Posting to group ");
+				strBuf.append(groups.toString());
+				Log.get().info(strBuf.toString());
 
 				article.setGroup(groups.toString());
 				//article.removeHeader(Headers.REPLY_TO);
@@ -179,15 +180,15 @@ public class Dispatcher
 				// Write article to database
 				if (updateReq) {
 					Log.get().info("Updating " + article.getMessageID()
-						+ " with additional groups");
+							+ " with additional groups");
 					StorageManager.current().delete(article.getMessageID());
 					StorageManager.current().addArticle(article);
 				} else {
 					Log.get().info("Gatewaying " + article.getMessageID() + " to "
-						+ article.getHeader(Headers.NEWSGROUPS)[0]);
+							+ article.getHeader(Headers.NEWSGROUPS)[0]);
 					StorageManager.current().addArticle(article);
 					Stats.getInstance().mailGatewayed(
-						article.getHeader(Headers.NEWSGROUPS)[0]);
+							article.getHeader(Headers.NEWSGROUPS)[0]);
 				}
 				posted = true;
 			} else {
@@ -196,12 +197,13 @@ public class Dispatcher
 					buf.append(' ');
 					buf.append(toa.toString());
 				}
-				buf.append(" " + article.getHeader(Headers.LIST_POST)[0]);
+				buf.append(" ");
+				buf.append(article.getHeader(Headers.LIST_POST)[0]);
 				Log.get().warning("No group for" + buf.toString());
 			}
 			return posted;
 		} catch (Exception ex) {
-			ex.printStackTrace();
+			Log.get().log(Level.WARNING, ex.getLocalizedMessage(), ex);
 			return false;
 		}
 	}
@@ -211,15 +213,17 @@ public class Dispatcher
 	 * This method MAY be called several times by PostCommand for the same
 	 * article.
 	 */
-	public static void toList(Article article, String group)
-		throws IOException, MessagingException, StorageBackendException
-	{
+	public static boolean toList(Article article, String group)
+			throws IOException, MessagingException, StorageBackendException {
 		// Get mailing lists for the group of this article
 		List<String> rcptAddresses = StorageManager.current().getListsForGroup(group);
 
-		if (rcptAddresses == null || rcptAddresses.size() == 0) {
-			Log.get().warning("No ML-address for " + group + " found.");
-			return;
+		if (rcptAddresses == null || rcptAddresses.isEmpty()) {
+			StringBuilder strBuf = new StringBuilder();
+			strBuf.append("No ML address found for group ");
+			strBuf.append(group);
+			Log.get().warning(strBuf.toString());
+			return false;
 		}
 
 		for (String rcptAddress : rcptAddresses) {
@@ -229,7 +233,7 @@ public class Dispatcher
 			String smtpUser = Config.inst().get(Config.MLSEND_USER, "user");
 			String smtpPw = Config.inst().get(Config.MLSEND_PASSWORD, "mysecret");
 			String smtpFrom = Config.inst().get(
-				Config.MLSEND_ADDRESS, article.getHeader(Headers.FROM)[0]);
+					Config.MLSEND_ADDRESS, article.getHeader(Headers.FROM)[0]);
 
 			// TODO: Make Article cloneable()
 			article.getMessageID(); // Make sure an ID is existing
@@ -251,8 +255,9 @@ public class Dispatcher
 
 			Stats.getInstance().mailGatewayed(group);
 			Log.get().info("MLGateway: Mail " + article.getHeader("Subject")[0]
-				+ " was delivered to " + rcptAddress + ".");
+					+ " was delivered to " + rcptAddress + ".");
 		}
+		return true;
 	}
 
 	/**
@@ -262,8 +267,7 @@ public class Dispatcher
 	 * @throws javax.mail.MessagingException
 	 */
 	private static void rewriteSenderAddress(Article msg)
-		throws MessagingException
-	{
+			throws MessagingException {
 		String mlAddress = Config.inst().get(Config.MLSEND_ADDRESS, null);
 
 		if (mlAddress != null) {
