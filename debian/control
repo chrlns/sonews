@@ -7,7 +7,7 @@ Package: sonews
 Standards-Version: 3.9.1.0
 Build-Depends: debhelper (>= 7.0.50~), openjdk-6-jdk, ant, glassfish-mail
 
-Package: sonews-server
+Package: sonews
 Architecture: all
 Depends: openjdk-6-jre-headless | openjdk-6-jre | sun-java6-jre, glassfish-mail, libhsqldb-java
 Suggests: sonews-web, libpg-java, mysql-server, libmysql-java, libjchart2d-java
