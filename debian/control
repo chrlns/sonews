@@ -3,7 +3,6 @@ Section: news
 Priority: optional
 Maintainer: Christian Lins <christian@lins.me>
 Homepage: http://www.sonews.org/
-Package: sonews
 Standards-Version: 3.9.1.0
 Build-Depends: debhelper (>= 7.0.50~), openjdk-6-jdk, ant, glassfish-mail
 
