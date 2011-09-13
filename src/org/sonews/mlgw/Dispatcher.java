@@ -250,6 +250,7 @@ public class Dispatcher {
 			}
 
 			SMTPTransport smtpTransport = new SMTPTransport(smtpHost, smtpPort);
+			smtpTransport.login();
 			smtpTransport.send(article, smtpFrom, rcptAddress);
 			smtpTransport.close();
 

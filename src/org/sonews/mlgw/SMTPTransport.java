@@ -15,7 +15,6 @@
  *   You should have received a copy of the GNU General Public License
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 package org.sonews.mlgw;
 
 import java.io.BufferedOutputStream;
@@ -33,45 +32,30 @@ import org.sonews.util.io.ArticleInputStream;
  * @author Christian Lins
  * @since sonews/1.0
  */
-class SMTPTransport
-{
+class SMTPTransport {
+
+	public static final String NEWLINE = "\r\n";
 
 	protected BufferedReader in;
 	protected BufferedOutputStream out;
 	protected Socket socket;
 
 	public SMTPTransport(String host, int port)
-		throws IOException, UnknownHostException
-	{
-		socket = new Socket(host, port);
-		this.in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+			throws IOException, UnknownHostException {
+		this.socket = new Socket(host, port);
+		this.in = new BufferedReader(
+				new InputStreamReader(socket.getInputStream()));
 		this.out = new BufferedOutputStream(socket.getOutputStream());
 
-		// Read helo from server
+		// Read HELO from server
 		String line = this.in.readLine();
 		if (line == null || !line.startsWith("220 ")) {
-			throw new IOException("Invalid helo from server: " + line);
+			throw new IOException("Invalid HELO from server: " + line);
 		}
-
-		// Send HELO to server
-		this.out.write(
-			("HELO " + Config.inst().get(Config.HOSTNAME, "localhost") + "\r\n").getBytes("UTF-8"));
-		this.out.flush();
-		line = this.in.readLine();
-		if (line == null || !line.startsWith("250 ")) {
-			throw new IOException("Unexpected reply: " + line);
-		}
-	}
-
-	public SMTPTransport(String host)
-		throws IOException
-	{
-		this(host, 25);
 	}
 
 	public void close()
-		throws IOException
-	{
+			throws IOException {
 		this.out.write("QUIT".getBytes("UTF-8"));
 		this.out.flush();
 		this.in.readLine();
@@ -79,9 +63,77 @@ class SMTPTransport
 		this.socket.close();
 	}
 
+	private void ehlo(String hostname) throws IOException {
+		StringBuilder strBuf = new StringBuilder();
+		strBuf.append("EHLO ");
+		strBuf.append(hostname);
+		strBuf.append(NEWLINE);
+
+		// Send EHLO to server
+		this.out.write(strBuf.toString().getBytes("UTF-8"));
+		this.out.flush();
+
+		// Read reply: "250-example.org Hello example.net"
+		String line = this.in.readLine();
+		if (line == null || !line.startsWith("250")) {
+			throw new IOException("Unexpected reply: " + line);
+		}
+
+		// FIXME: More 250- lines possible!
+
+		// Read reply: "250 AUTH CRAM-MD5 LOGIN PLAIN"
+		line = this.in.readLine();
+		if (line == null || !line.startsWith("250 ")) {
+			throw new IOException("Unexpected reply: " + line);
+		}
+		String[] authMethods = line.split(" ");
+		// TODO: Check for supported methods
+
+		// Do a PLAIN login
+		strBuf = new StringBuilder();
+		strBuf.append("AUTH PLAIN");
+		strBuf.append(NEWLINE);
+
+		// Send AUTH to server
+		this.out.write(strBuf.toString().getBytes("UTF-8"));
+		this.out.flush();
+
+		// Read reply
+		line = this.in.readLine();
+		if (line == null || !line.startsWith("250 ")) {
+			throw new IOException("Unexpected reply: " + line);
+		}
+	}
+
+	private void helo(String hostname) throws IOException {
+		StringBuilder heloStr = new StringBuilder();
+		heloStr.append("HELO ");
+		heloStr.append(hostname);
+		heloStr.append(NEWLINE);
+
+		// Send HELO to server
+		this.out.write(heloStr.toString().getBytes("UTF-8"));
+		this.out.flush();
+
+		// Read reply
+		String line = this.in.readLine();
+		if (line == null || !line.startsWith("250 ")) {
+			throw new IOException("Unexpected reply: " + line);
+		}
+	}
+
+	public void login() throws IOException {
+		String hostname = Config.inst().get(Config.HOSTNAME, "localhost");
+		String auth = Config.inst().get(Config.MLSEND_AUTH, "none");
+		if(auth.equals("none")) {
+			helo(hostname);
+		} else {
+			ehlo(hostname);
+		}
+	}
+
 	public void send(Article article, String mailFrom, String rcptTo)
-		throws IOException
-	{
+			throws IOException {
 		assert (article != null);
 		assert (mailFrom != null);
 		assert (rcptTo != null);

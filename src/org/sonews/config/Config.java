@@ -32,16 +32,20 @@ public class Config extends AbstractConfig {
 	public static final String ARTICLE_MAXSIZE = "sonews.article.maxsize";
 	/** BackendConfig key constant. Value: Amount of news that are feeded per run. */
 	public static final String EVENTLOG = "sonews.eventlog";
+
 	public static final String FEED_NEWSPERRUN = "sonews.feed.newsperrun";
 	public static final String FEED_PULLINTERVAL = "sonews.feed.pullinterval";
+
 	public static final String HOSTNAME = "sonews.hostname";
 	public static final String PORT = "sonews.port";
 	public static final String TIMEOUT = "sonews.timeout";
 	public static final String LOGLEVEL = "sonews.loglevel";
+
 	public static final String MLPOLL_DELETEUNKNOWN = "sonews.mlpoll.deleteunknown";
 	public static final String MLPOLL_HOST = "sonews.mlpoll.host";
 	public static final String MLPOLL_PASSWORD = "sonews.mlpoll.password";
 	public static final String MLPOLL_USER = "sonews.mlpoll.user";
+
 	public static final String MLSEND_ADDRESS = "sonews.mlsend.address";
 	public static final String MLSEND_RW_FROM = "sonews.mlsend.rewrite.from";
 	public static final String MLSEND_RW_SENDER = "sonews.mlsend.rewrite.sender";
@@ -49,9 +53,12 @@ public class Config extends AbstractConfig {
 	public static final String MLSEND_PASSWORD = "sonews.mlsend.password";
 	public static final String MLSEND_PORT = "sonews.mlsend.port";
 	public static final String MLSEND_USER = "sonews.mlsend.user";
+	public static final String MLSEND_AUTH = "sonews.mlsend.auth";
+
 	/** Key constant. If value is "true" every I/O is written to logfile
 	 * (which is a lot!) */
 	public static final String DEBUG = "sonews.debug";
+
 	/** Key constant. Value is classname of the JDBC driver */
 	public static final String STORAGE_DBMSDRIVER = "sonews.storage.dbmsdriver";
 	/** Key constant. Value is JDBC connect String to the database. */
@@ -61,9 +68,11 @@ public class Config extends AbstractConfig {
 	/** Key constant. Value is the password for the DBMS. */
 	public static final String STORAGE_PASSWORD = "sonews.storage.password";
 	public static final String STORAGE_PROVIDER = "sonews.storage.provider";
+
 	/** Key constant. Value is the name of the host which is allowed to use the
 	 *  XDAEMON command; default: "localhost" */
 	public static final String XDAEMON_HOST = "sonews.xdaemon.host";
+
 	/** The config key for the filename of the logfile */
 	public static final String LOGFILE = "sonews.log";
 	public static final String[] AVAILABLE_KEYS = {
