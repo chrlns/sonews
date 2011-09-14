@@ -15,7 +15,6 @@
  *   You should have received a copy of the GNU General Public License
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 package org.sonews.daemon.command;
 
 import java.io.IOException;
@@ -39,36 +38,30 @@ import org.sonews.util.Stats;
  * @author Christian Lins
  * @since sonews/0.5.0
  */
-public class XDaemonCommand implements Command
-{
+public class XDaemonCommand implements Command {
 
 	@Override
-	public String[] getSupportedCommandStrings()
-	{
-		return new String[] {"XDAEMON"};
+	public String[] getSupportedCommandStrings() {
+		return new String[]{"XDAEMON"};
 	}
 
 	@Override
-	public boolean hasFinished()
-	{
+	public boolean hasFinished() {
 		return true;
 	}
 
 	@Override
-	public String impliedCapability()
-	{
+	public String impliedCapability() {
 		return null;
 	}
 
 	@Override
-	public boolean isStateful()
-	{
+	public boolean isStateful() {
 		return false;
 	}
 
 	private void channelAdd(String[] commands, NNTPConnection conn)
-		throws IOException, StorageBackendException
-	{
+			throws IOException, StorageBackendException {
 		String groupName = commands[2];
 		if (StorageManager.current().isGroupExisting(groupName)) {
 			conn.println("400 group " + groupName + " already existing!");
@@ -81,11 +74,11 @@ public class XDaemonCommand implements Command
 	// TODO: Refactor this method to reduce complexity!
 	@Override
 	public void processLine(NNTPConnection conn, String line, byte[] raw)
-		throws IOException, StorageBackendException
-	{
-		InetSocketAddress addr = (InetSocketAddress) conn.getSocketChannel().socket().getRemoteSocketAddress();
+			throws IOException, StorageBackendException {
+		InetSocketAddress addr = (InetSocketAddress)conn.getSocketChannel()
+				.socket().getRemoteSocketAddress();
 		if (addr.getHostName().equals(
-			Config.inst().get(Config.XDAEMON_HOST, "localhost"))) {
+				Config.inst().get(Config.XDAEMON_HOST, "localhost"))) {
 			String[] commands = line.split(" ", 4);
 			if (commands.length == 3 && commands[1].equalsIgnoreCase("LIST")) {
 				if (commands[2].equalsIgnoreCase("CONFIGKEYS")) {
@@ -96,17 +89,17 @@ public class XDaemonCommand implements Command
 					conn.println(".");
 				} else if (commands[2].equalsIgnoreCase("PEERINGRULES")) {
 					List<Subscription> pull =
-						StorageManager.current().getSubscriptions(FeedManager.TYPE_PULL);
+							StorageManager.current().getSubscriptions(FeedManager.TYPE_PULL);
 					List<Subscription> push =
-						StorageManager.current().getSubscriptions(FeedManager.TYPE_PUSH);
+							StorageManager.current().getSubscriptions(FeedManager.TYPE_PUSH);
 					conn.println("100 list of peering rules follows");
 					for (Subscription sub : pull) {
 						conn.println("PULL " + sub.getHost() + ":" + sub.getPort()
-							+ " " + sub.getGroup());
+								+ " " + sub.getGroup());
 					}
 					for (Subscription sub : push) {
 						conn.println("PUSH " + sub.getHost() + ":" + sub.getPort()
-							+ " " + sub.getGroup());
+								+ " " + sub.getGroup());
 					}
 					conn.println(".");
 				} else {
@@ -126,23 +119,23 @@ public class XDaemonCommand implements Command
 					group.update();
 					conn.println("200 group " + commands[2] + " marked as deleted");
 				}
-			} else if(commands.length == 5 && commands[1].equalsIgnoreCase("GROUPFLAG")) {
+			} else if (commands.length == 5 && commands[1].equalsIgnoreCase("GROUPFLAG")) {
 				Group group = StorageManager.current().getGroup(commands[2]);
 				String flagName = commands[4];
-				if(commands[3].equalsIgnoreCase("SET")) {
-					if(flagName.equals("MAILINGLIST")) {
+				if (commands[3].equalsIgnoreCase("SET")) {
+					if (flagName.equals("MAILINGLIST")) {
 						group.setFlag(Group.MAILINGLIST);
-					} else if(flagName.equals("DELETED")) {
+					} else if (flagName.equals("DELETED")) {
 						group.setFlag(Group.DELETED);
-					} else if(flagName.equals("READONLY")) {
+					} else if (flagName.equals("READONLY")) {
 						group.setFlag(Group.READONLY);
 					}
-				} else if(commands[3].equalsIgnoreCase("UNSET")) {
-					if(flagName.equals("MAILINGLIST")) {
+				} else if (commands[3].equalsIgnoreCase("UNSET")) {
+					if (flagName.equals("MAILINGLIST")) {
 						group.unsetFlag(Group.MAILINGLIST);
-					} else if(flagName.equals("DELETED")) {
+					} else if (flagName.equals("DELETED")) {
 						group.unsetFlag(Group.DELETED);
-					} else if(flagName.equals("READONLY")) {
+					} else if (flagName.equals("READONLY")) {
 						group.unsetFlag(Group.READONLY);
 					}
 				} else {
