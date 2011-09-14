@@ -23,6 +23,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.List;
 import org.sonews.config.Config;
 import org.sonews.storage.Article;
 import org.sonews.util.io.ArticleInputStream;
@@ -73,20 +75,8 @@ class SMTPTransport {
 		this.out.write(strBuf.toString().getBytes("UTF-8"));
 		this.out.flush();
 
-		// Read reply: "250-example.org Hello example.net"
-		String line = this.in.readLine();
-		if (line == null || !line.startsWith("250")) {
-			throw new IOException("Unexpected reply: " + line);
-		}
+		List<String> ehloReplies = readReply("250");
 
-		// FIXME: More 250- lines possible!
-
-		// Read reply: "250 AUTH CRAM-MD5 LOGIN PLAIN"
-		line = this.in.readLine();
-		if (line == null || !line.startsWith("250 ")) {
-			throw new IOException("Unexpected reply: " + line);
-		}
-		String[] authMethods = line.split(" ");
 		// TODO: Check for supported methods
 
 		// Do a PLAIN login
@@ -98,8 +88,13 @@ class SMTPTransport {
 		this.out.write(strBuf.toString().getBytes("UTF-8"));
 		this.out.flush();
 
+		readReply("334");
+
+		// Send PLAIN credentials to server
+		
+
 		// Read reply
-		line = this.in.readLine();
+		String line = this.in.readLine();
 		if (line == null || !line.startsWith("250 ")) {
 			throw new IOException("Unexpected reply: " + line);
 		}
@@ -116,10 +111,7 @@ class SMTPTransport {
 		this.out.flush();
 
 		// Read reply
-		String line = this.in.readLine();
-		if (line == null || !line.startsWith("250 ")) {
-			throw new IOException("Unexpected reply: " + line);
-		}
+		readReply("250");
 	}
 
 	public void login() throws IOException {
@@ -130,6 +122,32 @@ class SMTPTransport {
 		} else {
 			ehlo(hostname);
 		}
+	}
+
+	/**
+	 * Read one or more exspected reply lines.
+	 * @param expectedReply
+	 * @return
+	 * @throws IOException If the reply of the server does not fit the exspected
+	 * reply code.
+	 */
+	private List<String> readReply(String expectedReply) throws IOException {
+		List<String> replyStrings = new ArrayList<String>();
+
+		for(;;) {
+			String line = this.in.readLine();
+			if (line == null || !line.startsWith(expectedReply)) {
+				throw new IOException("Unexpected reply: " + line);
+			}
+
+			replyStrings.add(line);
+
+			if(line.charAt(3) == ' ') { // Last reply line
+				break;
+			}
+		}
+
+		return replyStrings;
 	}
 
 	public void send(Article article, String mailFrom, String rcptTo)
