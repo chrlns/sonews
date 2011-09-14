@@ -4,11 +4,13 @@ Priority: optional
 Maintainer: Christian Lins <christian@lins.me>
 Homepage: http://www.sonews.org/
 Standards-Version: 3.9.1.0
-Build-Depends: debhelper (>= 7.0.50~), openjdk-6-jdk, ant, glassfish-mail
+Build-Depends: debhelper (>= 7.0.50~), openjdk-6-jdk, ant, glassfish-mail,
+ libcommons-codec-java
 
 Package: sonews
 Architecture: all
-Depends: openjdk-6-jre-headless | openjdk-6-jre | sun-java6-jre, glassfish-mail, libhsqldb-java
+Depends: openjdk-6-jre-headless | openjdk-6-jre | sun-java6-jre, glassfish-mail, libhsqldb-java,
+ libcommons-codec-java
 Suggests: sonews-web, libpg-java, mysql-server, libmysql-java, libjchart2d-java
 Description: Usenet news server
  sonews is a modern Usenet server providing newsgroups via NNTP.
