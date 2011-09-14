@@ -21,10 +21,12 @@ import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
+import org.apache.commons.codec.binary.Base64;
 import org.sonews.config.Config;
 import org.sonews.storage.Article;
 import org.sonews.util.io.ArticleInputStream;
@@ -65,6 +67,16 @@ class SMTPTransport {
 		this.socket.close();
 	}
 
+	private byte[] createCredentials() throws UnsupportedEncodingException {
+		String user = Config.inst().get(Config.MLSEND_USER, "");
+		String pass = Config.inst().get(Config.MLSEND_PASSWORD, "");
+		StringBuilder credBuf = new StringBuilder();
+		credBuf.append(user);
+		credBuf.append("\u0000");
+		credBuf.append(pass);
+		return Base64.encodeBase64(credBuf.toString().getBytes("UTF-8"));
+	}
+
 	private void ehlo(String hostname) throws IOException {
 		StringBuilder strBuf = new StringBuilder();
 		strBuf.append("EHLO ");
@@ -91,13 +103,11 @@ class SMTPTransport {
 		readReply("334");
 
 		// Send PLAIN credentials to server
-		
+		this.out.write(createCredentials());
+		this.out.flush();
 
-		// Read reply
-		String line = this.in.readLine();
-		if (line == null || !line.startsWith("250 ")) {
-			throw new IOException("Unexpected reply: " + line);
-		}
+		// Read reply of successful login
+		readReply("235");
 	}
 
 	private void helo(String hostname) throws IOException {
