@@ -101,11 +101,11 @@ public class ArticleCommand implements Command {
 					+ " article retrieved - head and body follow");
 			conn.println(article.getHeaderSource());
 			conn.println("");
-			conn.println(article.getBody());
+			conn.printlnEscapeDots(article.getBody());
 			conn.println(".");
 		} else if (command[0].equalsIgnoreCase("BODY")) {
 			conn.println("222 " + artIndex + " " + article.getMessageID() + " body");
-			conn.println(article.getBody());
+			conn.printlnEscapeDots(article.getBody());
 			conn.println(".");
 		} /*
 		 * HEAD: This command is mandatory.

@@ -17,6 +17,7 @@
  */
 package org.sonews.daemon;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.SocketException;
@@ -36,6 +37,8 @@ import org.sonews.storage.Group;
 import org.sonews.storage.StorageBackendException;
 import org.sonews.util.Log;
 import org.sonews.util.Stats;
+import org.sonews.util.io.CRLFOutputStream;
+import org.sonews.util.io.SMTPOutputStream;
 
 /**
  * For every SocketChannel (so TCP/IP connection) there is an instance of
@@ -302,6 +305,30 @@ public final class NNTPConnection {
 			throws IOException {
 		this.lineBuffers.addOutputBuffer(ByteBuffer.wrap(rawLines));
 		writeToChannel(CharBuffer.wrap(NEWLINE), charset, null);
+	}
+	
+	/**
+	 * Same as {@link #println(byte[]) } but escapes lines containing single dot,
+	 * which has special meaning in protocol (end of message).
+	 * 
+	 * This method is safe to be used for writing messages â if message contains 
+	 * a line with single dot, it will be doubled and thus not interpreted 
+	 * by NNTP client as end of message
+	 * 
+	 * @param rawLines
+	 * @throws IOException 
+	 */
+	public void printlnEscapeDots(final byte[] rawLines) throws IOException {
+		// TODO: optimalizace
+		
+		ByteArrayOutputStream baos = new ByteArrayOutputStream(rawLines.length + 10);
+		CRLFOutputStream crlfStream = new CRLFOutputStream(baos);
+		SMTPOutputStream smtpStream = new SMTPOutputStream(crlfStream);
+		smtpStream.write(rawLines);
+		
+		println(baos.toByteArray());
+		
+		smtpStream.close();
 	}
 
 	/**
