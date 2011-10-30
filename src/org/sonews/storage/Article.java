@@ -41,6 +41,8 @@ import org.sonews.util.Log;
  * @since n3tpd/0.1
  */
 public class Article extends ArticleHead {
+	
+	private String authenticatedUser;
 
 	/**
 	 * Loads the Article identified by the given ID from the JDBCDatabase.
@@ -219,5 +221,20 @@ public class Article extends ArticleHead {
 	@Override
 	public String toString() {
 		return getMessageID();
+	}
+
+	/**
+	 * @return username of currently logged user â or null, if user is not authenticated.
+	 */
+	public String getAuthenticatedUser() {
+		return authenticatedUser;
+	}
+	
+	/**
+	 * This method is to be called from POST Command implementation.
+	 * @param authenticatedUser current username â or null, if user is not authenticated.
+	 */
+	public void setAuthenticatedUser(String authenticatedUser) {
+		this.authenticatedUser = authenticatedUser;
 	}
 }

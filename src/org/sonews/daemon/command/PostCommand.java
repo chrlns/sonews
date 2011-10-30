@@ -210,6 +210,10 @@ public class PostCommand implements Command {
 
 	private void postArticle(NNTPConnection conn, Article article)
 			throws IOException {
+		if (conn.getUser() != null && conn.getUser().isAuthenticated()) {
+			article.setAuthenticatedUser(conn.getUser().getUserName());
+		}
+		
 		if (article.getHeader(Headers.CONTROL)[0].length() > 0) {
 			controlMessage(conn, article);
 		} else if (article.getHeader(Headers.SUPERSEDES)[0].length() > 0) {

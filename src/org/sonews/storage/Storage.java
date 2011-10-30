@@ -144,4 +144,7 @@ public interface Storage {
 
 	boolean update(Group group)
 			throws StorageBackendException;
+
+	public boolean authenticateUser(String username, char[] password)
+			throws StorageBackendException;
 }

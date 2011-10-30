@@ -31,6 +31,7 @@ import java.util.Arrays;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.logging.Level;
+import org.sonews.acl.User;
 import org.sonews.daemon.command.Command;
 import org.sonews.storage.Article;
 import org.sonews.storage.Group;
@@ -62,6 +63,7 @@ public final class NNTPConnection {
 	private int readLock = 0;
 	private final Object readLockGate = new Object();
 	private SelectionKey writeSelKey = null;
+	private User user;
 
 	public NNTPConnection(final SocketChannel channel)
 			throws IOException {
@@ -145,7 +147,7 @@ public final class NNTPConnection {
 			// will be received and a timeout can be triggered.
 			this.channel.socket().shutdownInput();
 		} catch (IOException ex) {
-			Log.get().warning("Exception in NNTPConnection.shutdownInput(): " + ex);
+			Log.get().log(Level.WARNING, "Exception in NNTPConnection.shutdownInput(): {0}", ex);
 		}
 	}
 
@@ -159,9 +161,9 @@ public final class NNTPConnection {
 					channel.close();
 				} catch (SocketException ex) {
 					// Socket was already disconnected
-					Log.get().info("NNTPConnection.shutdownOutput(): " + ex);
+					Log.get().log(Level.INFO, "NNTPConnection.shutdownOutput(): {0}", ex);
 				} catch (Exception ex) {
-					Log.get().warning("NNTPConnection.shutdownOutput(): " + ex);
+					Log.get().log(Level.WARNING, "NNTPConnection.shutdownOutput(): {0}", ex);
 				}
 			}
 		}, 3000);
@@ -224,7 +226,7 @@ public final class NNTPConnection {
 			raw = Arrays.copyOf(raw, raw.length - 1);
 		}
 
-		Log.get().fine("<< " + line);
+		Log.get().log(Level.FINE, "<< {0}", line);
 
 		if (command == null) {
 			command = parseCommandLine(line);
@@ -341,7 +343,7 @@ public final class NNTPConnection {
 			CharSequence debugLine)
 			throws IOException {
 		if (!charset.canEncode()) {
-			Log.get().severe("FATAL: Charset " + charset + " cannot encode!");
+			Log.get().log(Level.SEVERE, "FATAL: Charset {0} cannot encode!", charset);
 			return;
 		}
 
@@ -359,14 +361,14 @@ public final class NNTPConnection {
 			ChannelWriter.getInstance().getSelector().wakeup();
 		} catch (Exception ex) // CancelledKeyException and ChannelCloseException
 		{
-			Log.get().warning("NNTPConnection.writeToChannel(): " + ex);
+			Log.get().log(Level.WARNING, "NNTPConnection.writeToChannel(): {0}", ex);
 			return;
 		}
 
 		// Update last activity timestamp
 		this.lastActivity = System.currentTimeMillis();
 		if (debugLine != null) {
-			Log.get().fine(">> " + debugLine);
+			Log.get().log(Level.FINE, ">> {0}", debugLine);
 		}
 	}
 
@@ -386,5 +388,20 @@ public final class NNTPConnection {
 
 	void setLastActivity(long timestamp) {
 		this.lastActivity = timestamp;
+	}
+
+	/**
+	 * @return Currently logged user (but you should check {@link User#isAuthenticated()}, if user is athenticated, or we just trust him)
+	 */
+	public User getUser() {
+		return user;
+	}
+
+	/**
+	 * This method is to be called from AUTHINFO USER Command implementation.
+	 * @param username username from AUTHINFO USER username.
+	 */
+	public void setUser(User user) {
+		this.user = user;
 	}
 }

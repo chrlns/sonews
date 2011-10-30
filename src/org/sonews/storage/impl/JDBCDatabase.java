@@ -1468,4 +1468,10 @@ public class JDBCDatabase implements Storage {
 			return update(group);
 		}
 	}
+
+	@Override
+	public boolean authenticateUser(String username, char[] password) 
+			throws StorageBackendException {
+		throw new StorageBackendException("Not supported yet.");
+	}
 }

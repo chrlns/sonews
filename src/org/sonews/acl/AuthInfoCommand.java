@@ -18,40 +18,87 @@
 package org.sonews.acl;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.sonews.daemon.NNTPConnection;
 import org.sonews.daemon.command.Command;
 import org.sonews.storage.StorageBackendException;
+import org.sonews.storage.StorageManager;
 
 /**
  *
- * @author Christian Lins
- * @since sonews/1.1
+ * @author FrantiÅ¡ek KuÄera (frantovo.cz)
  */
 public class AuthInfoCommand implements Command {
 
-	@Override
-	public String[] getSupportedCommandStrings() {
-		throw new UnsupportedOperationException("Not supported yet.");
-	}
+	private static final Logger log = Logger.getLogger(AuthInfoCommand.class.getName());
+	private static String[] SUPPORTED_COMMANDS = {"AUTHINFO"};
 
 	@Override
 	public boolean hasFinished() {
-		throw new UnsupportedOperationException("Not supported yet.");
+		return true;
 	}
 
 	@Override
 	public String impliedCapability() {
-		throw new UnsupportedOperationException("Not supported yet.");
+		return "AUTHINFO";
 	}
 
 	@Override
 	public boolean isStateful() {
-		throw new UnsupportedOperationException("Not supported yet.");
+		return false;
 	}
 
 	@Override
-	public void processLine(NNTPConnection conn, String line, byte[] rawLine)
-			throws IOException, StorageBackendException {
-		throw new UnsupportedOperationException("Not supported yet.");
+	public String[] getSupportedCommandStrings() {
+		return SUPPORTED_COMMANDS;
+	}
+
+	@Override
+	public void processLine(NNTPConnection conn, String line, byte[] rawLine) throws IOException, StorageBackendException {
+		Pattern commandPattern = Pattern.compile("AUTHINFO (USER|PASS) (.*)", Pattern.CASE_INSENSITIVE);
+		Matcher commandMatcher = commandPattern.matcher(line);
+
+		if (commandMatcher.matches()) {
+
+			if (conn.getUser() != null && conn.getUser().isAuthenticated()) {
+				conn.println("502 Command unavailable (you are already authenticated)");
+			} else if ("USER".equalsIgnoreCase(commandMatcher.group(1))) {
+				conn.setUser(new User(commandMatcher.group(2)));
+				conn.println("381 Password required"); // ask user for his password
+				log.log(Level.FINE, "User ''{0}'' greets us. We are waiting for his password.", conn.getUser().getUserName());
+			} else if ("PASS".equalsIgnoreCase(commandMatcher.group(1))) {
+				if (conn.getUser() == null) {
+					conn.println("482 Authentication commands issued out of sequence");
+				} else {
+
+					char[] password = commandMatcher.group(2).toCharArray();
+					boolean goodPassword = StorageManager.current().authenticateUser(conn.getUser().getUserName(), password);
+					Arrays.fill(password, '*');
+					commandMatcher = null;
+
+					if (goodPassword) {
+						conn.println("281 Authentication accepted");
+						conn.getUser().setAuthenticated(true);
+						log.log(Level.INFO, "User ''{0}'' has been succesfully authenticated.", conn.getUser().getUserName());
+					} else {
+						log.log(Level.INFO, "User ''{0}'' has provided wrong password.", conn.getUser().getUserName());
+						conn.setUser(null);
+						conn.println("481 Authentication failed: wrong password");
+					}
+
+				}
+			} else {
+				// impossible, see commandPattern
+				conn.println("500 Unknown command");
+			}
+
+
+		} else {
+			conn.println("500 Unknown command, expecting AUTHINFO USER username or AUTHINFO PASS password ");
+		}
 	}
 }
