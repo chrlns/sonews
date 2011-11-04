@@ -37,6 +37,7 @@ import org.sonews.storage.StorageBackendException;
 import org.sonews.storage.StorageManager;
 import org.sonews.feed.FeedManager;
 import org.sonews.util.Stats;
+import org.sonews.util.io.SMTPInputStream;
 
 /**
  * Implementation of the POST command. This command requires multiple lines
@@ -138,7 +139,7 @@ public class PostCommand implements Command {
 					headers.setHeader(Headers.LINES, Integer.toString(lineCount));
 					headers.setHeader(Headers.BYTES, Long.toString(bodySize));
 
-					byte[] body = bufBody.toByteArray();
+					byte[] body = unescapeDots(bufBody.toByteArray());
 					if (body.length >= 2) {
 						// Remove trailing CRLF
 						body = Arrays.copyOf(body, body.length - 2);
@@ -272,5 +273,28 @@ public class PostCommand implements Command {
 				conn.println("500 internal server error");
 			}
 		}
+	}
+
+	/**
+	 * TODO: rework, integrate into NNTPConnection
+	 * 
+	 * @param body message body with doubled dots
+	 * @return message body with unescaped dots (.. â .)
+	 */
+	private static byte[] unescapeDots(byte[] body) throws IOException {
+		byte[] result = new byte[body.length];
+		int resultLength = 0;
+
+		ByteArrayInputStream escapedInput = new ByteArrayInputStream(body);
+		SMTPInputStream unescapedInput = new SMTPInputStream(escapedInput);
+
+		int ch = unescapedInput.read();
+		while (ch >= 0) {
+			result[resultLength] = (byte) ch;
+			resultLength++;
+			ch = unescapedInput.read();
+		}
+
+		return Arrays.copyOfRange(result, 0, resultLength);
 	}
 }
