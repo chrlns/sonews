@@ -49,6 +49,7 @@ public class AuthInfoCommand implements Command {
 
 	@Override
 	public boolean isStateful() {
+		// TODO: make it statefull?
 		return false;
 	}
 
@@ -76,6 +77,7 @@ public class AuthInfoCommand implements Command {
 				} else {
 
 					char[] password = commandMatcher.group(2).toCharArray();
+					// TODO: StorageManager should return User object instead of boolean (so there could be transferred some additional information about user)
 					boolean goodPassword = StorageManager.current().authenticateUser(conn.getUser().getUserName(), password);
 					Arrays.fill(password, '*');
 					commandMatcher = null;

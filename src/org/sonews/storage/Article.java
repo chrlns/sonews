@@ -31,6 +31,7 @@ import javax.mail.Header;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.internet.InternetHeaders;
+import org.sonews.acl.User;
 import org.sonews.config.Config;
 import org.sonews.util.Log;
 
@@ -42,7 +43,7 @@ import org.sonews.util.Log;
  */
 public class Article extends ArticleHead {
 	
-	private String authenticatedUser;
+	private User sender;
 
 	/**
 	 * Loads the Article identified by the given ID from the JDBCDatabase.
@@ -224,17 +225,17 @@ public class Article extends ArticleHead {
 	}
 
 	/**
-	 * @return username of currently logged user â or null, if user is not authenticated.
+	 * @return sender â currently logged user â or null, if user is not authenticated.
 	 */
-	public String getAuthenticatedUser() {
-		return authenticatedUser;
+	public User getUser() {
+		return sender;
 	}
 	
 	/**
 	 * This method is to be called from POST Command implementation.
-	 * @param authenticatedUser current username â or null, if user is not authenticated.
+	 * @param sender current username â or null, if user is not authenticated.
 	 */
-	public void setAuthenticatedUser(String authenticatedUser) {
-		this.authenticatedUser = authenticatedUser;
+	public void setUser(User sender) {
+		this.sender = sender;
 	}
 }
