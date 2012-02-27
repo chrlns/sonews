@@ -27,11 +27,12 @@
     <path id="classpath">
         <pathelement location="${build.class}"/>
         <pathelement location="lib/glassfish-mail.jar"/>
+        <pathelement location="/usr/share/java/glassfish-mail.jar"/>
         <pathelement location="lib/mysql-connector-java.jar"/>
         <pathelement location="lib/junit-4.8.2.jar"/>
+        <pathelement location="/usr/share/java/junit4.jar"/>
+        <pathelement location="/usr/share/java/commons-codec.jar"/>
     </path>
-
-
 
     <!-- the main target, called in recursive builds -->
     <target name="main" depends="prepare,compile,jar"/>
