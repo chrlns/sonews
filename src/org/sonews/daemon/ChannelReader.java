@@ -31,34 +31,33 @@ import org.sonews.util.Log;
 
 /**
  * A Thread task listening for OP_READ events from SocketChannels.
+ * 
  * @author Christian Lins
  * @since sonews/0.5.0
  */
-class ChannelReader extends AbstractDaemon
-{
+class ChannelReader extends AbstractDaemon {
 
 	private static ChannelReader instance = new ChannelReader();
 
 	/**
 	 * @return Active ChannelReader instance.
 	 */
-	public static ChannelReader getInstance()
-	{
+	public static ChannelReader getInstance() {
 		return instance;
 	}
+
 	private Selector selector = null;
 
-	protected ChannelReader()
-	{
+	protected ChannelReader() {
 	}
 
 	/**
 	 * Sets the selector which is used by this reader to determine the channel
 	 * to read from.
+	 * 
 	 * @param selector
 	 */
-	public void setSelector(final Selector selector)
-	{
+	public void setSelector(final Selector selector) {
 		this.selector = selector;
 	}
 
@@ -66,14 +65,14 @@ class ChannelReader extends AbstractDaemon
 	 * Run loop. Blocks until some data is available in a channel.
 	 */
 	@Override
-	public void run()
-	{
+	public void run() {
 		assert selector != null;
 
 		while (isRunning()) {
 			try {
 				// select() blocks until some SelectableChannels are ready for
-				// processing. There is no need to lock the selector as we have only
+				// processing. There is no need to lock the selector as we have
+				// only
 				// one thread per selector.
 				selector.select();
 
@@ -85,20 +84,24 @@ class ChannelReader extends AbstractDaemon
 				SelectionKey selKey = null;
 
 				synchronized (selKeys) {
-					Iterator it = selKeys.iterator();
+					Iterator<SelectionKey> it = selKeys.iterator();
 
 					// Process the first pending event
 					while (it.hasNext()) {
-						selKey = (SelectionKey) it.next();
+						selKey = it.next();
 						channel = (SocketChannel) selKey.channel();
 						conn = Connections.getInstance().get(channel);
 
-						// Because we cannot lock the selKey as that would cause a deadlock
-						// we lock the connection. To preserve the order of the received
-						// byte blocks a selection key for a connection that has pending
+						// Because we cannot lock the selKey as that would cause
+						// a deadlock
+						// we lock the connection. To preserve the order of the
+						// received
+						// byte blocks a selection key for a connection that has
+						// pending
 						// read events is skipped.
 						if (conn == null || conn.tryReadLock()) {
-							// Remove from set to indicate that it's being processed
+							// Remove from set to indicate that it's being
+							// processed
 							it.remove();
 							if (conn != null) {
 								break; // End while loop
@@ -128,25 +131,26 @@ class ChannelReader extends AbstractDaemon
 			// Eventually wait for a register operation
 			synchronized (NNTPDaemon.RegisterGate) {
 				// Do nothing; FindBugs may warn about an empty synchronized
-				// statement, but we cannot use a wait()/notify() mechanism here.
+				// statement, but we cannot use a wait()/notify() mechanism
+				// here.
 				// If we used something like RegisterGate.wait() we block here
 				// until the NNTPDaemon calls notify(). But the daemon only
-				// calls notify() if itself is NOT blocked in the listening socket.
+				// calls notify() if itself is NOT blocked in the listening
+				// socket.
 			}
 		} // while(isRunning())
 	}
 
 	private void processSelectionKey(final NNTPConnection connection,
-		final SocketChannel socketChannel, final SelectionKey selKey)
-		throws InterruptedException, IOException
-	{
+			final SocketChannel socketChannel, final SelectionKey selKey)
+			throws InterruptedException, IOException {
 		assert selKey != null;
 		assert selKey.isReadable();
 
 		// Some bytes are available for reading
 		if (selKey.isValid()) {
 			// Lock the channel
-			//synchronized(socketChannel)
+			// synchronized(socketChannel)
 			{
 				// Read the data into the appropriate buffer
 				ByteBuffer buf = connection.getInputBuffer();
@@ -156,9 +160,11 @@ class ChannelReader extends AbstractDaemon
 				} catch (IOException ex) {
 					// The connection was probably closed by the remote host
 					// in a non-clean fashion
-					Log.get().info("ChannelReader.processSelectionKey(): " + ex);
+					Log.get()
+							.info("ChannelReader.processSelectionKey(): " + ex);
 				} catch (Exception ex) {
-					Log.get().warning("ChannelReader.processSelectionKey(): " + ex);
+					Log.get().warning(
+							"ChannelReader.processSelectionKey(): " + ex);
 				}
 
 				if (read == -1) // End of stream

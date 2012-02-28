@@ -28,25 +28,23 @@ import org.sonews.config.Config;
 
 /**
  * An article with no body only headers.
+ * 
  * @author Christian Lins
  * @since sonews/0.5.0
  */
-public class ArticleHead
-{
+public class ArticleHead {
 
 	protected InternetHeaders headers = null;
 	protected String headerSrc = null;
 
-	protected ArticleHead()
-	{
+	protected ArticleHead() {
 	}
 
-	public ArticleHead(String headers)
-	{
+	public ArticleHead(String headers) {
 		try {
 			// Parse the header
-			this.headers = new InternetHeaders(
-				new ByteArrayInputStream(headers.getBytes()));
+			this.headers = new InternetHeaders(new ByteArrayInputStream(
+					headers.getBytes()));
 		} catch (MessagingException ex) {
 			ex.printStackTrace();
 		}
@@ -54,53 +52,53 @@ public class ArticleHead
 
 	/**
 	 * Returns the header field with given name.
-	 * @param name Name of the header field(s).
-	 * @param returnNull If set to true, this method will return null instead
-	 *                   of an empty array if there is no header field found.
+	 * 
+	 * @param name
+	 *            Name of the header field(s).
+	 * @param returnNull
+	 *            If set to true, this method will return null instead of an
+	 *            empty array if there is no header field found.
 	 * @return Header values or empty string.
 	 */
-	public String[] getHeader(String name, boolean returnNull)
-	{
+	public String[] getHeader(String name, boolean returnNull) {
 		String[] ret = this.headers.getHeader(name);
 		if (ret == null && !returnNull) {
-			ret = new String[] {""};
+			ret = new String[] { "" };
 		}
 		return ret;
 	}
 
-	public String[] getHeader(String name)
-	{
+	public String[] getHeader(String name) {
 		return getHeader(name, false);
 	}
 
 	/**
 	 * Sets the header value identified through the header name.
+	 * 
 	 * @param name
 	 * @param value
 	 */
-	public void setHeader(String name, String value)
-	{
+	public void setHeader(String name, String value) {
 		this.headers.setHeader(name, value);
 		this.headerSrc = null;
 	}
 
-	public Enumeration getAllHeaders()
-	{
+	public Enumeration getAllHeaders() {
 		return this.headers.getAllHeaders();
 	}
 
 	/**
 	 * @return Header source code of this Article.
 	 */
-	public String getHeaderSource()
-	{
+	public String getHeaderSource() {
 		if (this.headerSrc != null) {
 			return this.headerSrc;
 		}
 
 		StringBuffer buf = new StringBuffer();
 
-		for (Enumeration en = this.headers.getAllHeaders(); en.hasMoreElements();) {
+		for (Enumeration en = this.headers.getAllHeaders(); en
+				.hasMoreElements();) {
 			Header entry = (Header) en.nextElement();
 
 			String value = entry.getValue().replaceAll("[\r\n]", " ");
@@ -118,26 +116,25 @@ public class ArticleHead
 	}
 
 	/**
-	 * Sets the headers of this Article. If headers contain no
-	 * Message-Id a new one is created.
+	 * Sets the headers of this Article. If headers contain no Message-Id a new
+	 * one is created.
+	 * 
 	 * @param headers
 	 */
-	public void setHeaders(InternetHeaders headers)
-	{
+	public void setHeaders(InternetHeaders headers) {
 		this.headers = headers;
 		this.headerSrc = null;
 		validateHeaders();
 	}
 
 	/**
-	 * Checks some headers for their validity and generates an
-	 * appropriate Path-header for this host if not yet existing.
-	 * This method is called by some Article constructors and the
-	 * method setHeaders().
+	 * Checks some headers for their validity and generates an appropriate
+	 * Path-header for this host if not yet existing. This method is called by
+	 * some Article constructors and the method setHeaders().
+	 * 
 	 * @return true if something on the headers was changed.
 	 */
-	protected void validateHeaders()
-	{
+	protected void validateHeaders() {
 		// Check for valid Path-header
 		final String path = getHeader(Headers.PATH)[0];
 		final String host = Config.inst().get(Config.HOSTNAME, "localhost");

@@ -87,7 +87,7 @@ class SMTPTransport {
 		this.out.write(strBuf.toString().getBytes("UTF-8"));
 		this.out.flush();
 
-		List<String> ehloReplies = readReply("250");
+		/*List<String> ehloReplies = */readReply("250");
 
 		// TODO: Check for supported methods
 

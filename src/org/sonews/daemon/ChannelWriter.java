@@ -29,41 +29,39 @@ import java.util.Iterator;
 
 /**
  * A Thread task that processes OP_WRITE events for SocketChannels.
+ * 
  * @author Christian Lins
  * @since sonews/0.5.0
  */
-class ChannelWriter extends AbstractDaemon
-{
+class ChannelWriter extends AbstractDaemon {
 
 	private static ChannelWriter instance = new ChannelWriter();
 
 	/**
 	 * @return Returns the active ChannelWriter instance.
 	 */
-	public static ChannelWriter getInstance()
-	{
+	public static ChannelWriter getInstance() {
 		return instance;
 	}
+
 	private Selector selector = null;
 
-	protected ChannelWriter()
-	{
+	protected ChannelWriter() {
 	}
 
 	/**
 	 * @return Selector associated with this instance.
 	 */
-	public Selector getSelector()
-	{
+	public Selector getSelector() {
 		return this.selector;
 	}
 
 	/**
 	 * Sets the selector that is used by this ChannelWriter.
+	 * 
 	 * @param selector
 	 */
-	public void setSelector(final Selector selector)
-	{
+	public void setSelector(final Selector selector) {
 		this.selector = selector;
 	}
 
@@ -71,8 +69,7 @@ class ChannelWriter extends AbstractDaemon
 	 * Run loop.
 	 */
 	@Override
-	public void run()
-	{
+	public void run() {
 		assert selector != null;
 
 		while (isRunning()) {
@@ -82,18 +79,19 @@ class ChannelWriter extends AbstractDaemon
 				NNTPConnection connection = null;
 
 				// select() blocks until some SelectableChannels are ready for
-				// processing. There is no need to synchronize the selector as we
+				// processing. There is no need to synchronize the selector as
+				// we
 				// have only one thread per selector.
 				selector.select(); // The return value of select can be ignored
 
 				// Get list of selection keys with pending OP_WRITE events.
 				// The keySET is not thread-safe whereas the keys itself are.
-				Iterator it = selector.selectedKeys().iterator();
+				Iterator<SelectionKey> it = selector.selectedKeys().iterator();
 
 				while (it.hasNext()) {
 					// We remove the first event from the set and store it for
 					// later processing.
-					selKey = (SelectionKey) it.next();
+					selKey = it.next();
 					socketChannel = (SocketChannel) selKey.channel();
 					connection = Connections.getInstance().get(socketChannel);
 
@@ -108,8 +106,10 @@ class ChannelWriter extends AbstractDaemon
 				if (selKey != null) {
 					try {
 						// Process the selected key.
-						// As there is only one OP_WRITE key for a given channel, we need
-						// not to synchronize this processing to retain the order.
+						// As there is only one OP_WRITE key for a given
+						// channel, we need
+						// not to synchronize this processing to retain the
+						// order.
 						processSelectionKey(connection, socketChannel, selKey);
 					} catch (IOException ex) {
 						Log.get().warning("Error writing to channel: " + ex);
@@ -122,7 +122,8 @@ class ChannelWriter extends AbstractDaemon
 				}
 
 				// Eventually wait for a register operation
-				synchronized (NNTPDaemon.RegisterGate) { /* do nothing */ }
+				synchronized (NNTPDaemon.RegisterGate) { /* do nothing */
+				}
 			} catch (CancelledKeyException ex) {
 				Log.get().info("ChannelWriter.run(): " + ex);
 			} catch (Exception ex) {
@@ -132,9 +133,8 @@ class ChannelWriter extends AbstractDaemon
 	}
 
 	private void processSelectionKey(final NNTPConnection connection,
-		final SocketChannel socketChannel, final SelectionKey selKey)
-		throws InterruptedException, IOException
-	{
+			final SocketChannel socketChannel, final SelectionKey selKey)
+			throws InterruptedException, IOException {
 		assert connection != null;
 		assert socketChannel != null;
 		assert selKey != null;
@@ -147,11 +147,14 @@ class ChannelWriter extends AbstractDaemon
 				// Get next output buffer
 				ByteBuffer buf = connection.getOutputBuffer();
 				if (buf == null) {
-					// Currently we have nothing to write, so we stop the writeable
-					// events until we have something to write to the socket channel
-					//selKey.cancel();
+					// Currently we have nothing to write, so we stop the
+					// writeable
+					// events until we have something to write to the socket
+					// channel
+					// selKey.cancel();
 					selKey.interestOps(0);
-					// Update activity timestamp to prevent too early disconnects
+					// Update activity timestamp to prevent too early
+					// disconnects
 					// on slow client connections
 					connection.setLastActivity(System.currentTimeMillis());
 					return;
@@ -159,13 +162,17 @@ class ChannelWriter extends AbstractDaemon
 
 				while (buf != null) // There is data to be send
 				{
-					// Write buffer to socket channel; this method does not block
+					// Write buffer to socket channel; this method does not
+					// block
 					if (socketChannel.write(buf) <= 0) {
-						// Perhaps there is data to be written, but the SocketChannel's
-						// buffer is full, so we stop writing to until the next event.
+						// Perhaps there is data to be written, but the
+						// SocketChannel's
+						// buffer is full, so we stop writing to until the next
+						// event.
 						break;
 					} else {
-						// Retrieve next buffer if available; method may return the same
+						// Retrieve next buffer if available; method may return
+						// the same
 						// buffer instance if it still have some bytes remaining
 						buf = connection.getOutputBuffer();
 					}

@@ -38,13 +38,11 @@ import org.sonews.util.Log;
 /**
  * Represents a newsgroup article.
  * @author Christian Lins
- * @author Denis Schwerdel
+ * @author Dennis Schwerdel
  * @since n3tpd/0.1
  */
 public class Article extends ArticleHead {
 	
-	private User sender;
-
 	/**
 	 * Loads the Article identified by the given ID from the JDBCDatabase.
 	 * @param messageID
@@ -58,7 +56,9 @@ public class Article extends ArticleHead {
 			return null;
 		}
 	}
+
 	private byte[] body = new byte[0];
+	private User sender;
 
 	/**
 	 * Default constructor.

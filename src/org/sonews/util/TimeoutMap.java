@@ -25,42 +25,41 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Implementation of a Map that will loose its stored values after a 
- * configurable amount of time.
- * This class may be used to cache config values for example.
+ * Implementation of a Map that will loose its stored values after a
+ * configurable amount of time. This class may be used to cache config values
+ * for example.
+ * 
  * @author Christian Lins
  * @since sonews/0.5.0
  */
-public class TimeoutMap<K, V> extends ConcurrentHashMap<K, V>
-{
+@SuppressWarnings("serial")
+public class TimeoutMap<K, V> extends ConcurrentHashMap<K, V> {
 
-	private static final long serialVersionUID = 453453467700345L;
 	private int timeout = 60000; // 60 sec
 	private transient Map<K, Long> timeoutMap = new HashMap<K, Long>();
 
 	/**
 	 * Constructor.
-	 * @param timeout Timeout in milliseconds
+	 * 
+	 * @param timeout
+	 *            Timeout in milliseconds
 	 */
-	public TimeoutMap(final int timeout)
-	{
+	public TimeoutMap(final int timeout) {
 		this.timeout = timeout;
 	}
 
 	/**
 	 * Uses default timeout (60 sec).
 	 */
-	public TimeoutMap()
-	{
+	public TimeoutMap() {
 	}
 
 	/**
-	 *
+	 * 
 	 * @param key
 	 * @return true if key is still valid.
 	 */
-	protected boolean checkTimeOut(Object key)
-	{
+	protected boolean checkTimeOut(Object key) {
 		synchronized (this.timeoutMap) {
 			if (this.timeoutMap.containsKey(key)) {
 				long keytime = this.timeoutMap.get(key);
@@ -77,14 +76,12 @@ public class TimeoutMap<K, V> extends ConcurrentHashMap<K, V>
 	}
 
 	@Override
-	public boolean containsKey(Object key)
-	{
+	public boolean containsKey(Object key) {
 		return checkTimeOut(key);
 	}
 
 	@Override
-	public synchronized V get(Object key)
-	{
+	public synchronized V get(Object key) {
 		if (checkTimeOut(key)) {
 			return super.get(key);
 		} else {
@@ -93,8 +90,7 @@ public class TimeoutMap<K, V> extends ConcurrentHashMap<K, V>
 	}
 
 	@Override
-	public V put(K key, V value)
-	{
+	public V put(K key, V value) {
 		synchronized (this.timeoutMap) {
 			removeStaleKeys();
 			this.timeoutMap.put(key, System.currentTimeMillis());
@@ -107,8 +103,7 @@ public class TimeoutMap<K, V> extends ConcurrentHashMap<K, V>
 	 * @return
 	 */
 	@Override
-	public V remove(Object arg0)
-	{
+	public V remove(Object arg0) {
 		synchronized (this.timeoutMap) {
 			this.timeoutMap.remove(arg0);
 			V val = super.remove(arg0);
@@ -116,8 +111,7 @@ public class TimeoutMap<K, V> extends ConcurrentHashMap<K, V>
 		}
 	}
 
-	protected void removeStaleKeys()
-	{
+	protected void removeStaleKeys() {
 		synchronized (this.timeoutMap) {
 			Set<Object> keySet = new HashSet<Object>(this.timeoutMap.keySet());
 			for (Object key : keySet) {

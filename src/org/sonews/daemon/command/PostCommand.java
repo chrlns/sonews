@@ -20,7 +20,6 @@ package org.sonews.daemon.command;
 import java.io.IOException;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.logging.Level;
 import javax.mail.MessagingException;

@@ -230,8 +230,8 @@ public class Dispatcher {
 			// Compose message and send it via given SMTP-Host
 			String smtpHost = Config.inst().get(Config.MLSEND_HOST, "localhost");
 			int smtpPort = Config.inst().get(Config.MLSEND_PORT, 25);
-			String smtpUser = Config.inst().get(Config.MLSEND_USER, "user");
-			String smtpPw = Config.inst().get(Config.MLSEND_PASSWORD, "mysecret");
+			//String smtpUser = Config.inst().get(Config.MLSEND_USER, "user");
+			//String smtpPw = Config.inst().get(Config.MLSEND_PASSWORD, "mysecret");
 			String smtpFrom = Config.inst().get(
 					Config.MLSEND_ADDRESS, article.getHeader(Headers.FROM)[0]);
 

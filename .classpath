@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry kind="src" path="src"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry kind="lib" path="/usr/share/java/commons-codec.jar"/>
-	<classpathentry kind="lib" path="/usr/share/java/glassfish-mail.jar"/>
-	<classpathentry kind="lib" path="/usr/share/java/junit4.jar"/>
+	<classpathentry exported="true" kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry exported="true" kind="lib" path="/usr/share/java/commons-codec.jar"/>
+	<classpathentry exported="true" kind="lib" path="/usr/share/java/glassfish-mail.jar"/>
+	<classpathentry exported="true" kind="lib" path="/usr/share/java/junit4.jar"/>
 	<classpathentry kind="output" path="build/class"/>
 </classpath>

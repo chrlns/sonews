@@ -1,3 +1,20 @@
+/*
+ *   SONEWS News Server
+ *   see AUTHORS for the list of contributors
+ *
+ *   This program is free software: you can redistribute it and/or modify
+ *   it under the terms of the GNU General Public License as published by
+ *   the Free Software Foundation, either version 3 of the License, or
+ *   (at your option) any later version.
+ *
+ *   This program is distributed in the hope that it will be useful,
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *   GNU General Public License for more details.
+ *
+ *   You should have received a copy of the GNU General Public License
+ *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 package org.sonews.storage.impl;
 
 import org.sonews.storage.Storage;
@@ -18,9 +35,14 @@ import org.sonews.storage.StorageProvider;
  * $BASE$: Base directory of the LocalStorage, e.g. /var/share/sonews/stor0
  * $BASE$/news/: contains the news mails, one file per news named by its Message-ID
  * $BASE$/index/: contains index files referencing the files in ../news
+ * 
+ * @since sonews/1.1
+ * @author Christian Lins
  */
 public class LocalStorageProvider implements StorageProvider {
 
+	private LocalStorage storage = new LocalStorage();
+	
 	@Override
 	public boolean isSupported(String uri) {
 		return uri.startsWith("sonews:local");
@@ -28,8 +50,7 @@ public class LocalStorageProvider implements StorageProvider {
 
 	@Override
 	public Storage storage(Thread thread) throws StorageBackendException {
-		// TODO Auto-generated method stub
-		return null;
+		return storage;
 	}
 
 }
