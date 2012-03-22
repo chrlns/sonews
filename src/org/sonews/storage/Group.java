@@ -60,7 +60,7 @@ public class Group {
 		try {
 			return StorageManager.current().getGroups();
 		} catch (StorageBackendException ex) {
-			Log.get().severe(ex.getMessage());
+			Log.get().severe(ex.toString());
 			return null;
 		}
 	}

@@ -41,7 +41,7 @@ import org.sonews.storage.StorageProvider;
  */
 public class LocalStorageProvider implements StorageProvider {
 
-	private LocalStorage storage = new LocalStorage();
+	private LocalStorage storage = new LocalStorage("/var/share/sonews/stor0");
 	
 	@Override
 	public boolean isSupported(String uri) {

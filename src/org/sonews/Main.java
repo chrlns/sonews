@@ -59,8 +59,9 @@ public final class Main {
 		Thread.currentThread().setName("Mainthread");
 
 		// Command line arguments
-		boolean feed = false;  // Enable feeding?
-		boolean mlgw = false;  // Enable Mailinglist gateway?
+		boolean feed   = false;  // Enable feeding?
+		boolean mlgw   = false;  // Enable mailing list gateway?
+		boolean purger = false;  // Enable message purging?
 		int port = -1;
 
 		for (int n = 0; n < args.length; n++) {
@@ -95,17 +96,17 @@ public final class Main {
 					Log.get().warning(strBuf.toString());
 					Log.get().log(Level.INFO, "Main.java", ex);
 				}
-			} else if (args[n].equals("-plugin-storage")) {
-				System.out.println("Warning: -plugin-storage is not implemented!");
+			} else if (args[n].equals("-purger")) {
+				purger = true;
 			} else if (args[n].equals("-v") || args[n].equals("-version")) {
 				// Simply return as the version info is already printed above
 				return;
 			}
 		}
 
-		// Try to load the JDBCDatabase;
-		// Do NOT USE BackendConfig or Log classes before this point because they require
-		// a working JDBCDatabase connection.
+		// Try to load the backend:
+		// Do NOT USE BackendConfig or Log classes before this point because 
+		// they require a working JDBCDatabase connection.
 		try {
 			String provName = Config.inst().get(Config.LEVEL_FILE,
 					Config.STORAGE_PROVIDER, "org.sonews.storage.impl.JDBCDatabaseProvider");
@@ -150,8 +151,10 @@ public final class Main {
 			FeedManager.startFeeding();
 		}
 
-		Purger purger = new Purger();
-		purger.start();
+		if(purger) {
+			Purger purgerDaemon = new Purger();
+			purgerDaemon.start();
+		}
 
 		// Wait for main thread to exit (setDaemon(false))
 		daemon.join();

@@ -17,6 +17,10 @@
  */
 package org.sonews.storage.impl;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -30,6 +34,19 @@ import org.sonews.util.Pair;
 
 /**
  * Local file system storage.
+ * LocalStorage is a simple method for storing news in the local filesystem of
+ * the server running SONEWS.
+ * The news saved one file per news and are properly indexed for faster access.
+ * Although it is not recommended to use LocalStorage for large installations
+ * as the performance will decrease with growing numbers of news stored.
+ * Additionally, there are hard limits dependending on the underlying OS and
+ * filesystem.
+ *
+ * Directory structure:
+ * $BASE$: Base directory of the LocalStorage, e.g. /var/share/sonews/stor0
+ * $BASE$/news/: contains the news mails, one file per news named by its Message-ID
+ * $BASE$/index/: contains index files referencing the files in ../news
+ * 
  * @since sonews/1.1
  * @author Christian Lins
  */
@@ -38,10 +55,38 @@ public class LocalStorage implements Storage {
 	private HashMap<String, Article> articles = new HashMap<String, Article>();
 	private HashMap<String, Integer> groups = new HashMap<String, Integer>();
 	
+	private String base;
+	
+	public LocalStorage(String base) {
+		this.base = base;
+		if(!this.base.endsWith("/")) {
+			this.base += "/";
+		}
+	}
+	
 	@Override
 	public void addArticle(Article art) throws StorageBackendException {
-		// TODO Auto-generated method stub
-
+		try {
+			// TODO: Synchronize this method
+			
+			// Write body and header of Article in separate files on disk
+			File file = new File(base + "news/" + art.getMessageID() + ".body"); 
+			FileOutputStream out = new FileOutputStream(file);
+			out.write(art.getBody());
+			out.flush();
+			out.close();
+			
+			file = new File(base + "news/" + art.getMessageID() + ".head");
+			out = new FileOutputStream(file);
+			out.write(art.getHeaderSource().getBytes("UTF-8"));
+			out.flush();
+			out.close();
+			
+			// Add Article info to in memory cache
+			this.articles.put(art.getMessageID(), art);
+		} catch(IOException ex) {
+			throw new StorageBackendException(ex);
+		}
 	}
 
 	/**
@@ -85,37 +130,32 @@ public class LocalStorage implements Storage {
 	@Override
 	public Article getArticle(long articleIndex, long groupID)
 			throws StorageBackendException {
-		// TODO Auto-generated method stub
-		return null;
+		throw new StorageBackendException("Not implemented!");
 	}
 
 	@Override
 	public List<Pair<Long, ArticleHead>> getArticleHeads(Group group,
 			long first, long last) throws StorageBackendException {
-		// TODO Auto-generated method stub
-		return null;
+		throw new StorageBackendException("Not implemented!");
 	}
 
 	@Override
 	public List<Pair<Long, String>> getArticleHeaders(Group group, long start,
 			long end, String header, String pattern)
 			throws StorageBackendException {
-		// TODO Auto-generated method stub
-		return null;
+		throw new StorageBackendException("Not implemented!");
 	}
 
 	@Override
 	public long getArticleIndex(Article art, Group group)
 			throws StorageBackendException {
-		// TODO Auto-generated method stub
-		return 0;
+		throw new StorageBackendException("Not implemented!");
 	}
 
 	@Override
 	public List<Long> getArticleNumbers(long groupID)
 			throws StorageBackendException {
-		// TODO Auto-generated method stub
-		return null;
+		throw new StorageBackendException("Not implemented!");
 	}
 
 	/**
@@ -154,26 +194,24 @@ public class LocalStorage implements Storage {
 	@Override
 	public double getEventsPerHour(int key, long gid)
 			throws StorageBackendException {
-		return 0;
+		throw new StorageBackendException("Not implemented!");
 	}
 
 	@Override
 	public int getFirstArticleNumber(Group group)
 			throws StorageBackendException {
-		// TODO Auto-generated method stub
-		return 0;
+		throw new StorageBackendException("Not implemented!");
 	}
 
 	@Override
 	public Group getGroup(String name) throws StorageBackendException {
-		// TODO Auto-generated method stub
-		return null;
+		throw new StorageBackendException("Not implemented!");
 	}
 
 	@Override
 	public List<Group> getGroups() throws StorageBackendException {
-		// TODO Auto-generated method stub
-		return null;
+		List<Group> groups = new ArrayList<Group>();
+		throw new StorageBackendException("Not implemented!");
 	}
 
 	/**
@@ -185,13 +223,12 @@ public class LocalStorage implements Storage {
 	@Override
 	public List<String> getGroupsForList(String listAddress)
 			throws StorageBackendException {
-		return null;
+		throw new StorageBackendException("Not implemented!");
 	}
 
 	@Override
 	public int getLastArticleNumber(Group group) throws StorageBackendException {
-		// TODO Auto-generated method stub
-		return 0;
+		throw new StorageBackendException("Not implemented!");
 	}
 
 	/**
@@ -203,8 +240,7 @@ public class LocalStorage implements Storage {
 	@Override
 	public List<String> getListsForGroup(String groupname)
 			throws StorageBackendException {
-		// TODO Auto-generated method stub
-		return null;
+		throw new StorageBackendException("Not implemented!");
 	}
 
 	/**
@@ -214,15 +250,13 @@ public class LocalStorage implements Storage {
 	 */
 	@Override
 	public String getOldestArticle() throws StorageBackendException {
-		// TODO Auto-generated method stub
-		return null;
+		throw new StorageBackendException("Not implemented!");
 	}
 
 	@Override
 	public int getPostingsCount(String groupname)
 			throws StorageBackendException {
-		// TODO Auto-generated method stub
-		return 0;
+		throw new StorageBackendException("Not implemented!");
 	}
 
 	/**
@@ -234,8 +268,7 @@ public class LocalStorage implements Storage {
 	@Override
 	public List<Subscription> getSubscriptions(int type)
 			throws StorageBackendException {
-		// TODO Auto-generated method stub
-		return null;
+		throw new StorageBackendException("Not implemented!");
 	}
 
 	@Override
@@ -257,27 +290,23 @@ public class LocalStorage implements Storage {
 	 */
 	@Override
 	public void purgeGroup(Group group) throws StorageBackendException {
-		// TODO Auto-generated method stub
-
+		throw new StorageBackendException("Not implemented!");
 	}
 
 	@Override
 	public void setConfigValue(String key, String value)
 			throws StorageBackendException {
-		// TODO Auto-generated method stub
-
+		throw new StorageBackendException("Not implemented!");
 	}
 
 	@Override
 	public boolean update(Article article) throws StorageBackendException {
-		// TODO Auto-generated method stub
-		return false;
+		throw new StorageBackendException("Not implemented!");
 	}
 
 	@Override
 	public boolean update(Group group) throws StorageBackendException {
-		// TODO Auto-generated method stub
-		return false;
+		throw new StorageBackendException("Not implemented!");
 	}
 
 	/**
@@ -290,8 +319,7 @@ public class LocalStorage implements Storage {
 	@Override
 	public boolean authenticateUser(String username, char[] password)
 			throws StorageBackendException {
-		// TODO Auto-generated method stub
-		return false;
+		throw new StorageBackendException("Not implemented!");
 	}
 
 }
