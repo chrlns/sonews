@@ -108,6 +108,20 @@
         </copy>
     </target>
 
+	<target name="javadoc" depends="prepare">
+		<javadoc 
+			destdir="build/apidoc">
+			<fileset dir="src" defaultexcludes="yes">
+				<include name="org/sonews/**"/>
+				<exclude name="**/*.htm*"/>
+			</fileset>
+			<fileset dir="." defaultexcludes="yes">
+				<include name="test/**"/>
+				<exclude name="**/*.htm*"/>
+			</fileset>
+        </javadoc>
+    </target>
+
     <!-- clean up -->
     <target name="clean" depends="prepare">
         <delete includeEmptyDirs="true">
