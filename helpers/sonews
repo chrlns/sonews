@@ -9,9 +9,9 @@ CLASSPATH=/usr/share/java/sonews.jar:\
 LOGFILE=/var/log/sonews.log
 PIDFILE=/var/run/sonews.pid
 ARGS="-mlgw -c /etc/sonews/sonews.conf -feed"
-
+RUNAS=sonews
 MAINCLASS=org.sonews.Main
-JAVA=java
+JAVA=sudo -u $RUNAS /usr/bin/java
 
 case "$1" in
   start)
