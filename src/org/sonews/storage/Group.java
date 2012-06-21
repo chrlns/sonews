@@ -17,7 +17,6 @@
  */
 package org.sonews.storage;
 
-import java.sql.SQLException;
 import java.util.List;
 import org.sonews.util.Log;
 import org.sonews.util.Pair;

@@ -33,6 +33,7 @@ import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 import javax.mail.Header;
 import javax.mail.internet.MimeUtility;
+
 import org.sonews.config.Config;
 import org.sonews.util.Log;
 import org.sonews.feed.Subscription;
@@ -359,7 +360,7 @@ public class JDBCDatabase implements Storage {
 		pstmtAddArticle1.execute();
 
 		// Add headers
-		Enumeration headers = article.getAllHeaders();
+		Enumeration<?> headers = article.getAllHeaders();
 		for (int n = 0; headers.hasMoreElements(); n++) {
 			Header header = (Header) headers.nextElement();
 			pstmtAddArticle2.setInt(1, newArticleID);
@@ -507,7 +508,10 @@ public class JDBCDatabase implements Storage {
 
 			this.pstmtDeleteArticle0.setString(1, messageID);
 			int rs = this.pstmtDeleteArticle0.executeUpdate();
-
+			if(rs != 1) {
+				throw new StorageBackendException("Could not delete message " + messageID);
+			}
+			
 			// We do not trust the ON DELETE CASCADE functionality to delete
 			// orphaned references...
 			this.pstmtDeleteArticle1.setString(1, messageID);

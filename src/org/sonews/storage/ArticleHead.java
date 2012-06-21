@@ -83,7 +83,7 @@ public class ArticleHead {
 		this.headerSrc = null;
 	}
 
-	public Enumeration getAllHeaders() {
+	public Enumeration<?> getAllHeaders() {
 		return this.headers.getAllHeaders();
 	}
 
@@ -97,7 +97,7 @@ public class ArticleHead {
 
 		StringBuffer buf = new StringBuffer();
 
-		for (Enumeration en = this.headers.getAllHeaders(); en
+		for (Enumeration<?> en = this.headers.getAllHeaders(); en
 				.hasMoreElements();) {
 			Header entry = (Header) en.nextElement();
 

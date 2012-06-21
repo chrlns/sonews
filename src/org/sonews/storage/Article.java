@@ -96,7 +96,7 @@ public class Article extends ArticleHead {
 			throws IOException, MessagingException {
 		this.headers = new InternetHeaders();
 
-		for (Enumeration e = msg.getAllHeaders(); e.hasMoreElements();) {
+		for (Enumeration<?> e = msg.getAllHeaders(); e.hasMoreElements();) {
 			final Header header = (Header) e.nextElement();
 			this.headers.addHeader(header.getName(), header.getValue());
 		}
