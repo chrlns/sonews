@@ -17,8 +17,12 @@
  */
 package org.sonews.util;
 
+import java.text.DateFormat;
+import java.text.ParseException;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
+
 import org.sonews.daemon.AbstractDaemon;
 import org.sonews.config.Config;
 import org.sonews.storage.Article;
@@ -28,18 +32,18 @@ import org.sonews.storage.StorageBackendException;
 import org.sonews.storage.StorageManager;
 
 /**
- * The purger is started in configurable intervals to search
- * for messages that can be purged. A message must be deleted if its lifetime
- * has exceeded, if it was marked as deleted or if the maximum number of
- * articles in the database is reached.
+ * The purger is started in configurable intervals to search for messages that
+ * can be purged. A message must be deleted if its lifetime has exceeded, if it
+ * was marked as deleted or if the maximum number of articles in the database is
+ * reached.
+ * 
  * @author Christian Lins
  * @since sonews/0.5.0
  */
 public class Purger extends AbstractDaemon {
 
 	/**
-	 * Loops through all messages and deletes them if their time
-	 * has come.
+	 * Loops through all messages and deletes them if their time has come.
 	 */
 	@Override
 	public void run() {
@@ -57,8 +61,11 @@ public class Purger extends AbstractDaemon {
 		}
 	}
 
-	private void purgeDeleted()
-			throws StorageBackendException {
+	/**
+	 * Purge messages from storage backend that have been marked as deleted.
+	 * @throws StorageBackendException
+	 */
+	private void purgeDeleted() throws StorageBackendException {
 		List<Group> groups = StorageManager.current().getGroups();
 		for (Group channel : groups) {
 			if (!(channel instanceof Group)) {
@@ -68,33 +75,38 @@ public class Purger extends AbstractDaemon {
 			Group group = (Group) channel;
 			// Look for groups that are marked as deleted
 			if (group.isDeleted()) {
-				List<Long> ids = StorageManager.current().getArticleNumbers(group.getInternalID());
+				List<Long> ids = StorageManager.current().getArticleNumbers(
+						group.getInternalID());
 				if (ids.size() == 0) {
 					StorageManager.current().purgeGroup(group);
 					Log.get().info("Group " + group.getName() + " purged.");
 				}
 
 				for (int n = 0; n < ids.size() && n < 10; n++) {
-					Article art = StorageManager.current().getArticle(ids.get(n), group.getInternalID());
+					Article art = StorageManager.current().getArticle(
+							ids.get(n), group.getInternalID());
 					StorageManager.current().delete(art.getMessageID());
-					Log.get().info("Article " + art.getMessageID() + " purged.");
+					Log.get()
+							.info("Article " + art.getMessageID() + " purged.");
 				}
 			}
 		}
 	}
 
-	private void purgeOutdated()
-			throws InterruptedException, StorageBackendException {
-		long articleMaximum =
-				Config.inst().get("sonews.article.maxnum", Long.MAX_VALUE);
-		long lifetime =
-				Config.inst().get("sonews.article.lifetime", -1);
+	/**
+	 * Purge messages that are older then the given treshold.
+	 * @throws InterruptedException
+	 * @throws StorageBackendException
+	 */
+	private void purgeOutdated() throws InterruptedException, StorageBackendException {
+		long articleMaximum = Config.inst().get("sonews.article.maxnum",
+				Long.MAX_VALUE);
+		long lifetime = Config.inst().get("sonews.article.lifetime", -1);
 
 		if (lifetime > 0 || articleMaximum < Stats.getInstance().getNumberOfNews()) {
 			Log.get().info("Purging old messages...");
 			String mid = StorageManager.current().getOldestArticle();
-			if (mid == null) // No articles in the database
-			{
+			if (mid == null) { // No articles in the database
 				return;
 			}
 
@@ -102,9 +114,12 @@ public class Purger extends AbstractDaemon {
 			long artDate = 0;
 			String dateStr = art.getHeader(Headers.DATE)[0];
 			try {
-				artDate = Date.parse(dateStr) / 1000 / 60 / 60 / 24;
-			} catch (IllegalArgumentException ex) {
-				Log.get().warning("Could not parse date string: " + dateStr + " " + ex);
+				DateFormat dateFormat = DateFormat.getDateInstance(
+						DateFormat.LONG, Locale.US);
+				artDate = dateFormat.parse(dateStr).getTime() / 1000 / 3600 / 24;
+			} catch (ParseException ex) {
+				Log.get().warning(
+						"Could not parse date string: " + dateStr + " " + ex);
 			}
 
 			// Should we delete the message because of its age or because the
