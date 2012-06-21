@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map.Entry;
 
 import org.sonews.feed.Subscription;
 import org.sonews.storage.Article;
@@ -30,6 +31,7 @@ import org.sonews.storage.ArticleHead;
 import org.sonews.storage.Group;
 import org.sonews.storage.Storage;
 import org.sonews.storage.StorageBackendException;
+import org.sonews.util.Log;
 import org.sonews.util.Pair;
 
 /**
@@ -62,28 +64,49 @@ public class LocalStorage implements Storage {
 		if(!this.base.endsWith("/")) {
 			this.base += "/";
 		}
+		
+		// Load groups
+		readGroupsFile();
+		
+		// Load news indices
+	}
+	
+	private void writeGroupsFile() {
+		try {
+			File file = new File(base + "groups");
+			FileOutputStream out = new FileOutputStream(file);
+			for(Entry<String,Integer> entry : this.groups.entrySet()) {
+				byte[] raw = entry.getKey().getBytes();
+			}
+		} catch(IOException ex) {
+			
+		}
+	}
+	
+	private void readGroupsFile() {
+		
 	}
 	
 	@Override
 	public void addArticle(Article art) throws StorageBackendException {
 		try {
-			// TODO: Synchronize this method
-			
-			// Write body and header of Article in separate files on disk
-			File file = new File(base + "news/" + art.getMessageID() + ".body"); 
-			FileOutputStream out = new FileOutputStream(file);
-			out.write(art.getBody());
-			out.flush();
-			out.close();
-			
-			file = new File(base + "news/" + art.getMessageID() + ".head");
-			out = new FileOutputStream(file);
-			out.write(art.getHeaderSource().getBytes("UTF-8"));
-			out.flush();
-			out.close();
-			
-			// Add Article info to in memory cache
-			this.articles.put(art.getMessageID(), art);
+			synchronized(this) {
+				// Write body and header of Article in separate files on disk
+				File file = new File(base + "news/" + art.getMessageID() + ".body"); 
+				FileOutputStream out = new FileOutputStream(file);
+				out.write(art.getBody());
+				out.flush();
+				out.close();
+				
+				file = new File(base + "news/" + art.getMessageID() + ".head");
+				out = new FileOutputStream(file);
+				out.write(art.getHeaderSource().getBytes("UTF-8"));
+				out.flush();
+				out.close();
+				
+				// Add Article info to in memory cache
+				this.articles.put(art.getMessageID(), art);
+			}
 		} catch(IOException ex) {
 			throw new StorageBackendException(ex);
 		}
@@ -205,13 +228,23 @@ public class LocalStorage implements Storage {
 
 	@Override
 	public Group getGroup(String name) throws StorageBackendException {
-		throw new StorageBackendException("Not implemented!");
+		if(this.groups.containsKey(name)) {
+			int groupID = this.groups.get(name);
+			return new Group(name, groupID, 0); // TODO flags are always zero
+		} else {
+			Log.get().info("Group " + name + " not found in configuration");
+			return null;
+		}
 	}
 
 	@Override
 	public List<Group> getGroups() throws StorageBackendException {
 		List<Group> groups = new ArrayList<Group>();
-		throw new StorageBackendException("Not implemented!");
+		for(Entry<String, Integer> entry : this.groups.entrySet()) {
+			// TODO Flags are always zero
+			groups.add(new Group(entry.getKey(), entry.getValue(), 0));
+		}
+		return groups;
 	}
 
 	/**
