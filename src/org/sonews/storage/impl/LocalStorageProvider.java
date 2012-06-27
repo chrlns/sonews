@@ -17,6 +17,9 @@
  */
 package org.sonews.storage.impl;
 
+import java.io.File;
+
+import org.sonews.config.Config;
 import org.sonews.storage.Storage;
 import org.sonews.storage.StorageBackendException;
 import org.sonews.storage.StorageProvider;
@@ -41,7 +44,20 @@ import org.sonews.storage.StorageProvider;
  */
 public class LocalStorageProvider implements StorageProvider {
 
-	private LocalStorage storage = new LocalStorage("/var/share/sonews/stor0");
+	private LocalStorage storage;
+	
+	public LocalStorageProvider() {
+		String storageBase = Config.inst().
+			get(Config.LEVEL_FILE, Config.STORAGE_DATABASE,  "sonews/stor0");
+		
+		// If the directory for the local storage does not exist yet,
+		// create it!
+		File dir = new File(storageBase);
+		if(!dir.exists()) {
+			dir.mkdirs();
+		}
+		this.storage = new LocalStorage(storageBase);
+	}
 	
 	@Override
 	public boolean isSupported(String uri) {

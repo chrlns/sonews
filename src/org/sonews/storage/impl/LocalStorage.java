@@ -17,13 +17,19 @@
  */
 package org.sonews.storage.impl;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.logging.Level;
 
 import org.sonews.feed.Subscription;
 import org.sonews.storage.Article;
@@ -54,8 +60,15 @@ import org.sonews.util.Pair;
  */
 public class LocalStorage implements Storage {
 
-	private HashMap<String, Article> articles = new HashMap<String, Article>();
-	private HashMap<String, Integer> groups = new HashMap<String, Integer>();
+	/** Memory cache of loaded articles. Key is the Message-ID of the articles */
+	private Map<String, Article> articles = new HashMap<String, Article>();
+	
+	/** Map<Groupname, Groupflags> */
+	private Map<String, Integer> groups = new HashMap<String, Integer>();
+	
+	/** Map<Groupname, Map<Art. Idx. in Group, Message-ID>> */
+	private Map<String, Map<Integer, String>> groupArtIdxMsgID 
+		= new HashMap<String, Map<Integer,String>>();
 	
 	private String base;
 	
@@ -68,23 +81,52 @@ public class LocalStorage implements Storage {
 		// Load groups
 		readGroupsFile();
 		
-		// Load news indices
+		// Build news indices
+		buildIndices();
+	}
+	
+	private void buildIndices() {
+		
 	}
 	
 	private void writeGroupsFile() {
 		try {
 			File file = new File(base + "groups");
 			FileOutputStream out = new FileOutputStream(file);
+			byte[] buf;
 			for(Entry<String,Integer> entry : this.groups.entrySet()) {
-				byte[] raw = entry.getKey().getBytes();
+				buf = entry.getKey().getBytes("UTF-8");
+				out.write(buf);
+				out.write(";".getBytes("UTF-8"));
+				buf = Integer.toString(entry.getValue()).getBytes("UTF-8");
+				out.write(buf);
+				out.write("\n".getBytes("UTF-8"));
 			}
+			out.flush();
+			out.close();
 		} catch(IOException ex) {
-			
+			Log.get().log(Level.SEVERE, ex.getLocalizedMessage(), ex);
 		}
 	}
 	
 	private void readGroupsFile() {
-		
+		try {
+			File file = new File(base + "groups");
+			if(file.exists()) {
+				BufferedReader in = new BufferedReader(
+						new InputStreamReader(
+								new FileInputStream(file), 
+								Charset.forName("UTF-8")));
+				String line;
+				while((line = in.readLine()) != null) {
+					String[] entry = line.split(";");
+					this.groups.put(entry[0], Integer.parseInt(entry[1]));
+				}
+				in.close();
+			}
+		} catch(IOException ex) {
+			Log.get().log(Level.SEVERE, ex.getLocalizedMessage(), ex);
+		}
 	}
 	
 	@Override
@@ -123,7 +165,10 @@ public class LocalStorage implements Storage {
 	@Override
 	public void addGroup(String groupname, int flags)
 			throws StorageBackendException {
-		this.groups.put(groupname, flags);
+		synchronized(this) {
+			this.groups.put(groupname, flags);
+			writeGroupsFile();
+		}
 	}
 
 	@Override
@@ -184,7 +229,7 @@ public class LocalStorage implements Storage {
 	/**
 	 * Not yet supported.
 	 * @param key
-	 * @return
+	 * @return Always null
 	 * @throws StorageBackendException
 	 */
 	@Override
@@ -259,12 +304,15 @@ public class LocalStorage implements Storage {
 		throw new StorageBackendException("Not implemented!");
 	}
 
+	/**
+	 * @return Index of the newest article in group, 0 if non existing
+	 */
 	@Override
 	public int getLastArticleNumber(Group group) throws StorageBackendException {
-		throw new StorageBackendException("Not implemented!");
+		return 0; // TODO
 	}
 
-	/**
+	/**throw new StorageBackendException("Not implemented!");
 	 * Not yet supported.
 	 * @param groupname
 	 * @return
