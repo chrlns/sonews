@@ -27,7 +27,6 @@ import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetHeaders;
 import org.sonews.config.Config;
 import org.sonews.util.Log;
-import org.sonews.mlgw.Dispatcher;
 import org.sonews.storage.Article;
 import org.sonews.storage.Group;
 import org.sonews.daemon.NNTPConnection;
@@ -237,7 +236,7 @@ public class PostCommand implements Command {
 						if (group.isMailingList() && !conn.isLocalConnection()) {
 							// Send to mailing list; the Dispatcher writes
 							// statistics to database
-							success = Dispatcher.toList(article, group.getName());
+							// FIXME success = Dispatcher.toList(article, group.getName());
 						} else {
 							// Store in database
 							if (!StorageManager.current().isArticleExisting(article.getMessageID())) {
@@ -258,15 +257,7 @@ public class PostCommand implements Command {
 				} else {
 					conn.println("441 newsgroup not found or configuration error");
 				}
-			} catch (AddressException ex) {
-				Log.get().warning(ex.getMessage());
-				conn.println("441 invalid sender address");
-			} catch (MessagingException ex) {
-				// A MessageException is thrown when the sender email address is
-				// invalid or something is wrong with the SMTP server.
-				System.err.println(ex.getLocalizedMessage());
-				conn.println("441 " + ex.getClass().getCanonicalName() + ": " + ex.getLocalizedMessage());
-			} catch (StorageBackendException ex) {
+		} catch (StorageBackendException ex) {
 				ex.printStackTrace();
 				conn.println("500 internal server error");
 			}

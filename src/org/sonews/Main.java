@@ -27,8 +27,6 @@ import org.sonews.daemon.ChannelLineBuffers;
 import org.sonews.daemon.CommandSelector;
 import org.sonews.daemon.Connections;
 import org.sonews.daemon.NNTPDaemon;
-import org.sonews.feed.FeedManager;
-import org.sonews.mlgw.MailPoller;
 import org.sonews.storage.StorageBackendException;
 import org.sonews.storage.StorageManager;
 import org.sonews.storage.StorageProvider;
@@ -140,16 +138,6 @@ public final class Main {
 
 		// Start Connections purger thread...
 		Connections.getInstance().start();
-
-		// Start mailinglist gateway...
-		if (mlgw) {
-			new MailPoller().start();
-		}
-
-		// Start feeds
-		if (feed) {
-			FeedManager.startFeeding();
-		}
 
 		if(purger) {
 			Purger purgerDaemon = new Purger();

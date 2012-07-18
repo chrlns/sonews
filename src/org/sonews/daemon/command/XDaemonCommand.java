@@ -22,10 +22,10 @@ import java.net.InetSocketAddress;
 import java.util.List;
 import org.sonews.config.Config;
 import org.sonews.daemon.NNTPConnection;
-import org.sonews.storage.StorageBackendException;
-import org.sonews.storage.StorageManager;
 import org.sonews.feed.FeedManager;
 import org.sonews.feed.Subscription;
+import org.sonews.storage.StorageBackendException;
+import org.sonews.storage.StorageManager;
 import org.sonews.storage.Group;
 import org.sonews.util.Stats;
 
