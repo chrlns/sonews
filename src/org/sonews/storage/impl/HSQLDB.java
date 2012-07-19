@@ -23,36 +23,37 @@ import org.sonews.storage.Storage;
 
 /**
  * A specialized JDBCDatabase supporting HSQLDB.
+ * 
  * @author Christian Lins
  * @since sonews/1.1
  */
 public class HSQLDB extends JDBCDatabase implements Storage {
 
-	@Override
-	protected void prepareAddGroupStatement() throws SQLException {
-		this.pstmtAddGroup0 = conn.prepareStatement(
-				"INSERT INTO groups (name, flags, group_id) VALUES (?, ?, IDENTITY())");
-	}
+    @Override
+    protected void prepareAddGroupStatement() throws SQLException {
+        this.pstmtAddGroup0 = conn
+                .prepareStatement("INSERT INTO groups (name, flags, group_id) VALUES (?, ?, IDENTITY())");
+    }
 
-	@Override
-	protected void prepareCountGroupsStatement() throws SQLException {
-		this.pstmtCountGroups = conn.prepareStatement(
-				"SELECT Count(group_id) FROM groups WHERE "
-				+ "BITAND(flags, " + Group.DELETED + ") = 0");
-	}
+    @Override
+    protected void prepareCountGroupsStatement() throws SQLException {
+        this.pstmtCountGroups = conn
+                .prepareStatement("SELECT Count(group_id) FROM groups WHERE "
+                        + "BITAND(flags, " + Group.DELETED + ") = 0");
+    }
 
-	@Override
-	protected void prepareGetPostingsCountStatement() throws SQLException {
-		this.pstmtGetPostingsCount = conn.prepareStatement(
-				"SELECT Count(*) FROM postings JOIN groups "
-				+ "ON groups.name = ? GROUP BY groups.name");
-	}
+    @Override
+    protected void prepareGetPostingsCountStatement() throws SQLException {
+        this.pstmtGetPostingsCount = conn
+                .prepareStatement("SELECT Count(*) FROM postings JOIN groups "
+                        + "ON groups.name = ? GROUP BY groups.name");
+    }
 
-	@Override
-	protected void prepareGetSubscriptionsStatement() throws SQLException {
-		this.pstmtGetSubscriptions = conn.prepareStatement(
-				"SELECT * FROM (SELECT feedtype, host, port, peer_id FROM peers JOIN "
-				+ "peer_subscriptions ON peers.peer_id = peer_subscriptions.peer_id) "
-				+ "JOIN groups ON group_id = groups.group_id WHERE feedtype = ?");
-	}
+    @Override
+    protected void prepareGetSubscriptionsStatement() throws SQLException {
+        this.pstmtGetSubscriptions = conn
+                .prepareStatement("SELECT * FROM (SELECT feedtype, host, port, peer_id FROM peers JOIN "
+                        + "peer_subscriptions ON peers.peer_id = peer_subscriptions.peer_id) "
+                        + "JOIN groups ON group_id = groups.group_id WHERE feedtype = ?");
+    }
 }

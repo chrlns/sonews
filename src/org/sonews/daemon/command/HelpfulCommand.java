@@ -19,16 +19,15 @@
 package org.sonews.daemon.command;
 
 /**
- *
+ * 
  * @since sonews/1.1
  * @author Christian Lins
  */
-public interface HelpfulCommand extends Command
-{
+public interface HelpfulCommand extends Command {
 
-	/**
-	 * @return A short description of this command, that is
-	 * used within the output of the HELP command.
-	 */
-	String getHelpString();
+    /**
+     * @return A short description of this command, that is used within the
+     *         output of the HELP command.
+     */
+    String getHelpString();
 }

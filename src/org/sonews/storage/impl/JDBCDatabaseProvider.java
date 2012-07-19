@@ -25,34 +25,33 @@ import org.sonews.storage.StorageBackendException;
 import org.sonews.storage.StorageProvider;
 
 /**
- *
+ * 
  * @author Christian Lins
  * @since sonews/1.0
  */
 public class JDBCDatabaseProvider implements StorageProvider {
 
-	protected static final Map<Thread, JDBCDatabase> instances =
-			new ConcurrentHashMap<Thread, JDBCDatabase>();
+    protected static final Map<Thread, JDBCDatabase> instances = new ConcurrentHashMap<Thread, JDBCDatabase>();
 
-	@Override
-	public boolean isSupported(String uri) {
-		return uri.startsWith("jdbc:mysql") || uri.startsWith("jdbc:postgresql");
-	}
+    @Override
+    public boolean isSupported(String uri) {
+        return uri.startsWith("jdbc:mysql")
+                || uri.startsWith("jdbc:postgresql");
+    }
 
-	@Override
-	public Storage storage(Thread thread)
-			throws StorageBackendException {
-		try {
-			if (!instances.containsKey(Thread.currentThread())) {
-				JDBCDatabase db = new JDBCDatabase();
-				db.arise();
-				instances.put(Thread.currentThread(), db);
-				return db;
-			} else {
-				return instances.get(Thread.currentThread());
-			}
-		} catch (SQLException ex) {
-			throw new StorageBackendException(ex);
-		}
-	}
+    @Override
+    public Storage storage(Thread thread) throws StorageBackendException {
+        try {
+            if (!instances.containsKey(Thread.currentThread())) {
+                JDBCDatabase db = new JDBCDatabase();
+                db.arise();
+                instances.put(Thread.currentThread(), db);
+                return db;
+            } else {
+                return instances.get(Thread.currentThread());
+            }
+        } catch (SQLException ex) {
+            throw new StorageBackendException(ex);
+        }
+    }
 }

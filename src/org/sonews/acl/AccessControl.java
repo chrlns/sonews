@@ -18,11 +18,11 @@
 package org.sonews.acl;
 
 /**
- *
+ * 
  * @author Christian Lins
  * @since sonews/1.1
  */
 public interface AccessControl {
 
-	boolean hasPermission(String user, char[] secret, String permission);
+    boolean hasPermission(String user, char[] secret, String permission);
 }

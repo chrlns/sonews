@@ -24,70 +24,71 @@ import org.sonews.storage.StorageBackendException;
 
 /**
  * Implementation of the STAT command.
+ * 
  * @author Christian Lins
  * @since sonews/0.5.0
  */
 public class StatCommand implements Command {
 
-	@Override
-	public String[] getSupportedCommandStrings() {
-		return new String[]{"STAT"};
-	}
+    @Override
+    public String[] getSupportedCommandStrings() {
+        return new String[] { "STAT" };
+    }
 
-	@Override
-	public boolean hasFinished() {
-		return true;
-	}
+    @Override
+    public boolean hasFinished() {
+        return true;
+    }
 
-	@Override
-	public String impliedCapability() {
-		return null;
-	}
+    @Override
+    public String impliedCapability() {
+        return null;
+    }
 
-	@Override
-	public boolean isStateful() {
-		return false;
-	}
+    @Override
+    public boolean isStateful() {
+        return false;
+    }
 
-	// TODO: Method has various exit points => Refactor!
-	@Override
-	public void processLine(NNTPConnection conn, final String line, byte[] raw)
-			throws IOException, StorageBackendException {
-		final String[] command = line.split(" ");
+    // TODO: Method has various exit points => Refactor!
+    @Override
+    public void processLine(NNTPConnection conn, final String line, byte[] raw)
+            throws IOException, StorageBackendException {
+        final String[] command = line.split(" ");
 
-		Article article = null;
-		if (command.length == 1) {
-			article = conn.getCurrentArticle();
-			if (article == null) {
-				conn.println("420 no current article has been selected");
-				return;
-			}
-		} else if (command[1].matches(NNTPConnection.MESSAGE_ID_PATTERN)) {
-			// Message-ID
-			article = Article.getByMessageID(command[1]);
-			if (article == null) {
-				conn.println("430 no such article found");
-				return;
-			}
-		} else {
-			// Message Number
-			try {
-				long aid = Long.parseLong(command[1]);
-				article = conn.getCurrentChannel().getArticle(aid);
-			} catch (NumberFormatException ex) {
-				ex.printStackTrace();
-			} catch (StorageBackendException ex) {
-				ex.printStackTrace();
-			}
-			if (article == null) {
-				conn.println("423 no such article number in this group");
-				return;
-			}
-			conn.setCurrentArticle(article);
-		}
+        Article article = null;
+        if (command.length == 1) {
+            article = conn.getCurrentArticle();
+            if (article == null) {
+                conn.println("420 no current article has been selected");
+                return;
+            }
+        } else if (command[1].matches(NNTPConnection.MESSAGE_ID_PATTERN)) {
+            // Message-ID
+            article = Article.getByMessageID(command[1]);
+            if (article == null) {
+                conn.println("430 no such article found");
+                return;
+            }
+        } else {
+            // Message Number
+            try {
+                long aid = Long.parseLong(command[1]);
+                article = conn.getCurrentChannel().getArticle(aid);
+            } catch (NumberFormatException ex) {
+                ex.printStackTrace();
+            } catch (StorageBackendException ex) {
+                ex.printStackTrace();
+            }
+            if (article == null) {
+                conn.println("423 no such article number in this group");
+                return;
+            }
+            conn.setCurrentArticle(article);
+        }
 
-		conn.println("223 " + conn.getCurrentChannel().getIndexOf(article) + " "
-				+ article.getMessageID()
-				+ " article retrieved - request text separately");
-	}
+        conn.println("223 " + conn.getCurrentChannel().getIndexOf(article)
+                + " " + article.getMessageID()
+                + " article retrieved - request text separately");
+    }
 }

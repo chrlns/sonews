@@ -29,114 +29,117 @@ import org.sonews.util.io.Resource;
 
 /**
  * Database setup utility class.
+ * 
  * @author Christian Lins
  * @since sonews/0.5.0
  */
 public final class DatabaseSetup {
 
-	private static final Map<String, String> templateMap = new HashMap<String, String>();
-	private static final Map<String, StringTemplate> urlMap = new HashMap<String, StringTemplate>();
-	private static final Map<String, String> driverMap = new HashMap<String, String>();
+    private static final Map<String, String> templateMap = new HashMap<String, String>();
+    private static final Map<String, StringTemplate> urlMap = new HashMap<String, StringTemplate>();
+    private static final Map<String, String> driverMap = new HashMap<String, String>();
 
-	static {
-		templateMap.put("1", "helpers/database_mysql5_tmpl.sql");
-		templateMap.put("2", "helpers/database_postgresql8_tmpl.sql");
-		templateMap.put("3", "helpers/database_hsqldb_tmpl.sql");
+    static {
+        templateMap.put("1", "helpers/database_mysql5_tmpl.sql");
+        templateMap.put("2", "helpers/database_postgresql8_tmpl.sql");
+        templateMap.put("3", "helpers/database_hsqldb_tmpl.sql");
 
-		urlMap.put("1", new StringTemplate("jdbc:mysql://%HOSTNAME/%DB"));
-		urlMap.put("2", new StringTemplate("jdbc:postgresql://%HOSTNAME/%DB"));
+        urlMap.put("1", new StringTemplate("jdbc:mysql://%HOSTNAME/%DB"));
+        urlMap.put("2", new StringTemplate("jdbc:postgresql://%HOSTNAME/%DB"));
 
-		driverMap.put("1", "com.mysql.jdbc.Driver");
-		driverMap.put("2", "org.postgresql.Driver");
-		driverMap.put("3", "org.hsqldb.jdbcDriver");
-	}
+        driverMap.put("1", "com.mysql.jdbc.Driver");
+        driverMap.put("2", "org.postgresql.Driver");
+        driverMap.put("3", "org.hsqldb.jdbcDriver");
+    }
 
-	public static void main(String[] args)
-			throws Exception {
-		
-		loadJDBCDriver();
+    public static void main(String[] args) throws Exception {
 
-		if (args.length == 0) {
-			System.out.println("sonews Database setup helper");
-			System.out.println("This program will create a initial database table structure");
-			System.out.println("for the sonews Newsserver.");
-			System.out.println("You need to create a database and a db user manually before!");
+        loadJDBCDriver();
 
-			System.out.println("Select DBMS type:");
-			System.out.println("[1] MySQL 5.x or higher");
-			System.out.println("[2] PostgreSQL 8.x or higher");
-			System.out.print("Your choice: ");
+        if (args.length == 0) {
+            System.out.println("sonews Database setup helper");
+            System.out
+                    .println("This program will create a initial database table structure");
+            System.out.println("for the sonews Newsserver.");
+            System.out
+                    .println("You need to create a database and a db user manually before!");
 
-			BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
-			String dbmsType = in.readLine();
-			String tmplName = templateMap.get(dbmsType);
-			if (tmplName == null) {
-				System.err.println("Invalid choice. Try again you fool!");
-				main(args);
-				return;
-			}
+            System.out.println("Select DBMS type:");
+            System.out.println("[1] MySQL 5.x or higher");
+            System.out.println("[2] PostgreSQL 8.x or higher");
+            System.out.print("Your choice: ");
 
-			String tmpl = Resource.getAsString(tmplName, true);
+            BufferedReader in = new BufferedReader(new InputStreamReader(
+                    System.in));
+            String dbmsType = in.readLine();
+            String tmplName = templateMap.get(dbmsType);
+            if (tmplName == null) {
+                System.err.println("Invalid choice. Try again you fool!");
+                main(args);
+                return;
+            }
 
-			System.out.print("Database server hostname (e.g. localhost): ");
-			String dbHostname = in.readLine();
+            String tmpl = Resource.getAsString(tmplName, true);
 
-			System.out.print("Database name: ");
-			String dbName = in.readLine();
+            System.out.print("Database server hostname (e.g. localhost): ");
+            String dbHostname = in.readLine();
 
-			System.out.print("Give name of DB user that can create tables: ");
-			String dbUser = in.readLine();
+            System.out.print("Database name: ");
+            String dbName = in.readLine();
 
-			System.out.print("Password: ");
-			String dbPassword = in.readLine();
+            System.out.print("Give name of DB user that can create tables: ");
+            String dbUser = in.readLine();
 
-			String url = urlMap.get(dbmsType).set("HOSTNAME", dbHostname).set("DB", dbName).toString();
-			createTables(tmpl, url, dbUser, dbPassword);
+            System.out.print("Password: ");
+            String dbPassword = in.readLine();
 
-			// TODO: Create config file
+            String url = urlMap.get(dbmsType).set("HOSTNAME", dbHostname)
+                    .set("DB", dbName).toString();
+            createTables(tmpl, url, dbUser, dbPassword);
 
-		} else if(args.length == 4) {
-			String tmplName = args[0];
-			String url = args[1];
-			String dbUser = args[2];
-			String dbPassword = args[3];
+            // TODO: Create config file
 
-			String tmpl = Resource.getAsString(tmplName, true);
-			createTables(tmpl, url, dbUser, dbPassword);
-		} else {
-			System.out.println("Wrong number of parameters!");
-		}
+        } else if (args.length == 4) {
+            String tmplName = args[0];
+            String url = args[1];
+            String dbUser = args[2];
+            String dbPassword = args[3];
 
-		System.out.println("Ok");
-	}
+            String tmpl = Resource.getAsString(tmplName, true);
+            createTables(tmpl, url, dbUser, dbPassword);
+        } else {
+            System.out.println("Wrong number of parameters!");
+        }
 
-	public static void createTables(String tmpl, String url, String dbUser, String dbPassword)
-			throws SQLException {
-		Connection conn =
-				DriverManager.getConnection(url, dbUser, dbPassword);
+        System.out.println("Ok");
+    }
 
-		String[] tmplChunks = tmpl.split(";");
+    public static void createTables(String tmpl, String url, String dbUser,
+            String dbPassword) throws SQLException {
+        Connection conn = DriverManager.getConnection(url, dbUser, dbPassword);
 
-		for (String chunk : tmplChunks) {
-			if (chunk.trim().equals("")) {
-				continue;
-			}
+        String[] tmplChunks = tmpl.split(";");
 
-			Statement stmt = conn.createStatement();
-			stmt.execute(chunk);
-		}
+        for (String chunk : tmplChunks) {
+            if (chunk.trim().equals("")) {
+                continue;
+            }
 
-		conn.commit();
-		conn.close();
-	}
+            Statement stmt = conn.createStatement();
+            stmt.execute(chunk);
+        }
 
-	public static void loadJDBCDriver() {
-		for(String className : driverMap.values()) {
-			try {
-				Class.forName(className);
-			} catch (ClassNotFoundException ex) {
-				System.out.println("Could not load JDBC driver: " + className);
-			}
-		}
-	}
+        conn.commit();
+        conn.close();
+    }
+
+    public static void loadJDBCDriver() {
+        for (String className : driverMap.values()) {
+            try {
+                Class.forName(className);
+            } catch (ClassNotFoundException ex) {
+                System.out.println("Could not load JDBC driver: " + className);
+            }
+        }
+    }
 }

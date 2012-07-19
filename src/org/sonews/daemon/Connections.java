@@ -32,129 +32,134 @@ import java.util.ListIterator;
 import java.util.Map;
 
 /**
- * Daemon thread collecting all NNTPConnection instances. The thread
- * checks periodically if there are stale/timed out connections and
- * removes and purges them properly.
+ * Daemon thread collecting all NNTPConnection instances. The thread checks
+ * periodically if there are stale/timed out connections and removes and purges
+ * them properly.
+ * 
  * @author Christian Lins
  * @since sonews/0.5.0
  */
-public final class Connections extends AbstractDaemon
-{
+public final class Connections extends AbstractDaemon {
 
-	private static final Connections instance = new Connections();
+    private static final Connections instance = new Connections();
 
-	/**
-	 * @return Active Connections instance.
-	 */
-	public static Connections getInstance()
-	{
-		return Connections.instance;
-	}
-	private final List<NNTPConnection> connections = new ArrayList<NNTPConnection>();
-	private final Map<SocketChannel, NNTPConnection> connByChannel = new HashMap<SocketChannel, NNTPConnection>();
+    /**
+     * @return Active Connections instance.
+     */
+    public static Connections getInstance() {
+        return Connections.instance;
+    }
 
-	private Connections()
-	{
-		setName("Connections");
-	}
+    private final List<NNTPConnection> connections = new ArrayList<NNTPConnection>();
+    private final Map<SocketChannel, NNTPConnection> connByChannel = new HashMap<SocketChannel, NNTPConnection>();
 
-	/**
-	 * Adds the given NNTPConnection to the Connections management.
-	 * @param conn
-	 * @see org.sonews.daemon.NNTPConnection
-	 */
-	public void add(final NNTPConnection conn)
-	{
-		synchronized (this.connections) {
-			this.connections.add(conn);
-			this.connByChannel.put(conn.getSocketChannel(), conn);
-		}
-	}
+    private Connections() {
+        setName("Connections");
+    }
 
-	/**
-	 * @param channel
-	 * @return NNTPConnection instance that is associated with the given
-	 * SocketChannel.
-	 */
-	public NNTPConnection get(final SocketChannel channel)
-	{
-		synchronized (this.connections) {
-			return this.connByChannel.get(channel);
-		}
-	}
+    /**
+     * Adds the given NNTPConnection to the Connections management.
+     * 
+     * @param conn
+     * @see org.sonews.daemon.NNTPConnection
+     */
+    public void add(final NNTPConnection conn) {
+        synchronized (this.connections) {
+            this.connections.add(conn);
+            this.connByChannel.put(conn.getSocketChannel(), conn);
+        }
+    }
 
-	int getConnectionCount(String remote)
-	{
-		int cnt = 0;
-		synchronized (this.connections) {
-			for (NNTPConnection conn : this.connections) {
-				assert conn != null;
-				assert conn.getSocketChannel() != null;
+    /**
+     * @param channel
+     * @return NNTPConnection instance that is associated with the given
+     *         SocketChannel.
+     */
+    public NNTPConnection get(final SocketChannel channel) {
+        synchronized (this.connections) {
+            return this.connByChannel.get(channel);
+        }
+    }
 
-				Socket socket = conn.getSocketChannel().socket();
-				if (socket != null) {
-					InetSocketAddress sockAddr = (InetSocketAddress) socket.getRemoteSocketAddress();
-					if (sockAddr != null) {
-						if (sockAddr.getHostName().equals(remote)) {
-							cnt++;
-						}
-					}
-				} // if(socket != null)
-			}
-		}
-		return cnt;
-	}
+    int getConnectionCount(String remote) {
+        int cnt = 0;
+        synchronized (this.connections) {
+            for (NNTPConnection conn : this.connections) {
+                assert conn != null;
+                assert conn.getSocketChannel() != null;
 
-	/**
-	 * Run loops. Checks periodically for timed out connections and purged them
-	 * from the lists.
-	 */
-	@Override
-	public void run()
-	{
-		while (isRunning()) {
-			int timeoutMillis = 1000 * Config.inst().get(Config.TIMEOUT, 180);
+                Socket socket = conn.getSocketChannel().socket();
+                if (socket != null) {
+                    InetSocketAddress sockAddr = (InetSocketAddress) socket
+                            .getRemoteSocketAddress();
+                    if (sockAddr != null) {
+                        if (sockAddr.getHostName().equals(remote)) {
+                            cnt++;
+                        }
+                    }
+                } // if(socket != null)
+            }
+        }
+        return cnt;
+    }
 
-			synchronized (this.connections) {
-				final ListIterator<NNTPConnection> iter = this.connections.listIterator();
-				NNTPConnection conn;
+    /**
+     * Run loops. Checks periodically for timed out connections and purged them
+     * from the lists.
+     */
+    @Override
+    public void run() {
+        while (isRunning()) {
+            int timeoutMillis = 1000 * Config.inst().get(Config.TIMEOUT, 180);
 
-				while (iter.hasNext()) {
-					conn = iter.next();
-					if ((System.currentTimeMillis() - conn.getLastActivity()) > timeoutMillis
-						&& conn.getBuffers().isOutputBufferEmpty()) {
-						// A connection timeout has occurred so purge the connection
-						iter.remove();
+            synchronized (this.connections) {
+                final ListIterator<NNTPConnection> iter = this.connections
+                        .listIterator();
+                NNTPConnection conn;
 
-						// Close and remove the channel
-						SocketChannel channel = conn.getSocketChannel();
-						connByChannel.remove(channel);
+                while (iter.hasNext()) {
+                    conn = iter.next();
+                    if ((System.currentTimeMillis() - conn.getLastActivity()) > timeoutMillis
+                            && conn.getBuffers().isOutputBufferEmpty()) {
+                        // A connection timeout has occurred so purge the
+                        // connection
+                        iter.remove();
 
-						try {
-							assert channel != null;
-							assert channel.socket() != null;
+                        // Close and remove the channel
+                        SocketChannel channel = conn.getSocketChannel();
+                        connByChannel.remove(channel);
 
-							// Close the channel; implicitely cancels all selectionkeys
-							channel.close();
-							Log.get().info("Disconnected: " + channel.socket().getRemoteSocketAddress()
-								+ " (timeout)");
-						} catch (IOException ex) {
-							Log.get().warning("Connections.run(): " + ex);
-						}
+                        try {
+                            assert channel != null;
+                            assert channel.socket() != null;
 
-						// Recycle the used buffers
-						conn.getBuffers().recycleBuffers();
+                            // Close the channel; implicitely cancels all
+                            // selectionkeys
+                            channel.close();
+                            Log.get().info(
+                                    "Disconnected: "
+                                            + channel.socket()
+                                                    .getRemoteSocketAddress()
+                                            + " (timeout)");
+                        } catch (IOException ex) {
+                            Log.get().warning("Connections.run(): " + ex);
+                        }
 
-						Stats.getInstance().clientDisconnect();
-					}
-				}
-			}
+                        // Recycle the used buffers
+                        conn.getBuffers().recycleBuffers();
 
-			try {
-				Thread.sleep(10000); // Sleep ten seconds
-			} catch (InterruptedException ex) {
-				Log.get().warning("Connections Thread was interrupted: " + ex.getMessage());
-			}
-		}
-	}
+                        Stats.getInstance().clientDisconnect();
+                    }
+                }
+            }
+
+            try {
+                Thread.sleep(10000); // Sleep ten seconds
+            } catch (InterruptedException ex) {
+                Log.get().warning(
+                        "Connections Thread was interrupted: "
+                                + ex.getMessage());
+            }
+        }
+    }
 }

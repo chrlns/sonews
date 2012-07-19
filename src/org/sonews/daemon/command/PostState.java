@@ -20,11 +20,11 @@ package org.sonews.daemon.command;
 
 /**
  * States of the POST command's finite state machine.
+ * 
  * @author Christian Lins
  * @since sonews/0.5.0
  */
-enum PostState
-{
+enum PostState {
 
-	WaitForLineOne, ReadingHeaders, ReadingBody, Finished
+    WaitForLineOne, ReadingHeaders, ReadingBody, Finished
 }

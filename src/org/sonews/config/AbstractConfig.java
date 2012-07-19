@@ -19,33 +19,34 @@ package org.sonews.config;
 
 /**
  * Base class for Config and BootstrapConfig.
+ * 
  * @author Christian Lins
  * @since sonews/0.5.0
  */
 public abstract class AbstractConfig {
 
-	public abstract String get(String key, String defVal);
+    public abstract String get(String key, String defVal);
 
-	public int get(final String key, final int defVal) {
-		return Integer.parseInt(
-				get(key, Integer.toString(defVal)));
-	}
+    public int get(final String key, final int defVal) {
+        return Integer.parseInt(get(key, Integer.toString(defVal)));
+    }
 
-	public boolean get(String key, boolean defVal) {
-		String val = get(key, Boolean.toString(defVal));
-		return Boolean.parseBoolean(val);
-	}
+    public boolean get(String key, boolean defVal) {
+        String val = get(key, Boolean.toString(defVal));
+        return Boolean.parseBoolean(val);
+    }
 
-	/**
-	 * Returns a long config value specified via the given key.
-	 * @param key
-	 * @param defVal
-	 * @return
-	 */
-	public long get(String key, long defVal) {
-		String val = get(key, Long.toString(defVal));
-		return Long.parseLong(val);
-	}
+    /**
+     * Returns a long config value specified via the given key.
+     * 
+     * @param key
+     * @param defVal
+     * @return
+     */
+    public long get(String key, long defVal) {
+        String val = get(key, Long.toString(defVal));
+        return Long.parseLong(val);
+    }
 
-	protected abstract void set(String key, String val);
+    protected abstract void set(String key, String val);
 }

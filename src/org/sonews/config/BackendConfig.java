@@ -18,76 +18,83 @@
 package org.sonews.config;
 
 import java.util.logging.Level;
-import org.sonews.util.Log;
+
 import org.sonews.storage.StorageBackendException;
 import org.sonews.storage.StorageManager;
+import org.sonews.util.Log;
 import org.sonews.util.TimeoutMap;
 
 /**
- * Provides access to the program wide configuration that is stored within
- * the server's database.
+ * Provides access to the program wide configuration that is stored within the
+ * server's database.
+ * 
  * @author Christian Lins
  * @since sonews/0.5.0
  */
 class BackendConfig extends AbstractConfig {
 
-	private static BackendConfig instance = new BackendConfig();
+    private static BackendConfig instance = new BackendConfig();
 
-	public static BackendConfig getInstance() {
-		return instance;
-	}
-	private final TimeoutMap<String, String> values = new TimeoutMap<String, String>();
+    public static BackendConfig getInstance() {
+        return instance;
+    }
 
-	private BackendConfig() {
-		super();
-	}
+    private final TimeoutMap<String, String> values = new TimeoutMap<String, String>();
 
-	/**
-	 * Returns the config value for the given key or the defaultValue if the
-	 * key is not found in config.
-	 * @param key
-	 * @param defaultValue
-	 * @return
-	 */
-	@Override
-	public String get(String key, String defaultValue) {
-		try {
-			String configValue = values.get(key);
-			if (configValue == null) {
-				if (StorageManager.current() == null) {
-					Log.get().warning("BackendConfig not available, using default.");
-					return defaultValue;
-				}
+    private BackendConfig() {
+        super();
+    }
 
-				configValue = StorageManager.current().getConfigValue(key);
-				if (configValue == null) {
-					return defaultValue;
-				} else {
-					values.put(key, configValue);
-					return configValue;
-				}
-			} else {
-				return configValue;
-			}
-		} catch (StorageBackendException ex) {
-			Log.get().log(Level.SEVERE, "Storage backend problem", ex);
-			return defaultValue;
-		}
-	}
+    /**
+     * Returns the config value for the given key or the defaultValue if the key
+     * is not found in config.
+     * 
+     * @param key
+     * @param defaultValue
+     * @return
+     */
+    @Override
+    public String get(String key, String defaultValue) {
+        try {
+            String configValue = values.get(key);
+            if (configValue == null) {
+                if (StorageManager.current() == null) {
+                    Log.get().warning(
+                            "BackendConfig not available, using default.");
+                    return defaultValue;
+                }
 
-	/**
-	 * Sets the config value which is identified by the given key.
-	 * @param key
-	 * @param value
-	 */
-	public void set(String key, String value) {
-		values.put(key, value);
+                configValue = StorageManager.current().getConfigValue(key);
+                if (configValue == null) {
+                    return defaultValue;
+                } else {
+                    values.put(key, configValue);
+                    return configValue;
+                }
+            } else {
+                return configValue;
+            }
+        } catch (StorageBackendException ex) {
+            Log.get().log(Level.SEVERE, "Storage backend problem", ex);
+            return defaultValue;
+        }
+    }
 
-		try {
-			// Write values to database
-			StorageManager.current().setConfigValue(key, value);
-		} catch (StorageBackendException ex) {
-			ex.printStackTrace();
-		}
-	}
+    /**
+     * Sets the config value which is identified by the given key.
+     * 
+     * @param key
+     * @param value
+     */
+    @Override
+    public void set(String key, String value) {
+        values.put(key, value);
+
+        try {
+            // Write values to database
+            StorageManager.current().setConfigValue(key, value);
+        } catch (StorageBackendException ex) {
+            ex.printStackTrace();
+        }
+    }
 }

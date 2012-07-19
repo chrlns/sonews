@@ -27,11 +27,11 @@ package org.sonews.storage;
 @SuppressWarnings("serial")
 public class StorageBackendException extends Exception {
 
-	public StorageBackendException(Throwable cause) {
-		super(cause);
-	}
+    public StorageBackendException(Throwable cause) {
+        super(cause);
+    }
 
-	public StorageBackendException(String msg) {
-		super(msg);
-	}
+    public StorageBackendException(String msg) {
+        super(msg);
+    }
 }

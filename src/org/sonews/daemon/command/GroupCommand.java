@@ -26,71 +26,69 @@ import org.sonews.storage.StorageManager;
 
 /**
  * Class handling the GROUP command.
+ * 
  * <pre>
  *  Syntax
  *    GROUP group
- *
+ * 
  *  Responses
  *    211 number low high group     Group successfully selected
  *    411                           No such newsgroup
- *
+ * 
  *  Parameters
  *    group     Name of newsgroup
  *    number    Estimated number of articles in the group
  *    low       Reported low water mark
  *    high      Reported high water mark
  * </pre>
+ * 
  * (from RFC 3977)
  * 
  * @author Christian Lins
  * @author Dennis Schwerdel
  * @since n3tpd/0.1
  */
-public class GroupCommand implements Command
-{
+public class GroupCommand implements Command {
 
-	@Override
-	public String[] getSupportedCommandStrings()
-	{
-		return new String[] {"GROUP"};
-	}
+    @Override
+    public String[] getSupportedCommandStrings() {
+        return new String[] { "GROUP" };
+    }
 
-	@Override
-	public boolean hasFinished()
-	{
-		return true;
-	}
+    @Override
+    public boolean hasFinished() {
+        return true;
+    }
 
-	@Override
-	public String impliedCapability()
-	{
-		return null;
-	}
+    @Override
+    public String impliedCapability() {
+        return null;
+    }
 
-	@Override
-	public boolean isStateful()
-	{
-		return true;
-	}
+    @Override
+    public boolean isStateful() {
+        return true;
+    }
 
-	@Override
-	public void processLine(NNTPConnection conn, final String line, byte[] raw)
-		throws IOException, StorageBackendException
-	{
-		final String[] command = line.split(" ");
+    @Override
+    public void processLine(NNTPConnection conn, final String line, byte[] raw)
+            throws IOException, StorageBackendException {
+        final String[] command = line.split(" ");
 
-		Group group;
-		if (command.length >= 2) {
-			group = StorageManager.current().getGroup(command[1]);
-			if (group == null || group.isDeleted()) {
-				conn.println("411 no such news group");
-			} else {
-				conn.setCurrentGroup(group);
-				conn.println("211 " + group.getPostingsCount() + " " + group.getFirstArticleNumber()
-					+ " " + group.getLastArticleNumber() + " " + group.getName() + " group selected");
-			}
-		} else {
-			conn.println("500 no group name given");
-		}
-	}
+        Group group;
+        if (command.length >= 2) {
+            group = StorageManager.current().getGroup(command[1]);
+            if (group == null || group.isDeleted()) {
+                conn.println("411 no such news group");
+            } else {
+                conn.setCurrentGroup(group);
+                conn.println("211 " + group.getPostingsCount() + " "
+                        + group.getFirstArticleNumber() + " "
+                        + group.getLastArticleNumber() + " " + group.getName()
+                        + " group selected");
+            }
+        } else {
+            conn.println("500 no group name given");
+        }
+    }
 }

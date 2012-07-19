@@ -29,90 +29,87 @@ import org.sonews.util.io.Resource;
 
 /**
  * Selects the correct command processing class.
+ * 
  * @author Christian Lins
  * @since sonews/1.0
  */
-public class CommandSelector
-{
+public class CommandSelector {
 
-	private static Map<Thread, CommandSelector> instances = new ConcurrentHashMap<Thread, CommandSelector>();
-	private static Map<String, Class<?>> commandClassesMapping = new ConcurrentHashMap<String, Class<?>>();
+    private static Map<Thread, CommandSelector> instances = new ConcurrentHashMap<Thread, CommandSelector>();
+    private static Map<String, Class<?>> commandClassesMapping = new ConcurrentHashMap<String, Class<?>>();
 
-	static {
-		String[] classes = Resource.getAsString("helpers/commands.list", true).split("\n");
-		for (String className : classes) {
-			if (className.charAt(0) == '#') {
-				// Skip comments
-				continue;
-			}
+    static {
+        String[] classes = Resource.getAsString("helpers/commands.list", true)
+                .split("\n");
+        for (String className : classes) {
+            if (className.charAt(0) == '#') {
+                // Skip comments
+                continue;
+            }
 
-			try {
-				addCommandHandler(className);
-			} catch (ClassNotFoundException ex) {
-				Log.get().warning("Could not load command class: " + ex);
-			} catch (InstantiationException ex) {
-				Log.get().severe("Could not instantiate command class: " + ex);
-			} catch (IllegalAccessException ex) {
-				Log.get().severe("Could not access command class: " + ex);
-			}
-		}
-	}
+            try {
+                addCommandHandler(className);
+            } catch (ClassNotFoundException ex) {
+                Log.get().warning("Could not load command class: " + ex);
+            } catch (InstantiationException ex) {
+                Log.get().severe("Could not instantiate command class: " + ex);
+            } catch (IllegalAccessException ex) {
+                Log.get().severe("Could not access command class: " + ex);
+            }
+        }
+    }
 
-	public static void addCommandHandler(String className)
-		throws ClassNotFoundException, InstantiationException,
-		IllegalAccessException
-	{
-		Class<?> clazz = Class.forName(className);
-		Command cmd = (Command) clazz.newInstance();
-		String[] cmdStrs = cmd.getSupportedCommandStrings();
-		for (String cmdStr : cmdStrs) {
-			commandClassesMapping.put(cmdStr, clazz);
-		}
-	}
+    public static void addCommandHandler(String className)
+            throws ClassNotFoundException, InstantiationException,
+            IllegalAccessException {
+        Class<?> clazz = Class.forName(className);
+        Command cmd = (Command) clazz.newInstance();
+        String[] cmdStrs = cmd.getSupportedCommandStrings();
+        for (String cmdStr : cmdStrs) {
+            commandClassesMapping.put(cmdStr, clazz);
+        }
+    }
 
-	public static Set<String> getCommandNames()
-	{
-		return commandClassesMapping.keySet();
-	}
+    public static Set<String> getCommandNames() {
+        return commandClassesMapping.keySet();
+    }
 
-	public static CommandSelector getInstance()
-	{
-		CommandSelector csel = instances.get(Thread.currentThread());
-		if (csel == null) {
-			csel = new CommandSelector();
-			instances.put(Thread.currentThread(), csel);
-		}
-		return csel;
-	}
-	private Map<String, Command> commandMapping = new HashMap<String, Command>();
-	private Command unsupportedCmd = new UnsupportedCommand();
+    public static CommandSelector getInstance() {
+        CommandSelector csel = instances.get(Thread.currentThread());
+        if (csel == null) {
+            csel = new CommandSelector();
+            instances.put(Thread.currentThread(), csel);
+        }
+        return csel;
+    }
 
-	private CommandSelector()
-	{
-	}
+    private Map<String, Command> commandMapping = new HashMap<String, Command>();
+    private Command unsupportedCmd = new UnsupportedCommand();
 
-	public Command get(String commandName)
-	{
-		try {
-			commandName = commandName.toUpperCase();
-			Command cmd = this.commandMapping.get(commandName);
+    private CommandSelector() {
+    }
 
-			if (cmd == null) {
-				Class<?> clazz = commandClassesMapping.get(commandName);
-				if (clazz == null) {
-					cmd = this.unsupportedCmd;
-				} else {
-					cmd = (Command) clazz.newInstance();
-					this.commandMapping.put(commandName, cmd);
-				}
-			} else if (cmd.isStateful()) {
-				cmd = cmd.getClass().newInstance();
-			}
+    public Command get(String commandName) {
+        try {
+            commandName = commandName.toUpperCase();
+            Command cmd = this.commandMapping.get(commandName);
 
-			return cmd;
-		} catch (Exception ex) {
-			ex.printStackTrace();
-			return this.unsupportedCmd;
-		}
-	}
+            if (cmd == null) {
+                Class<?> clazz = commandClassesMapping.get(commandName);
+                if (clazz == null) {
+                    cmd = this.unsupportedCmd;
+                } else {
+                    cmd = (Command) clazz.newInstance();
+                    this.commandMapping.put(commandName, cmd);
+                }
+            } else if (cmd.isStateful()) {
+                cmd = cmd.getClass().newInstance();
+            }
+
+            return cmd;
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return this.unsupportedCmd;
+        }
+    }
 }

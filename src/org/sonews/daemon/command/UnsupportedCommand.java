@@ -24,43 +24,38 @@ import org.sonews.daemon.NNTPConnection;
 /**
  * A default "Unsupported Command". Simply returns error code 500 and a
  * "command not supported" message.
+ * 
  * @author Christian Lins
  * @since sonews/0.5.0
  */
-public class UnsupportedCommand implements Command
-{
+public class UnsupportedCommand implements Command {
 
-	/**
-	 * @return Always returns null.
-	 */
-	@Override
-	public String[] getSupportedCommandStrings()
-	{
-		return null;
-	}
+    /**
+     * @return Always returns null.
+     */
+    @Override
+    public String[] getSupportedCommandStrings() {
+        return null;
+    }
 
-	@Override
-	public boolean hasFinished()
-	{
-		return true;
-	}
+    @Override
+    public boolean hasFinished() {
+        return true;
+    }
 
-	@Override
-	public String impliedCapability()
-	{
-		return null;
-	}
+    @Override
+    public String impliedCapability() {
+        return null;
+    }
 
-	@Override
-	public boolean isStateful()
-	{
-		return false;
-	}
+    @Override
+    public boolean isStateful() {
+        return false;
+    }
 
-	@Override
-	public void processLine(NNTPConnection conn, final String line, byte[] raw)
-		throws IOException
-	{
-		conn.println("500 command not supported");
-	}
+    @Override
+    public void processLine(NNTPConnection conn, final String line, byte[] raw)
+            throws IOException {
+        conn.println("500 command not supported");
+    }
 }

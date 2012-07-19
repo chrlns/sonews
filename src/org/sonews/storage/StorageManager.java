@@ -19,55 +19,57 @@ package org.sonews.storage;
 
 /**
  * Provides access to a storage backend.
+ * 
  * @author Christian Lins
  * @since sonews/1.0
  */
 public final class StorageManager {
 
-	private static StorageProvider provider;
+    private static StorageProvider provider;
 
-	public static Storage current() throws StorageBackendException {
-		synchronized (StorageManager.class) {
-			if (provider == null) {
-				return null;
-			} else {
-				return provider.storage(Thread.currentThread());
-			}
-		}
-	}
+    public static Storage current() throws StorageBackendException {
+        synchronized (StorageManager.class) {
+            if (provider == null) {
+                return null;
+            } else {
+                return provider.storage(Thread.currentThread());
+            }
+        }
+    }
 
-	public static StorageProvider loadProvider(String pluginClassName) {
-		try {
-			Class<?> clazz = Class.forName(pluginClassName);
-			Object inst = clazz.newInstance();
-			return (StorageProvider)inst;
-		} catch (Exception ex) {
-			// Do not use logging here as the Log class requires a working
-			// backend which is in most cases not available at this point
-			System.out.println("Could not instantiate StorageProvider: " + ex);
-			return null;
-		}
-	}
+    public static StorageProvider loadProvider(String pluginClassName) {
+        try {
+            Class<?> clazz = Class.forName(pluginClassName);
+            Object inst = clazz.newInstance();
+            return (StorageProvider) inst;
+        } catch (Exception ex) {
+            // Do not use logging here as the Log class requires a working
+            // backend which is in most cases not available at this point
+            System.out.println("Could not instantiate StorageProvider: " + ex);
+            return null;
+        }
+    }
 
-	/**
-	 * Sets the current storage provider.
-	 * @param provider
-	 */
-	public static void enableProvider(StorageProvider provider) {
-		synchronized (StorageManager.class) {
-			if (StorageManager.provider != null) {
-				disableProvider();
-			}
-			StorageManager.provider = provider;
-		}
-	}
+    /**
+     * Sets the current storage provider.
+     * 
+     * @param provider
+     */
+    public static void enableProvider(StorageProvider provider) {
+        synchronized (StorageManager.class) {
+            if (StorageManager.provider != null) {
+                disableProvider();
+            }
+            StorageManager.provider = provider;
+        }
+    }
 
-	/**
-	 * Disables the current provider.
-	 */
-	public static void disableProvider() {
-		synchronized (StorageManager.class) {
-			provider = null;
-		}
-	}
+    /**
+     * Disables the current provider.
+     */
+    public static void disableProvider() {
+        synchronized (StorageManager.class) {
+            provider = null;
+        }
+    }
 }

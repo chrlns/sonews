@@ -25,33 +25,32 @@ import org.sonews.storage.StorageBackendException;
 import org.sonews.storage.StorageProvider;
 
 /**
- *
+ * 
  * @author Christian Lins
  * @since sonews/1.1
  */
 public class HSQLDBProvider implements StorageProvider {
-	protected static final Map<Thread, HSQLDB> instances =
-			new ConcurrentHashMap<Thread, HSQLDB>();
+    protected static final Map<Thread, HSQLDB> instances = new ConcurrentHashMap<Thread, HSQLDB>();
 
-	@Override
-	public boolean isSupported(String uri) {
-		return uri.startsWith("jdbc:hsqldb");
-	}
+    @Override
+    public boolean isSupported(String uri) {
+        return uri.startsWith("jdbc:hsqldb");
+    }
 
-	@Override
-	public Storage storage(Thread thread) throws StorageBackendException {
-		try {
-			if (!instances.containsKey(Thread.currentThread())) {
-				HSQLDB db = new HSQLDB();
-				db.arise();
-				instances.put(Thread.currentThread(), db);
-				return db;
-			} else {
-				return instances.get(Thread.currentThread());
-			}
-		} catch (SQLException ex) {
-			throw new StorageBackendException(ex);
-		}
-	}
+    @Override
+    public Storage storage(Thread thread) throws StorageBackendException {
+        try {
+            if (!instances.containsKey(Thread.currentThread())) {
+                HSQLDB db = new HSQLDB();
+                db.arise();
+                instances.put(Thread.currentThread(), db);
+                return db;
+            } else {
+                return instances.get(Thread.currentThread());
+            }
+        } catch (SQLException ex) {
+            throw new StorageBackendException(ex);
+        }
+    }
 
 }

@@ -23,70 +23,63 @@ import java.util.Map;
 
 /**
  * Class that allows simple String template handling.
+ * 
  * @author Christian Lins
  * @since sonews/0.5.0
  */
-public class StringTemplate
-{
+public class StringTemplate {
 
-	private String str = null;
-	private String templateDelimiter = "%";
-	private Map<String, String> templateValues = new HashMap<String, String>();
+    private String str = null;
+    private String templateDelimiter = "%";
+    private Map<String, String> templateValues = new HashMap<String, String>();
 
-	public StringTemplate(String str, final String templateDelimiter)
-	{
-		if (str == null || templateDelimiter == null) {
-			throw new IllegalArgumentException("null arguments not allowed");
-		}
+    public StringTemplate(String str, final String templateDelimiter) {
+        if (str == null || templateDelimiter == null) {
+            throw new IllegalArgumentException("null arguments not allowed");
+        }
 
-		this.str = str;
-		this.templateDelimiter = templateDelimiter;
-	}
+        this.str = str;
+        this.templateDelimiter = templateDelimiter;
+    }
 
-	public StringTemplate(String str)
-	{
-		this(str, "%");
-	}
+    public StringTemplate(String str) {
+        this(str, "%");
+    }
 
-	public StringTemplate set(String template, String value)
-	{
-		if (template == null || value == null) {
-			throw new IllegalArgumentException("null arguments not allowed");
-		}
+    public StringTemplate set(String template, String value) {
+        if (template == null || value == null) {
+            throw new IllegalArgumentException("null arguments not allowed");
+        }
 
-		this.templateValues.put(template, value);
-		return this;
-	}
+        this.templateValues.put(template, value);
+        return this;
+    }
 
-	public StringTemplate set(String template, long value)
-	{
-		return set(template, Long.toString(value));
-	}
+    public StringTemplate set(String template, long value) {
+        return set(template, Long.toString(value));
+    }
 
-	public StringTemplate set(String template, double value)
-	{
-		return set(template, Double.toString(value));
-	}
+    public StringTemplate set(String template, double value) {
+        return set(template, Double.toString(value));
+    }
 
-	public StringTemplate set(String template, Object obj)
-	{
-		if (template == null || obj == null) {
-			throw new IllegalArgumentException("null arguments not allowed");
-		}
+    public StringTemplate set(String template, Object obj) {
+        if (template == null || obj == null) {
+            throw new IllegalArgumentException("null arguments not allowed");
+        }
 
-		return set(template, obj.toString());
-	}
+        return set(template, obj.toString());
+    }
 
-	@Override
-	public String toString()
-	{
-		String ret = str;
+    @Override
+    public String toString() {
+        String ret = str;
 
-		for (String key : this.templateValues.keySet()) {
-			String value = this.templateValues.get(key);
-			ret = ret.replace(templateDelimiter + key, value);
-		}
+        for (String key : this.templateValues.keySet()) {
+            String value = this.templateValues.get(key);
+            ret = ret.replace(templateDelimiter + key, value);
+        }
 
-		return ret;
-	}
+        return ret;
+    }
 }

@@ -25,44 +25,39 @@ import org.sonews.storage.StorageBackendException;
 /**
  * Class handling the MODE READER command. This command actually does nothing
  * but returning a success status code.
+ * 
  * @author Christian Lins
  * @since sonews/0.5.0
  */
-public class ModeReaderCommand implements Command
-{
+public class ModeReaderCommand implements Command {
 
-	@Override
-	public String[] getSupportedCommandStrings()
-	{
-		return new String[] {"MODE"};
-	}
+    @Override
+    public String[] getSupportedCommandStrings() {
+        return new String[] { "MODE" };
+    }
 
-	@Override
-	public boolean hasFinished()
-	{
-		return true;
-	}
+    @Override
+    public boolean hasFinished() {
+        return true;
+    }
 
-	@Override
-	public String impliedCapability()
-	{
-		return null;
-	}
+    @Override
+    public String impliedCapability() {
+        return null;
+    }
 
-	@Override
-	public boolean isStateful()
-	{
-		return false;
-	}
+    @Override
+    public boolean isStateful() {
+        return false;
+    }
 
-	@Override
-	public void processLine(NNTPConnection conn, final String line, byte[] raw)
-		throws IOException, StorageBackendException
-	{
-		if (line.equalsIgnoreCase("MODE READER")) {
-			conn.println("200 hello you can post");
-		} else {
-			conn.println("500 I do not know this mode command");
-		}
-	}
+    @Override
+    public void processLine(NNTPConnection conn, final String line, byte[] raw)
+            throws IOException, StorageBackendException {
+        if (line.equalsIgnoreCase("MODE READER")) {
+            conn.println("200 hello you can post");
+        } else {
+            conn.println("500 I do not know this mode command");
+        }
+    }
 }

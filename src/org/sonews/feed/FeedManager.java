@@ -22,33 +22,30 @@ import org.sonews.storage.Article;
 
 /**
  * Controlls push and pull feeder.
+ * 
  * @author Christian Lins
  * @since sonews/0.5.0
  */
-public final class FeedManager
-{
+public final class FeedManager {
 
-	public static final int TYPE_PULL = 0;
-	public static final int TYPE_PUSH = 1;
-	private static PullFeeder pullFeeder = new PullFeeder();
-	private static PushFeeder pushFeeder = new PushFeeder();
+    public static final int TYPE_PULL = 0;
+    public static final int TYPE_PUSH = 1;
+    private static PullFeeder pullFeeder = new PullFeeder();
+    private static PushFeeder pushFeeder = new PushFeeder();
 
-	/**
-	 * Reads the peer subscriptions from database and starts the appropriate
-	 * PullFeeder or PushFeeder.
-	 */
-	public static synchronized void startFeeding()
-	{
-		pullFeeder.start();
-		pushFeeder.start();
-	}
+    /**
+     * Reads the peer subscriptions from database and starts the appropriate
+     * PullFeeder or PushFeeder.
+     */
+    public static synchronized void startFeeding() {
+        pullFeeder.start();
+        pushFeeder.start();
+    }
 
-	public static void queueForPush(Article article)
-	{
-		pushFeeder.queueForPush(article);
-	}
+    public static void queueForPush(Article article) {
+        pushFeeder.queueForPush(article);
+    }
 
-	private FeedManager()
-	{
-	}
+    private FeedManager() {
+    }
 }

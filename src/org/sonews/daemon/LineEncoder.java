@@ -27,52 +27,51 @@ import java.nio.charset.CoderResult;
 
 /**
  * Encodes a line to buffers using the correct charset.
+ * 
  * @author Christian Lins
  * @since sonews/0.5.0
  */
-class LineEncoder
-{
+class LineEncoder {
 
-	private CharBuffer characters;
-	private Charset charset;
+    private CharBuffer characters;
+    private Charset charset;
 
-	/**
-	 * Constructs new LineEncoder.
-	 * @param characters
-	 * @param charset
-	 */
-	public LineEncoder(CharBuffer characters, Charset charset)
-	{
-		this.characters = characters;
-		this.charset = charset;
-	}
+    /**
+     * Constructs new LineEncoder.
+     * 
+     * @param characters
+     * @param charset
+     */
+    public LineEncoder(CharBuffer characters, Charset charset) {
+        this.characters = characters;
+        this.charset = charset;
+    }
 
-	/**
-	 * Encodes the characters of this instance to the given ChannelLineBuffers
-	 * using the Charset of this instance.
-	 * @param buffer
-	 * @throws java.nio.channels.ClosedChannelException
-	 */
-	public void encode(ChannelLineBuffers buffer)
-		throws ClosedChannelException
-	{
-		CharsetEncoder encoder = charset.newEncoder();
-		while (characters.hasRemaining()) {
-			ByteBuffer buf = ChannelLineBuffers.newLineBuffer();
-			assert buf.position() == 0;
-			assert buf.capacity() >= 512;
+    /**
+     * Encodes the characters of this instance to the given ChannelLineBuffers
+     * using the Charset of this instance.
+     * 
+     * @param buffer
+     * @throws java.nio.channels.ClosedChannelException
+     */
+    public void encode(ChannelLineBuffers buffer) throws ClosedChannelException {
+        CharsetEncoder encoder = charset.newEncoder();
+        while (characters.hasRemaining()) {
+            ByteBuffer buf = ChannelLineBuffers.newLineBuffer();
+            assert buf.position() == 0;
+            assert buf.capacity() >= 512;
 
-			CoderResult res = encoder.encode(characters, buf, true);
+            CoderResult res = encoder.encode(characters, buf, true);
 
-			// Set limit to current position and current position to 0;
-			// means make ready for read from buffer
-			buf.flip();
-			buffer.addOutputBuffer(buf);
+            // Set limit to current position and current position to 0;
+            // means make ready for read from buffer
+            buf.flip();
+            buffer.addOutputBuffer(buf);
 
-			if (res.isUnderflow()) // All input processed
-			{
-				break;
-			}
-		}
-	}
+            if (res.isUnderflow()) // All input processed
+            {
+                break;
+            }
+        }
+    }
 }
