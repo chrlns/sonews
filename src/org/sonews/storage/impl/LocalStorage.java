@@ -47,25 +47,25 @@ import org.sonews.util.Pair;
  * recommended to use LocalStorage for large installations as the performance
  * will decrease with growing numbers of news stored. Additionally, there are
  * hard limits dependending on the underlying OS and filesystem.
- * 
+ *
  * Directory structure: $BASE$: Base directory of the LocalStorage, e.g.
  * /var/share/sonews/stor0 $BASE$/news/: contains the news mails, one file per
  * news named by its Message-ID $BASE$/index/: contains index files referencing
  * the files in ../news
- * 
+ *
  * @since sonews/1.1
  * @author Christian Lins
  */
 public class LocalStorage implements Storage {
 
     /** Memory cache of loaded articles. Key is the Message-ID of the articles */
-    private Map<String, Article> articles = new HashMap<String, Article>();
+    private final Map<String, Article> articles = new HashMap<String, Article>();
 
     /** Map<Groupname, Groupflags> */
-    private Map<String, Integer> groups = new HashMap<String, Integer>();
+    private final Map<String, Integer> groups = new HashMap<String, Integer>();
 
     /** Map<Groupname, Map<Art. Idx. in Group, Message-ID>> */
-    private Map<String, Map<Integer, String>> groupArtIdxMsgID = new HashMap<String, Map<Integer, String>>();
+    private final Map<String, Map<Integer, String>> groupArtIdxMsgID = new HashMap<String, Map<Integer, String>>();
 
     private String base;
 
@@ -84,6 +84,10 @@ public class LocalStorage implements Storage {
 
     private void buildIndices() {
 
+    }
+
+    private String friendlyID(String id) {
+        return id.substring(1, id.length() - 1);
     }
 
     private void writeGroupsFile() {
@@ -128,22 +132,22 @@ public class LocalStorage implements Storage {
     public void addArticle(Article art) throws StorageBackendException {
         try {
             synchronized (this) {
+                String mid = friendlyID(art.getMessageID());
                 // Write body and header of Article in separate files on disk
-                File file = new File(base + "news/" + art.getMessageID()
-                        + ".body");
+                File file = new File(base + "news/" + mid + ".body");
                 FileOutputStream out = new FileOutputStream(file);
                 out.write(art.getBody());
                 out.flush();
                 out.close();
 
-                file = new File(base + "news/" + art.getMessageID() + ".head");
+                file = new File(base + "news/" + mid + ".head");
                 out = new FileOutputStream(file);
                 out.write(art.getHeaderSource().getBytes("UTF-8"));
                 out.flush();
                 out.close();
 
                 // Add Article info to in memory cache
-                this.articles.put(art.getMessageID(), art);
+                this.articles.put(mid, art);
             }
         } catch (IOException ex) {
             throw new StorageBackendException(ex);
@@ -179,7 +183,7 @@ public class LocalStorage implements Storage {
 
     /**
      * Not implemented yet.
-     * 
+     *
      * @param messageID
      * @throws StorageBackendException
      */
@@ -225,7 +229,7 @@ public class LocalStorage implements Storage {
 
     /**
      * Not yet supported.
-     * 
+     *
      * @param key
      * @return Always null
      * @throws StorageBackendException
@@ -237,7 +241,7 @@ public class LocalStorage implements Storage {
 
     /**
      * Not yet supported.
-     * 
+     *
      * @param eventType
      * @param startTimestamp
      * @param endTimestamp
@@ -253,7 +257,7 @@ public class LocalStorage implements Storage {
 
     /**
      * Not yet supported.
-     * 
+     *
      * @param key
      * @param gid
      * @return
@@ -268,7 +272,20 @@ public class LocalStorage implements Storage {
     @Override
     public int getFirstArticleNumber(Group group)
             throws StorageBackendException {
-        throw new StorageBackendException("Not implemented!");
+        int firstArtNum = Integer.MAX_VALUE;
+        Map<Integer, String> idxs = this.groupArtIdxMsgID.get(group.getName());
+        if(idxs != null) {
+            for(int idx : idxs.keySet()) {
+                if(idx < firstArtNum) {
+                    firstArtNum = idx;
+                }
+            }
+        }
+        if(firstArtNum == Integer.MAX_VALUE) {
+            // Group is empty
+            firstArtNum = 0;
+        }
+        return firstArtNum;
     }
 
     @Override
@@ -294,7 +311,7 @@ public class LocalStorage implements Storage {
 
     /**
      * Not yet supported.
-     * 
+     *
      * @param listAddress
      * @return
      * @throws StorageBackendException
@@ -310,12 +327,21 @@ public class LocalStorage implements Storage {
      */
     @Override
     public int getLastArticleNumber(Group group) throws StorageBackendException {
-        return 0; // TODO
+        int lastArtNum = 0;
+        Map<Integer, String> idxs = this.groupArtIdxMsgID.get(group.getName());
+        if(idxs != null) {
+            for(int idx : idxs.keySet()) {
+                if(idx > lastArtNum) {
+                    lastArtNum = idx;
+                }
+            }
+        }
+        return lastArtNum;
     }
 
     /**
      * throw new StorageBackendException("Not implemented!"); Not yet supported.
-     * 
+     *
      * @param groupname
      * @return
      * @throws StorageBackendException
@@ -328,7 +354,7 @@ public class LocalStorage implements Storage {
 
     /**
      * Not yet supported.
-     * 
+     *
      * @return
      * @throws StorageBackendException
      */
@@ -340,12 +366,17 @@ public class LocalStorage implements Storage {
     @Override
     public int getPostingsCount(String groupname)
             throws StorageBackendException {
-        throw new StorageBackendException("Not implemented!");
+        Map<Integer, String> idxs = this.groupArtIdxMsgID.get(groupname);
+        if(idxs != null) {
+            return idxs.keySet().size();
+        } else {
+            return 0;
+        }
     }
 
     /**
      * Not yet supported.
-     * 
+     *
      * @param type
      * @return
      * @throws StorageBackendException
@@ -370,7 +401,7 @@ public class LocalStorage implements Storage {
 
     /**
      * Not yet supported.
-     * 
+     *
      * @param group
      * @throws StorageBackendException
      */
@@ -397,7 +428,7 @@ public class LocalStorage implements Storage {
 
     /**
      * Not yet supported.
-     * 
+     *
      * @param username
      * @param password
      * @return

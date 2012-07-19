@@ -31,18 +31,18 @@ import org.sonews.storage.StorageProvider;
  * recommended to use LocalStorage for large installations as the performance
  * will decrease with growing numbers of news stored. Additionally, there are
  * hard limits dependending on the underlying OS and filesystem.
- * 
+ *
  * Directory structure: $BASE$: Base directory of the LocalStorage, e.g.
  * /var/share/sonews/stor0 $BASE$/news/: contains the news mails, one file per
  * news named by its Message-ID $BASE$/index/: contains index files referencing
  * the files in ../news
- * 
+ *
  * @since sonews/1.1
  * @author Christian Lins
  */
 public class LocalStorageProvider implements StorageProvider {
 
-    private LocalStorage storage;
+    private final LocalStorage storage;
 
     public LocalStorageProvider() {
         String storageBase = Config.inst().get(Config.LEVEL_FILE,
@@ -50,10 +50,11 @@ public class LocalStorageProvider implements StorageProvider {
 
         // If the directory for the local storage does not exist yet,
         // create it!
-        File dir = new File(storageBase);
+        File dir = new File(storageBase + "/news");
         if (!dir.exists()) {
             dir.mkdirs();
         }
+
         this.storage = new LocalStorage(storageBase);
     }
 
