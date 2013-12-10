@@ -68,6 +68,9 @@
         <jar jarfile="${build.dir}/sonews.jar"
              basedir="${build.class}">
             <include name="org/sonews/**/*.class"/>
+            <manifest>
+                <attribute name="Main-Class" value="org.sonews.Main"/>
+            </manifest>
         </jar>
         <jar jarfile="${build.dir}/test.jar"
              basedir="${build.class}">

@@ -32,6 +32,7 @@ import org.sonews.util.Pair;
  * Class handling the OVER/XOVER command.
  * 
  * Description of the XOVER command:
+ * 
  * <pre>
  * XOVER [range]
  *
@@ -103,186 +104,157 @@ import org.sonews.util.Pair;
  *    420    Current article number is invalid
  *
  * </pre>
+ * 
  * @author Christian Lins
  * @since sonews/0.5.0
  */
-public class OverCommand implements Command
-{
+public class OverCommand implements Command {
 
-  public static final int MAX_LINES_PER_DBREQUEST = 200;
+    public static final int MAX_LINES_PER_DBREQUEST = 200;
 
-  @Override
-  public String[] getSupportedCommandStrings()
-  {
-    return new String[]{"OVER", "XOVER"};
-  }
-
-  @Override
-  public boolean hasFinished()
-  {
-    return true;
-  }
-
-  @Override
-  public boolean isStateful()
-  {
-    return false;
-  }
-
-  @Override
-  public void processLine(NNTPConnection conn, final String line, byte[] raw)
-    throws IOException, StorageBackendException
-  {
-    if(conn.getCurrentChannel() == null)
-    {
-      conn.println("412 no newsgroup selected");
+    @Override
+    public String[] getSupportedCommandStrings() {
+        return new String[] { "OVER", "XOVER" };
     }
-    else
-    {
-      String[] command = line.split(" ");
 
-      // If no parameter was specified, show information about
-      // the currently selected article(s)
-      if(command.length == 1)
-      {
-        final Article art = conn.getCurrentArticle();
-        if(art == null)
-        {
-          conn.println("420 no article(s) selected");
-          return;
-        }
+    @Override
+    public boolean hasFinished() {
+        return true;
+    }
 
-        conn.println(buildOverview(art, -1));
-      }
-      // otherwise print information about the specified range
-      else
-      {
-        long artStart;
-        long artEnd   = conn.getCurrentChannel().getLastArticleNumber();
-        String[] nums = command[1].split("-");
-        if(nums.length >= 1)
-        {
-          try
-          {
-            artStart = Integer.parseInt(nums[0]);
-          }
-          catch(NumberFormatException e) 
-          {
-            Log.msg(e.getMessage(), true);
-            artStart = Integer.parseInt(command[1]);
-          }
-        }
-        else
-        {
-          artStart = conn.getCurrentChannel().getFirstArticleNumber();
-        }
+    @Override
+    public String impliedCapability() {
+        return null;
+    }
 
-        if(nums.length >=2)
-        {
-          try
-          {
-            artEnd = Integer.parseInt(nums[1]);
-          }
-          catch(NumberFormatException e) 
-          {
-            e.printStackTrace();
-          }
-        }
+    @Override
+    public boolean isStateful() {
+        return false;
+    }
 
-        if(artStart > artEnd)
-        {
-          if(command[0].equalsIgnoreCase("OVER"))
-          {
-            conn.println("423 no articles in that range");
-          }
-          else
-          {
-            conn.println("224 (empty) overview information follows:");
-            conn.println(".");
-          }
-        }
-        else
-        {
-          for(long n = artStart; n <= artEnd; n += MAX_LINES_PER_DBREQUEST)
-          {
-            long nEnd = Math.min(n + MAX_LINES_PER_DBREQUEST - 1, artEnd);
-            List<Pair<Long, ArticleHead>> articleHeads = conn.getCurrentChannel()
-              .getArticleHeads(n, nEnd);
-            if(articleHeads.isEmpty() && n == artStart
-              && command[0].equalsIgnoreCase("OVER"))
-            {
-              // This reply is only valid for OVER, not for XOVER command
-              conn.println("423 no articles in that range");
-              return;
+    @Override
+    public void processLine(NNTPConnection conn, final String line, byte[] raw)
+            throws IOException, StorageBackendException {
+        if (conn.getCurrentChannel() == null) {
+            conn.println("412 no newsgroup selected");
+        } else {
+            String[] command = line.split(" ");
+
+            // If no parameter was specified, show information about
+            // the currently selected article(s)
+            if (command.length == 1) {
+                final Article art = conn.getCurrentArticle();
+                if (art == null) {
+                    conn.println("420 no article(s) selected");
+                    return;
+                }
+
+                conn.println(buildOverview(art, -1));
+            } // otherwise print information about the specified range
+            else {
+                long artStart;
+                long artEnd = conn.getCurrentChannel().getLastArticleNumber();
+                String[] nums = command[1].split("-");
+                if (nums.length >= 1) {
+                    try {
+                        artStart = Integer.parseInt(nums[0]);
+                    } catch (NumberFormatException e) {
+                        Log.get().info(e.getMessage());
+                        artStart = Integer.parseInt(command[1]);
+                    }
+                } else {
+                    artStart = conn.getCurrentChannel().getFirstArticleNumber();
+                }
+
+                if (nums.length >= 2) {
+                    try {
+                        artEnd = Integer.parseInt(nums[1]);
+                    } catch (NumberFormatException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                if (artStart > artEnd) {
+                    if (command[0].equalsIgnoreCase("OVER")) {
+                        conn.println("423 no articles in that range");
+                    } else {
+                        conn.println("224 (empty) overview information follows:");
+                        conn.println(".");
+                    }
+                } else {
+                    for (long n = artStart; n <= artEnd; n += MAX_LINES_PER_DBREQUEST) {
+                        long nEnd = Math.min(n + MAX_LINES_PER_DBREQUEST - 1,
+                                artEnd);
+                        List<Pair<Long, ArticleHead>> articleHeads = conn
+                                .getCurrentChannel().getArticleHeads(n, nEnd);
+                        if (articleHeads.isEmpty() && n == artStart
+                                && command[0].equalsIgnoreCase("OVER")) {
+                            // This reply is only valid for OVER, not for XOVER
+                            // command
+                            conn.println("423 no articles in that range");
+                            return;
+                        } else if (n == artStart) {
+                            // XOVER replies this although there is no data
+                            // available
+                            conn.println("224 overview information follows");
+                        }
+
+                        for (Pair<Long, ArticleHead> article : articleHeads) {
+                            String overview = buildOverview(article.getB(),
+                                    article.getA());
+                            conn.println(overview);
+                        }
+                    } // for
+                    conn.println(".");
+                }
             }
-            else if(n == artStart)
-            {
-              // XOVER replies this although there is no data available
-              conn.println("224 overview information follows");
-            }
-
-            for(Pair<Long, ArticleHead> article : articleHeads)
-            {
-              String overview = buildOverview(article.getB(), article.getA());
-              conn.println(overview);
-            }
-          } // for
-          conn.println(".");
         }
-      }
     }
-  }
-  
-  private String buildOverview(ArticleHead art, long nr)
-  {
-    StringBuilder overview = new StringBuilder();
-    overview.append(nr);
-    overview.append('\t');
 
-    String subject = art.getHeader(Headers.SUBJECT)[0];
-    if("".equals(subject))
-    {
-      subject = "<empty>";
+    private String buildOverview(ArticleHead art, long nr) {
+        StringBuilder overview = new StringBuilder();
+        overview.append(nr);
+        overview.append('\t');
+
+        String subject = art.getHeader(Headers.SUBJECT)[0];
+        if ("".equals(subject)) {
+            subject = "<empty>";
+        }
+        overview.append(escapeString(subject));
+        overview.append('\t');
+
+        overview.append(escapeString(art.getHeader(Headers.FROM)[0]));
+        overview.append('\t');
+        overview.append(escapeString(art.getHeader(Headers.DATE)[0]));
+        overview.append('\t');
+        overview.append(escapeString(art.getHeader(Headers.MESSAGE_ID)[0]));
+        overview.append('\t');
+        overview.append(escapeString(art.getHeader(Headers.REFERENCES)[0]));
+        overview.append('\t');
+
+        String bytes = art.getHeader(Headers.BYTES)[0];
+        if ("".equals(bytes)) {
+            bytes = "0";
+        }
+        overview.append(escapeString(bytes));
+        overview.append('\t');
+
+        String lines = art.getHeader(Headers.LINES)[0];
+        if ("".equals(lines)) {
+            lines = "0";
+        }
+        overview.append(escapeString(lines));
+        overview.append('\t');
+        overview.append(escapeString(art.getHeader(Headers.XREF)[0]));
+
+        // Remove trailing tabs if some data is empty
+        return overview.toString().trim();
     }
-    overview.append(escapeString(subject));
-    overview.append('\t');
 
-    overview.append(escapeString(art.getHeader(Headers.FROM)[0]));
-    overview.append('\t');
-    overview.append(escapeString(art.getHeader(Headers.DATE)[0]));
-    overview.append('\t');
-    overview.append(escapeString(art.getHeader(Headers.MESSAGE_ID)[0]));
-    overview.append('\t');
-    overview.append(escapeString(art.getHeader(Headers.REFERENCES)[0]));
-    overview.append('\t');
-
-    String bytes = art.getHeader(Headers.BYTES)[0];
-    if("".equals(bytes))
-    {
-      bytes = "0";
+    private String escapeString(String str) {
+        String nstr = str.replace("\r", "");
+        nstr = nstr.replace('\n', ' ');
+        nstr = nstr.replace('\t', ' ');
+        return nstr.trim();
     }
-    overview.append(escapeString(bytes));
-    overview.append('\t');
-
-    String lines = art.getHeader(Headers.LINES)[0];
-    if("".equals(lines))
-    {
-      lines = "0";
-    }
-    overview.append(escapeString(lines));
-    overview.append('\t');
-    overview.append(escapeString(art.getHeader(Headers.XREF)[0]));
-
-    // Remove trailing tabs if some data is empty
-    return overview.toString().trim();
-  }
-  
-  private String escapeString(String str)
-  {
-    String nstr = str.replace("\r", "");
-    nstr = nstr.replace('\n', ' ');
-    nstr = nstr.replace('\t', ' ');
-    return nstr.trim();
-  }
-  
 }

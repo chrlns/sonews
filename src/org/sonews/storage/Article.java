@@ -37,205 +37,214 @@ import org.sonews.util.Log;
 
 /**
  * Represents a newsgroup article.
+ * 
  * @author Christian Lins
  * @author Dennis Schwerdel
  * @since n3tpd/0.1
  */
 public class Article extends ArticleHead {
-	
-	/**
-	 * Loads the Article identified by the given ID from the JDBCDatabase.
-	 * @param messageID
-	 * @return null if Article is not found or if an error occurred.
-	 */
-	public static Article getByMessageID(final String messageID) {
-		try {
-			return StorageManager.current().getArticle(messageID);
-		} catch (StorageBackendException ex) {
-			Log.get().log(Level.WARNING, ex.getLocalizedMessage(), ex);
-			return null;
-		}
-	}
 
-	private byte[] body = new byte[0];
-	private User sender;
+    /**
+     * Loads the Article identified by the given ID from the JDBCDatabase.
+     * 
+     * @param messageID
+     * @return null if Article is not found or if an error occurred.
+     */
+    public static Article getByMessageID(final String messageID) {
+        try {
+            return StorageManager.current().getArticle(messageID);
+        } catch (StorageBackendException ex) {
+            Log.get().log(Level.WARNING, ex.getLocalizedMessage(), ex);
+            return null;
+        }
+    }
 
-	/**
-	 * Default constructor.
-	 */
-	public Article() {
-	}
+    private byte[] body = new byte[0];
+    private User sender;
 
-	/**
-	 * Creates a new Article object using the date from the given
-	 * raw data.
-	 */
-	public Article(String headers, byte[] body) {
-		try {
-			this.body = body;
+    /**
+     * Default constructor.
+     */
+    public Article() {
+    }
 
-			// Parse the header
-			this.headers = new InternetHeaders(
-					new ByteArrayInputStream(headers.getBytes()));
+    /**
+     * Creates a new Article object using the date from the given raw data.
+     */
+    public Article(String headers, byte[] body) {
+        try {
+            this.body = body;
 
-			this.headerSrc = headers;
-		} catch (MessagingException ex) {
-			Log.get().log(Level.WARNING, ex.getLocalizedMessage(), ex);
-		}
-	}
+            // Parse the header
+            this.headers = new InternetHeaders(new ByteArrayInputStream(
+                    headers.getBytes()));
 
-	/**
-	 * Creates an Article instance using the data from the javax.mail.Message
-	 * object. This constructor is called by the Mailinglist gateway.
-	 * @see javax.mail.Message
-	 * @param msg
-	 * @throws IOException
-	 * @throws MessagingException
-	 */
-	public Article(final Message msg)
-			throws IOException, MessagingException {
-		this.headers = new InternetHeaders();
+            this.headerSrc = headers;
+        } catch (MessagingException ex) {
+            Log.get().log(Level.WARNING, ex.getLocalizedMessage(), ex);
+        }
+    }
 
-		for (Enumeration<?> e = msg.getAllHeaders(); e.hasMoreElements();) {
-			final Header header = (Header) e.nextElement();
-			this.headers.addHeader(header.getName(), header.getValue());
-		}
+    /**
+     * Creates an Article instance using the data from the javax.mail.Message
+     * object. This constructor is called by the Mailinglist gateway.
+     * 
+     * @see javax.mail.Message
+     * @param msg
+     * @throws IOException
+     * @throws MessagingException
+     */
+    public Article(final Message msg) throws IOException, MessagingException {
+        this.headers = new InternetHeaders();
 
-		// Reads the raw byte body using Message.writeTo(OutputStream out)
-		this.body = readContent(msg);
+        for (Enumeration<?> e = msg.getAllHeaders(); e.hasMoreElements();) {
+            final Header header = (Header) e.nextElement();
+            this.headers.addHeader(header.getName(), header.getValue());
+        }
 
-		// Validate headers
-		validateHeaders();
-	}
+        // Reads the raw byte body using Message.writeTo(OutputStream out)
+        this.body = readContent(msg);
 
-	/**
-	 * Reads from the given Message into a byte array.
-	 * @param in
-	 * @return
-	 * @throws IOException
-	 */
-	private byte[] readContent(Message in)
-			throws IOException, MessagingException {
-		ByteArrayOutputStream out = new ByteArrayOutputStream();
-		in.writeTo(out);
-		return out.toByteArray();
-	}
+        // Validate headers
+        validateHeaders();
+    }
 
-	/**
-	 * Removes the header identified by the given key.
-	 * @param headerKey
-	 */
-	public void removeHeader(final String headerKey) {
-		this.headers.removeHeader(headerKey);
-		this.headerSrc = null;
-	}
+    /**
+     * Reads from the given Message into a byte array.
+     * 
+     * @param in
+     * @return
+     * @throws IOException
+     */
+    private byte[] readContent(Message in) throws IOException,
+            MessagingException {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        in.writeTo(out);
+        return out.toByteArray();
+    }
 
-	/**
-	 * Generates a message id for this article and sets it into
-	 * the header object. You have to update the JDBCDatabase manually to make this
-	 * change persistent.
-	 * Note: a Message-ID should never be changed and only generated once.
-	 */
-	private String generateMessageID() {
-		String randomString;
-		MessageDigest md5;
-		try {
-			md5 = MessageDigest.getInstance("MD5");
-			md5.reset();
-			md5.update(getBody());
-			md5.update(getHeader(Headers.SUBJECT)[0].getBytes());
-			md5.update(getHeader(Headers.FROM)[0].getBytes());
-			byte[] result = md5.digest();
-			StringBuilder hexString = new StringBuilder();
-			for (int i = 0; i < result.length; i++) {
-				hexString.append(Integer.toHexString(0xFF & result[i]));
-			}
-			randomString = hexString.toString();
-		} catch (NoSuchAlgorithmException ex) {
-			Log.get().log(Level.WARNING, ex.getLocalizedMessage(), ex);
-			randomString = UUID.randomUUID().toString();
-		}
-		String msgID = "<" + randomString + "@"
-				+ Config.inst().get(Config.HOSTNAME, "localhost") + ">";
+    /**
+     * Removes the header identified by the given key.
+     * 
+     * @param headerKey
+     */
+    public void removeHeader(final String headerKey) {
+        this.headers.removeHeader(headerKey);
+        this.headerSrc = null;
+    }
 
-		this.headers.setHeader(Headers.MESSAGE_ID, msgID);
+    /**
+     * Generates a message id for this article and sets it into the header
+     * object. You have to update the JDBCDatabase manually to make this change
+     * persistent. Note: a Message-ID should never be changed and only generated
+     * once.
+     */
+    private String generateMessageID() {
+        String randomString;
+        MessageDigest md5;
+        try {
+            md5 = MessageDigest.getInstance("MD5");
+            md5.reset();
+            md5.update(getBody());
+            md5.update(getHeader(Headers.SUBJECT)[0].getBytes());
+            md5.update(getHeader(Headers.FROM)[0].getBytes());
+            byte[] result = md5.digest();
+            StringBuilder hexString = new StringBuilder();
+            for (int i = 0; i < result.length; i++) {
+                hexString.append(Integer.toHexString(0xFF & result[i]));
+            }
+            randomString = hexString.toString();
+        } catch (NoSuchAlgorithmException ex) {
+            Log.get().log(Level.WARNING, ex.getLocalizedMessage(), ex);
+            randomString = UUID.randomUUID().toString();
+        }
+        String msgID = "<" + randomString + "@"
+                + Config.inst().get(Config.HOSTNAME, "localhost") + ">";
 
-		return msgID;
-	}
+        this.headers.setHeader(Headers.MESSAGE_ID, msgID);
 
-	/**
-	 * Returns the body string.
-	 */
-	public byte[] getBody() {
-		return body;
-	}
+        return msgID;
+    }
 
-	/**
-	 * @return Numerical IDs of the newsgroups this Article belongs to.
-	 */
-	public List<Group> getGroups() {
-		String[] groupnames = getHeader(Headers.NEWSGROUPS)[0].split(",");
-		ArrayList<Group> groups = new ArrayList<Group>();
+    /**
+     * Returns the body string.
+     */
+    public byte[] getBody() {
+        return body;
+    }
 
-		try {
-			for (String newsgroup : groupnames) {
-				newsgroup = newsgroup.trim();
-				Group group = StorageManager.current().getGroup(newsgroup);
-				if (group != null && // If the server does not provide the group, ignore it
-						!groups.contains(group)) // Yes, there may be duplicates
-				{
-					groups.add(group);
-				}
-			}
-		} catch (StorageBackendException ex) {
-			Log.get().log(Level.WARNING, ex.getLocalizedMessage(), ex);
-			return null;
-		}
-		return groups;
-	}
+    /**
+     * @return Numerical IDs of the newsgroups this Article belongs to.
+     */
+    public List<Group> getGroups() {
+        String[] groupnames = getHeader(Headers.NEWSGROUPS)[0].split(",");
+        ArrayList<Group> groups = new ArrayList<Group>();
 
-	public void setBody(byte[] body) {
-		this.body = body;
-	}
+        try {
+            for (String newsgroup : groupnames) {
+                newsgroup = newsgroup.trim();
+                Group group = StorageManager.current().getGroup(newsgroup);
+                if (group != null && // If the server does not provide the
+                                     // group, ignore it
+                        !groups.contains(group)) // Yes, there may be duplicates
+                {
+                    groups.add(group);
+                }
+            }
+        } catch (StorageBackendException ex) {
+            Log.get().log(Level.WARNING, ex.getLocalizedMessage(), ex);
+            return null;
+        }
+        return groups;
+    }
 
-	/**
-	 *
-	 * @param groupname Name(s) of newsgroups
-	 */
-	public void setGroup(String groupname) {
-		this.headers.setHeader(Headers.NEWSGROUPS, groupname);
-	}
+    public void setBody(byte[] body) {
+        this.body = body;
+    }
 
-	/**
-	 * Returns the Message-ID of this Article. If the appropriate header
-	 * is empty, a new Message-ID is created.
-	 * @return Message-ID of this Article.
-	 */
-	public String getMessageID() {
-		String[] msgID = getHeader(Headers.MESSAGE_ID);
-		return msgID[0].equals("") ? generateMessageID() : msgID[0];
-	}
+    /**
+     * 
+     * @param groupname
+     *            Name(s) of newsgroups
+     */
+    public void setGroup(String groupname) {
+        this.headers.setHeader(Headers.NEWSGROUPS, groupname);
+    }
 
-	/**
-	 * @return String containing the Message-ID.
-	 */
-	@Override
-	public String toString() {
-		return getMessageID();
-	}
+    /**
+     * Returns the Message-ID of this Article. If the appropriate header is
+     * empty, a new Message-ID is created.
+     * 
+     * @return Message-ID of this Article.
+     */
+    public String getMessageID() {
+        String[] msgID = getHeader(Headers.MESSAGE_ID);
+        return msgID[0].equals("") ? generateMessageID() : msgID[0];
+    }
 
-	/**
-	 * @return sender â currently logged user â or null, if user is not authenticated.
-	 */
-	public User getUser() {
-		return sender;
-	}
-	
-	/**
-	 * This method is to be called from POST Command implementation.
-	 * @param sender current username â or null, if user is not authenticated.
-	 */
-	public void setUser(User sender) {
-		this.sender = sender;
-	}
+    /**
+     * @return String containing the Message-ID.
+     */
+    @Override
+    public String toString() {
+        return getMessageID();
+    }
+
+    /**
+     * @return sender – currently logged user – or null, if user is not
+     *         authenticated.
+     */
+    public User getUser() {
+        return sender;
+    }
+
+    /**
+     * This method is to be called from POST Command implementation.
+     * 
+     * @param sender
+     *            current username – or null, if user is not authenticated.
+     */
+    public void setUser(User sender) {
+        this.sender = sender;
+    }
 }

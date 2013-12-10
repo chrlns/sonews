@@ -19,14 +19,16 @@ package org.sonews;
 
 import java.sql.Driver;
 import java.sql.DriverManager;
-import java.util.Enumeration;
 import java.util.Date;
+import java.util.Enumeration;
 import java.util.logging.Level;
+
 import org.sonews.config.Config;
 import org.sonews.daemon.ChannelLineBuffers;
 import org.sonews.daemon.CommandSelector;
 import org.sonews.daemon.Connections;
 import org.sonews.daemon.NNTPDaemon;
+import org.sonews.feed.FeedManager;
 import org.sonews.storage.StorageBackendException;
 import org.sonews.storage.StorageManager;
 import org.sonews.storage.StorageProvider;
@@ -36,123 +38,132 @@ import org.sonews.util.io.Resource;
 
 /**
  * Startup class of the daemon.
+ * 
  * @author Christian Lins
  * @since sonews/0.5.0
  */
 public final class Main {
 
-	/** Version information of the sonews daemon */
-	public static final String VERSION = "sonews/1.1.0";
+    /** Version information of the sonews daemon */
+    public static final String VERSION = "sonews/1.1.0";
 
-	/** The server's startup date */
-	public static final Date STARTDATE = new Date();
+    /** The server's startup date */
+    public static final Date STARTDATE = new Date();
 
-	/**
-	 * The main entrypoint.
-	 * @param args
-	 * @throws Exception
-	 */
-	public static void main(String[] args) throws Exception {
-		System.out.println(VERSION);
-		Thread.currentThread().setName("Mainthread");
+    /**
+     * The main entrypoint.
+     * 
+     * @param args
+     * @throws Exception
+     */
+    public static void main(String[] args) throws Exception {
+        System.out.println(VERSION);
+        Thread.currentThread().setName("Mainthread");
 
-		// Command line arguments
-		boolean feed   = false;  // Enable feeding?
-		boolean mlgw   = false;  // Enable mailing list gateway?
-		boolean purger = false;  // Enable message purging?
-		int port = -1;
+        // Command line arguments
+        boolean feed = false; // Enable feeding?
+        boolean purger = false; // Enable message purging?
+        int port = -1;
 
-		for (int n = 0; n < args.length; n++) {
-			if (args[n].equals("-c") || args[n].equals("-config")) {
-				Config.inst().set(Config.LEVEL_CLI, Config.CONFIGFILE, args[++n]);
-				System.out.println("Using config file " + args[n]);
-			} else if (args[n].equals("-dumpjdbcdriver")) {
-				System.out.println("Available JDBC drivers:");
-				Enumeration<Driver> drvs = DriverManager.getDrivers();
-				while (drvs.hasMoreElements()) {
-					System.out.println(drvs.nextElement());
-				}
-				return;
-			} else if (args[n].equals("-feed")) {
-				feed = true;
-			} else if (args[n].equals("-h") || args[n].equals("-help")) {
-				printArguments();
-				return;
-			} else if (args[n].equals("-mlgw")) {
-				mlgw = true;
-			} else if (args[n].equals("-p")) {
-				port = Integer.parseInt(args[++n]);
-			} else if (args[n].equals("-plugin-storage")) {
-				System.out.println("Warning: -plugin-storage is not implemented!");
-			} else if (args[n].equals("-plugin-command")) {
-				try {
-					CommandSelector.addCommandHandler(args[++n]);
-				} catch (Exception ex) {
-					StringBuilder strBuf = new StringBuilder();
-					strBuf.append("Could not load command plugin: ");
-					strBuf.append(args[n]);
-					Log.get().warning(strBuf.toString());
-					Log.get().log(Level.INFO, "Main.java", ex);
-				}
-			} else if (args[n].equals("-purger")) {
-				purger = true;
-			} else if (args[n].equals("-v") || args[n].equals("-version")) {
-				// Simply return as the version info is already printed above
-				return;
-			}
-		}
+        for (int n = 0; n < args.length; n++) {
+            if (args[n].equals("-c") || args[n].equals("-config")) {
+                Config.inst().set(Config.LEVEL_CLI, Config.CONFIGFILE,
+                        args[++n]);
+                System.out.println("Using config file " + args[n]);
+            } else if (args[n].equals("-dumpjdbcdriver")) {
+                System.out.println("Available JDBC drivers:");
+                Enumeration<Driver> drvs = DriverManager.getDrivers();
+                while (drvs.hasMoreElements()) {
+                    System.out.println(drvs.nextElement());
+                }
+                return;
+            } else if (args[n].equals("-feed")) {
+                feed = true;
+            } else if (args[n].equals("-h") || args[n].equals("-help")) {
+                printArguments();
+                return;
+            } else if (args[n].equals("-p")) {
+                port = Integer.parseInt(args[++n]);
+            } else if (args[n].equals("-plugin-storage")) {
+                System.out
+                        .println("Warning: -plugin-storage is not implemented!");
+            } else if (args[n].equals("-plugin-command")) {
+                try {
+                    CommandSelector.addCommandHandler(args[++n]);
+                } catch (Exception ex) {
+                    StringBuilder strBuf = new StringBuilder();
+                    strBuf.append("Could not load command plugin: ");
+                    strBuf.append(args[n]);
+                    Log.get().warning(strBuf.toString());
+                    Log.get().log(Level.INFO, "Main.java", ex);
+                }
+            } else if (args[n].equals("-purger")) {
+                purger = true;
+            } else if (args[n].equals("-v") || args[n].equals("-version")) {
+                // Simply return as the version info is already printed above
+                return;
+            }
+        }
 
-		// Try to load the backend:
-		// Do NOT USE BackendConfig or Log classes before this point because 
-		// they require a working JDBCDatabase connection.
-		try {
-			String provName = Config.inst().get(Config.LEVEL_FILE,
-					Config.STORAGE_PROVIDER, "org.sonews.storage.impl.JDBCDatabaseProvider");
-			StorageProvider sprov = StorageManager.loadProvider(provName);
-			StorageManager.enableProvider(sprov);
+        // Try to load the backend:
+        // Do NOT USE BackendConfig or Log classes before this point because
+        // they require a working JDBCDatabase connection.
+        try {
+            String provName = Config.inst().get(Config.LEVEL_FILE,
+                    Config.STORAGE_PROVIDER,
+                    "org.sonews.storage.impl.LocalStorageProvider");
+            StorageProvider sprov = StorageManager.loadProvider(provName);
+            StorageManager.enableProvider(sprov);
 
-			// Make sure some elementary groups are existing
-			if (!StorageManager.current().isGroupExisting("control")) {
-				StorageManager.current().addGroup("control", 0);
-				Log.get().info("Group 'control' created.");
-			}
-		} catch (StorageBackendException ex) {
-			Log.get().log(Level.SEVERE, ex.getLocalizedMessage(), ex);
-			System.err.println("Database initialization failed with " + ex.toString());
-			System.err.println("Make sure you have specified the correct database"
-							+ " settings in sonews.conf!");
-			return;
-		}
+            // Make sure some elementary groups are existing
+            if (!StorageManager.current().isGroupExisting("control")) {
+                StorageManager.current().addGroup("control", 0);
+                Log.get().info("Group 'control' created.");
+            }
+        } catch (StorageBackendException ex) {
+            Log.get().log(Level.SEVERE, ex.getLocalizedMessage(), ex);
+            System.err.println("Database initialization failed with "
+                    + ex.toString());
+            System.err
+                    .println("Make sure you have specified the correct database"
+                            + " settings in sonews.conf!");
+            return;
+        }
 
-		ChannelLineBuffers.allocateDirect();
+        ChannelLineBuffers.allocateDirect();
 
-		// Add shutdown hook
-		Runtime.getRuntime().addShutdownHook(new ShutdownHook());
+        // Add shutdown hook
+        Runtime.getRuntime().addShutdownHook(new ShutdownHook());
 
-		// Start the listening daemon
-		if (port <= 0) {
-			port = Config.inst().get(Config.PORT, 119);
-		}
-		final NNTPDaemon daemon = NNTPDaemon.createInstance(port);
-		daemon.start();
+        // Start the listening daemon
+        if (port <= 0) {
+            port = Config.inst().get(Config.PORT, 119);
+        }
+        final NNTPDaemon daemon = NNTPDaemon.createInstance(port);
+        daemon.start();
 
-		// Start Connections purger thread...
-		Connections.getInstance().start();
+        // Start Connections purger thread...
+        Connections.getInstance().start();
 
-		if(purger) {
-			Purger purgerDaemon = new Purger();
-			purgerDaemon.start();
-		}
+        // Start feeds
+        if (feed) {
+            FeedManager.startFeeding();
+        }
 
-		// Wait for main thread to exit (setDaemon(false))
-		daemon.join();
-	}
+        if (purger) {
+            Purger purgerDaemon = new Purger();
+            purgerDaemon.start();
+        }
 
-	private static void printArguments() {
-		String usage = Resource.getAsString("helpers/usage", true);
-		System.out.println(usage);
-	}
+        // Wait for main thread to exit (setDaemon(false))
+        daemon.join();
+    }
 
-	private Main() {
-	}
+    private static void printArguments() {
+        String usage = Resource.getAsString("helpers/usage", true);
+        System.out.println(usage);
+    }
+
+    private Main() {
+    }
 }

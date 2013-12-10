@@ -20,56 +20,60 @@ package org.sonews.acl;
 /**
  * Represents users (clients) accessing our service through NNTP protocol.
  * 
- * This class can be extended by your plugin 
- * to describe additional information, that was gained during login process.
+ * This class can be extended by your plugin to describe additional information,
+ * that was gained during login process.
  * 
  * When User object is created, default authentication status is false.
  * 
- * @author FrantiÅ¡ek KuÄera (frantovo.cz)
+ * @author František Kučera (frantovo.cz)
  */
 public class User {
 
-	private String userName;
-	private boolean authenticated = false;
+    private String userName;
+    private boolean authenticated = false;
 
-	public String getUserName() {
-		return userName;
-	}
+    public String getUserName() {
+        return userName;
+    }
 
-	public void setUserName(String userName) {
-		this.userName = userName;
-	}
+    public void setUserName(String userName) {
+        this.userName = userName;
+    }
 
-	/**
-	 * In some configurations users don't have to use their password â 
-	 * they can just tell us their name and we will trust them â 
-	 * in this case User object will exist end user name will be filled, but this method will return false.
-	 * 
-	 * @return true if user was succesfully authenticated (has provided correct password).
-	 */
-	public boolean isAuthenticated() {
-		return authenticated;
-	}
+    /**
+     * In some configurations users don't have to use their password – they can
+     * just tell us their name and we will trust them – in this case User object
+     * will exist end user name will be filled, but this method will return
+     * false.
+     * 
+     * @return true if user was succesfully authenticated (has provided correct
+     *         password).
+     */
+    public boolean isAuthenticated() {
+        return authenticated;
+    }
 
-	/**
-	 * This method is to be called from AUTHINFO PASS Command implementation.
-	 * 
-	 * @param authenticated true if user has provided right password in AUTHINFO PASS password.
-	 * @see #isAuthenticated() 
-	 */
-	public void setAuthenticated(boolean authenticated) {
-		this.authenticated = authenticated;
-	}
+    /**
+     * This method is to be called from AUTHINFO PASS Command implementation.
+     * 
+     * @param authenticated
+     *            true if user has provided right password in AUTHINFO PASS
+     *            password.
+     * @see #isAuthenticated()
+     */
+    public void setAuthenticated(boolean authenticated) {
+        this.authenticated = authenticated;
+    }
 
-	public User() {
-	}
+    public User() {
+    }
 
-	public User(String userName) {
-		this.userName = userName;
-	}
+    public User(String userName) {
+        this.userName = userName;
+    }
 
-	public User(String userName, boolean authenticated) {
-		this.userName = userName;
-		this.authenticated = authenticated;
-	}
+    public User(String userName, boolean authenticated) {
+        this.userName = userName;
+        this.authenticated = authenticated;
+    }
 }

@@ -42,366 +42,387 @@ import org.sonews.util.io.CRLFOutputStream;
 import org.sonews.util.io.SMTPOutputStream;
 
 /**
- * For every SocketChannel (so TCP/IP connection) there is an instance of
- * this class.
+ * For every SocketChannel (so TCP/IP connection) there is an instance of this
+ * class.
+ * 
  * @author Christian Lins
  * @since sonews/0.5.0
  */
 public final class NNTPConnection {
 
-	public static final String NEWLINE = "\r\n";    // RFC defines this as newline
-	public static final String MESSAGE_ID_PATTERN = "<[^>]+>";
-	private static final Timer cancelTimer = new Timer(true); // Thread-safe? True for run as daemon
-	/** SocketChannel is generally thread-safe */
-	private SocketChannel channel = null;
-	private Charset charset = Charset.forName("UTF-8");
-	private Command command = null;
-	private Article currentArticle = null;
-	private Group currentGroup = null;
-	private volatile long lastActivity = System.currentTimeMillis();
-	private ChannelLineBuffers lineBuffers = new ChannelLineBuffers();
-	private int readLock = 0;
-	private final Object readLockGate = new Object();
-	private SelectionKey writeSelKey = null;
-	private User user;
+    public static final String NEWLINE = "\r\n"; // RFC defines this as newline
+    public static final String MESSAGE_ID_PATTERN = "<[^>]+>";
+    private static final Timer cancelTimer = new Timer(true); // Thread-safe?
+                                                              // True for run as
+                                                              // daemon
+    /** SocketChannel is generally thread-safe */
+    private SocketChannel channel = null;
+    private Charset charset = Charset.forName("UTF-8");
+    private Command command = null;
+    private Article currentArticle = null;
+    private Group currentGroup = null;
+    private volatile long lastActivity = System.currentTimeMillis();
+    private ChannelLineBuffers lineBuffers = new ChannelLineBuffers();
+    private int readLock = 0;
+    private final Object readLockGate = new Object();
+    private SelectionKey writeSelKey = null;
+    private User user;
 
-	public NNTPConnection(final SocketChannel channel)
-			throws IOException {
-		if (channel == null) {
-			throw new IllegalArgumentException("channel is null");
-		}
+    public NNTPConnection(final SocketChannel channel) throws IOException {
+        if (channel == null) {
+            throw new IllegalArgumentException("channel is null");
+        }
 
-		this.channel = channel;
-		Stats.getInstance().clientConnect();
-	}
+        this.channel = channel;
+        Stats.getInstance().clientConnect();
+    }
 
-	/**
-	 * Tries to get the read lock for this NNTPConnection. This method is Thread-
-	 * safe and returns true of the read lock was successfully set. If the lock
-	 * is still hold by another Thread the method returns false.
-	 */
-	boolean tryReadLock() {
-		// As synchronizing simple types may cause deadlocks,
-		// we use a gate object.
-		synchronized (readLockGate) {
-			if (readLock != 0) {
-				return false;
-			} else {
-				readLock = Thread.currentThread().hashCode();
-				return true;
-			}
-		}
-	}
+    /**
+     * Tries to get the read lock for this NNTPConnection. This method is
+     * Thread- safe and returns true of the read lock was successfully set. If
+     * the lock is still hold by another Thread the method returns false.
+     */
+    boolean tryReadLock() {
+        // As synchronizing simple types may cause deadlocks,
+        // we use a gate object.
+        synchronized (readLockGate) {
+            if (readLock != 0) {
+                return false;
+            } else {
+                readLock = Thread.currentThread().hashCode();
+                return true;
+            }
+        }
+    }
 
-	/**
-	 * Releases the read lock in a Thread-safe way.
-	 * @throws IllegalMonitorStateException if a Thread not holding the lock
-	 * tries to release it.
-	 */
-	void unlockReadLock() {
-		synchronized (readLockGate) {
-			if (readLock == Thread.currentThread().hashCode()) {
-				readLock = 0;
-			} else {
-				throw new IllegalMonitorStateException();
-			}
-		}
-	}
+    /**
+     * Releases the read lock in a Thread-safe way.
+     * 
+     * @throws IllegalMonitorStateException
+     *             if a Thread not holding the lock tries to release it.
+     */
+    void unlockReadLock() {
+        synchronized (readLockGate) {
+            if (readLock == Thread.currentThread().hashCode()) {
+                readLock = 0;
+            } else {
+                throw new IllegalMonitorStateException();
+            }
+        }
+    }
 
-	/**
-	 * @return Current input buffer of this NNTPConnection instance.
-	 */
-	public ByteBuffer getInputBuffer() {
-		return this.lineBuffers.getInputBuffer();
-	}
+    /**
+     * @return Current input buffer of this NNTPConnection instance.
+     */
+    public ByteBuffer getInputBuffer() {
+        return this.lineBuffers.getInputBuffer();
+    }
 
-	/**
-	 * @return Output buffer of this NNTPConnection which has at least one byte
-	 * free storage.
-	 */
-	public ByteBuffer getOutputBuffer() {
-		return this.lineBuffers.getOutputBuffer();
-	}
+    /**
+     * @return Output buffer of this NNTPConnection which has at least one byte
+     *         free storage.
+     */
+    public ByteBuffer getOutputBuffer() {
+        return this.lineBuffers.getOutputBuffer();
+    }
 
-	/**
-	 * @return ChannelLineBuffers instance associated with this NNTPConnection.
-	 */
-	public ChannelLineBuffers getBuffers() {
-		return this.lineBuffers;
-	}
+    /**
+     * @return ChannelLineBuffers instance associated with this NNTPConnection.
+     */
+    public ChannelLineBuffers getBuffers() {
+        return this.lineBuffers;
+    }
 
-	/**
-	 * @return true if this connection comes from a local remote address.
-	 */
-	public boolean isLocalConnection() {
-		return ((InetSocketAddress) this.channel.socket().getRemoteSocketAddress()).getHostName().equalsIgnoreCase("localhost");
-	}
+    /**
+     * @return true if this connection comes from a local remote address.
+     */
+    public boolean isLocalConnection() {
+        return ((InetSocketAddress) this.channel.socket()
+                .getRemoteSocketAddress()).getHostName().equalsIgnoreCase(
+                "localhost");
+    }
 
-	void setWriteSelectionKey(SelectionKey selKey) {
-		this.writeSelKey = selKey;
-	}
+    void setWriteSelectionKey(SelectionKey selKey) {
+        this.writeSelKey = selKey;
+    }
 
-	public void shutdownInput() {
-		try {
-			// Closes the input line of the channel's socket, so no new data
-			// will be received and a timeout can be triggered.
-			this.channel.socket().shutdownInput();
-		} catch (IOException ex) {
-			Log.get().log(Level.WARNING, "Exception in NNTPConnection.shutdownInput(): {0}", ex);
-		}
-	}
+    public void shutdownInput() {
+        try {
+            // Closes the input line of the channel's socket, so no new data
+            // will be received and a timeout can be triggered.
+            this.channel.socket().shutdownInput();
+        } catch (IOException ex) {
+            Log.get().log(Level.WARNING,
+                    "Exception in NNTPConnection.shutdownInput(): {0}", ex);
+        }
+    }
 
-	public void shutdownOutput() {
-		cancelTimer.schedule(new TimerTask() {
-			@Override
-			public void run() {
-				try {
-					// Closes the output line of the channel's socket.
-					channel.socket().shutdownOutput();
-					channel.close();
-				} catch (SocketException ex) {
-					// Socket was already disconnected
-					Log.get().log(Level.INFO, "NNTPConnection.shutdownOutput(): {0}", ex);
-				} catch (Exception ex) {
-					Log.get().log(Level.WARNING, "NNTPConnection.shutdownOutput(): {0}", ex);
-				}
-			}
-		}, 3000);
-	}
+    public void shutdownOutput() {
+        cancelTimer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                try {
+                    // Closes the output line of the channel's socket.
+                    channel.socket().shutdownOutput();
+                    channel.close();
+                } catch (SocketException ex) {
+                    // Socket was already disconnected
+                    Log.get().log(Level.INFO,
+                            "NNTPConnection.shutdownOutput(): {0}", ex);
+                } catch (Exception ex) {
+                    Log.get().log(Level.WARNING,
+                            "NNTPConnection.shutdownOutput(): {0}", ex);
+                }
+            }
+        }, 3000);
+    }
 
-	public SocketChannel getSocketChannel() {
-		return this.channel;
-	}
+    public SocketChannel getSocketChannel() {
+        return this.channel;
+    }
 
-	public Article getCurrentArticle() {
-		return this.currentArticle;
-	}
+    public Article getCurrentArticle() {
+        return this.currentArticle;
+    }
 
-	public Charset getCurrentCharset() {
-		return this.charset;
-	}
+    public Charset getCurrentCharset() {
+        return this.charset;
+    }
 
-	/**
-	 * @return The currently selected communication channel (not SocketChannel)
-	 */
-	public Group getCurrentChannel() {
-		return this.currentGroup;
-	}
+    /**
+     * @return The currently selected communication channel (not SocketChannel)
+     */
+    public Group getCurrentChannel() {
+        return this.currentGroup;
+    }
 
-	public void setCurrentArticle(final Article article) {
-		this.currentArticle = article;
-	}
+    public void setCurrentArticle(final Article article) {
+        this.currentArticle = article;
+    }
 
-	public void setCurrentGroup(final Group group) {
-		this.currentGroup = group;
-	}
+    public void setCurrentGroup(final Group group) {
+        this.currentGroup = group;
+    }
 
-	public long getLastActivity() {
-		return this.lastActivity;
-	}
+    public long getLastActivity() {
+        return this.lastActivity;
+    }
 
-	/**
-	 * Due to the readLockGate there is no need to synchronize this method.
-	 * @param raw
-	 * @throws IllegalArgumentException if raw is null.
-	 * @throws IllegalStateException if calling thread does not own the readLock.
-	 */
-	void lineReceived(byte[] raw) {
-		if (raw == null) {
-			throw new IllegalArgumentException("raw is null");
-		}
+    /**
+     * Due to the readLockGate there is no need to synchronize this method.
+     * 
+     * @param raw
+     * @throws IllegalArgumentException
+     *             if raw is null.
+     * @throws IllegalStateException
+     *             if calling thread does not own the readLock.
+     */
+    void lineReceived(byte[] raw) {
+        if (raw == null) {
+            throw new IllegalArgumentException("raw is null");
+        }
 
-		if (readLock == 0 || readLock != Thread.currentThread().hashCode()) {
-			throw new IllegalStateException("readLock not properly set");
-		}
+        if (readLock == 0 || readLock != Thread.currentThread().hashCode()) {
+            throw new IllegalStateException("readLock not properly set");
+        }
 
-		this.lastActivity = System.currentTimeMillis();
+        this.lastActivity = System.currentTimeMillis();
 
-		String line = new String(raw, this.charset);
+        String line = new String(raw, this.charset);
 
-		// There might be a trailing \r, but trim() is a bad idea
-		// as it removes also leading spaces from long header lines.
-		if (line.endsWith("\r")) {
-			line = line.substring(0, line.length() - 1);
-			raw = Arrays.copyOf(raw, raw.length - 1);
-		}
+        // There might be a trailing \r, but trim() is a bad idea
+        // as it removes also leading spaces from long header lines.
+        if (line.endsWith("\r")) {
+            line = line.substring(0, line.length() - 1);
+            raw = Arrays.copyOf(raw, raw.length - 1);
+        }
 
-		Log.get().log(Level.FINE, "<< {0}", line);
+        Log.get().log(Level.FINE, "<< {0}", line);
 
-		if (command == null) {
-			command = parseCommandLine(line);
-			assert command != null;
-		}
+        if (command == null) {
+            command = parseCommandLine(line);
+            assert command != null;
+        }
 
-		try {
-			// The command object will process the line we just received
-			try {
-				command.processLine(this, line, raw);
-			} catch (StorageBackendException ex) {
-				Log.get().info("Retry command processing after StorageBackendException");
+        try {
+            // The command object will process the line we just received
+            try {
+                command.processLine(this, line, raw);
+            } catch (StorageBackendException ex) {
+                Log.get()
+                        .info("Retry command processing after StorageBackendException");
 
-				// Try it a second time, so that the backend has time to recover
-				command.processLine(this, line, raw);
-			}
-		} catch (ClosedChannelException ex0) {
-			try {
-				StringBuilder strBuf = new StringBuilder();
-				strBuf.append("Connection to ");
-				strBuf.append(channel.socket().getRemoteSocketAddress());
-				strBuf.append(" closed: ");
-				strBuf.append(ex0);
-				Log.get().info(strBuf.toString());
-			} catch (Exception ex0a) {
-				ex0a.printStackTrace();
-			}
-		} catch (Exception ex1) { // This will catch a second StorageBackendException
-			try {
-				command = null;
-				Log.get().log(Level.WARNING, ex1.getLocalizedMessage(), ex1);
-				println("403 Internal server error");
+                // Try it a second time, so that the backend has time to recover
+                command.processLine(this, line, raw);
+            }
+        } catch (ClosedChannelException ex0) {
+            try {
+                StringBuilder strBuf = new StringBuilder();
+                strBuf.append("Connection to ");
+                strBuf.append(channel.socket().getRemoteSocketAddress());
+                strBuf.append(" closed: ");
+                strBuf.append(ex0);
+                Log.get().info(strBuf.toString());
+            } catch (Exception ex0a) {
+                ex0a.printStackTrace();
+            }
+        } catch (Exception ex1) { // This will catch a second
+                                  // StorageBackendException
+            try {
+                command = null;
+                Log.get().log(Level.WARNING, ex1.getLocalizedMessage(), ex1);
+                println("403 Internal server error");
 
-				// Should we end the connection here?
-				// RFC says we MUST return 400 before closing the connection
-				shutdownInput();
-				shutdownOutput();
-			} catch (Exception ex2) {
-				ex2.printStackTrace();
-			}
-		}
+                // Should we end the connection here?
+                // RFC says we MUST return 400 before closing the connection
+                shutdownInput();
+                shutdownOutput();
+            } catch (Exception ex2) {
+                ex2.printStackTrace();
+            }
+        }
 
-		if (command == null || command.hasFinished()) {
-			command = null;
-			charset = Charset.forName("UTF-8"); // Reset to default
-		}
-	}
+        if (command == null || command.hasFinished()) {
+            command = null;
+            charset = Charset.forName("UTF-8"); // Reset to default
+        }
+    }
 
-	/**
-	 * This method determines the fitting command processing class.
-	 * @param line
-	 * @return
-	 */
-	private Command parseCommandLine(String line) {
-		String cmdStr = line.split(" ")[0];
-		return CommandSelector.getInstance().get(cmdStr);
-	}
+    /**
+     * This method determines the fitting command processing class.
+     * 
+     * @param line
+     * @return
+     */
+    private Command parseCommandLine(String line) {
+        String cmdStr = line.split(" ")[0];
+        return CommandSelector.getInstance().get(cmdStr);
+    }
 
-	/**
-	 * Puts the given line into the output buffer, adds a newline character
-	 * and returns. The method returns immediately and does not block until
-	 * the line was sent. If line is longer than 510 octets it is split up in
-	 * several lines. Each line is terminated by \r\n (NNTPConnection.NEWLINE).
-	 * @param line
-	 */
-	public void println(final CharSequence line, final Charset charset)
-			throws IOException {
-		writeToChannel(CharBuffer.wrap(line), charset, line);
-		writeToChannel(CharBuffer.wrap(NEWLINE), charset, null);
-	}
+    /**
+     * Puts the given line into the output buffer, adds a newline character and
+     * returns. The method returns immediately and does not block until the line
+     * was sent. If line is longer than 510 octets it is split up in several
+     * lines. Each line is terminated by \r\n (NNTPConnection.NEWLINE).
+     * 
+     * @param line
+     */
+    public void println(final CharSequence line, final Charset charset)
+            throws IOException {
+        writeToChannel(CharBuffer.wrap(line), charset, line);
+        writeToChannel(CharBuffer.wrap(NEWLINE), charset, null);
+    }
 
-	/**
-	 * Writes the given raw lines to the output buffers and finishes with
-	 * a newline character (\r\n).
-	 * @param rawLines
-	 */
-	public void println(final byte[] rawLines)
-			throws IOException {
-		this.lineBuffers.addOutputBuffer(ByteBuffer.wrap(rawLines));
-		writeToChannel(CharBuffer.wrap(NEWLINE), charset, null);
-	}
-	
-	/**
-	 * Same as {@link #println(byte[]) } but escapes lines containing single dot,
-	 * which has special meaning in protocol (end of message).
-	 * 
-	 * This method is safe to be used for writing messages â if message contains 
-	 * a line with single dot, it will be doubled and thus not interpreted 
-	 * by NNTP client as end of message
-	 * 
-	 * @param rawLines
-	 * @throws IOException 
-	 */
-	public void printlnEscapeDots(final byte[] rawLines) throws IOException {
-		// TODO: optimalizace
-		
-		ByteArrayOutputStream baos = new ByteArrayOutputStream(rawLines.length + 10);
-		CRLFOutputStream crlfStream = new CRLFOutputStream(baos);
-		SMTPOutputStream smtpStream = new SMTPOutputStream(crlfStream);
-		smtpStream.write(rawLines);
-		
-		println(baos.toByteArray());
-		
-		smtpStream.close();
-	}
+    /**
+     * Writes the given raw lines to the output buffers and finishes with a
+     * newline character (\r\n).
+     * 
+     * @param rawLines
+     */
+    public void println(final byte[] rawLines) throws IOException {
+        this.lineBuffers.addOutputBuffer(ByteBuffer.wrap(rawLines));
+        writeToChannel(CharBuffer.wrap(NEWLINE), charset, null);
+    }
 
-	/**
-	 * Encodes the given CharBuffer using the given Charset to a bunch of
-	 * ByteBuffers (each 512 bytes large) and enqueues them for writing at the
-	 * connected SocketChannel.
-	 * @throws java.io.IOException
-	 */
-	private void writeToChannel(CharBuffer characters, final Charset charset,
-			CharSequence debugLine)
-			throws IOException {
-		if (!charset.canEncode()) {
-			Log.get().log(Level.SEVERE, "FATAL: Charset {0} cannot encode!", charset);
-			return;
-		}
+    /**
+     * Same as {@link #println(byte[]) } but escapes lines containing single dot,
+     * which has special meaning in protocol (end of message).
+     * 
+     * This method is safe to be used for writing messages – if message contains
+     * a line with single dot, it will be doubled and thus not interpreted by
+     * NNTP client as end of message
+     * 
+     * @param rawLines
+     * @throws IOException
+     */
+    public void printlnEscapeDots(final byte[] rawLines) throws IOException {
+        // TODO: optimalizace
 
-		// Write characters to output buffers
-		LineEncoder lenc = new LineEncoder(characters, charset);
-		lenc.encode(lineBuffers);
+        ByteArrayOutputStream baos = new ByteArrayOutputStream(
+                rawLines.length + 10);
+        CRLFOutputStream crlfStream = new CRLFOutputStream(baos);
+        SMTPOutputStream smtpStream = new SMTPOutputStream(crlfStream);
+        smtpStream.write(rawLines);
 
-		enableWriteEvents(debugLine);
-	}
+        println(baos.toByteArray());
 
-	private void enableWriteEvents(CharSequence debugLine) {
-		// Enable OP_WRITE events so that the buffers are processed
-		try {
-			this.writeSelKey.interestOps(SelectionKey.OP_WRITE);
-			ChannelWriter.getInstance().getSelector().wakeup();
-		} catch (Exception ex) // CancelledKeyException and ChannelCloseException
-		{
-			Log.get().log(Level.WARNING, "NNTPConnection.writeToChannel(): {0}", ex);
-			return;
-		}
+        smtpStream.close();
+    }
 
-		// Update last activity timestamp
-		this.lastActivity = System.currentTimeMillis();
-		if (debugLine != null) {
-			Log.get().log(Level.FINE, ">> {0}", debugLine);
-		}
-	}
+    /**
+     * Encodes the given CharBuffer using the given Charset to a bunch of
+     * ByteBuffers (each 512 bytes large) and enqueues them for writing at the
+     * connected SocketChannel.
+     * 
+     * @throws java.io.IOException
+     */
+    private void writeToChannel(CharBuffer characters, final Charset charset,
+            CharSequence debugLine) throws IOException {
+        if (!charset.canEncode()) {
+            Log.get().log(Level.SEVERE, "FATAL: Charset {0} cannot encode!",
+                    charset);
+            return;
+        }
 
-	public void println(final CharSequence line)
-			throws IOException {
-		println(line, charset);
-	}
+        // Write characters to output buffers
+        LineEncoder lenc = new LineEncoder(characters, charset);
+        lenc.encode(lineBuffers);
 
-	public void print(final String line)
-			throws IOException {
-		writeToChannel(CharBuffer.wrap(line), charset, line);
-	}
+        enableWriteEvents(debugLine);
+    }
 
-	public void setCurrentCharset(final Charset charset) {
-		this.charset = charset;
-	}
+    private void enableWriteEvents(CharSequence debugLine) {
+        // Enable OP_WRITE events so that the buffers are processed
+        try {
+            this.writeSelKey.interestOps(SelectionKey.OP_WRITE);
+            ChannelWriter.getInstance().getSelector().wakeup();
+        } catch (Exception ex) // CancelledKeyException and
+                               // ChannelCloseException
+        {
+            Log.get().log(Level.WARNING,
+                    "NNTPConnection.writeToChannel(): {0}", ex);
+            return;
+        }
 
-	void setLastActivity(long timestamp) {
-		this.lastActivity = timestamp;
-	}
+        // Update last activity timestamp
+        this.lastActivity = System.currentTimeMillis();
+        if (debugLine != null) {
+            Log.get().log(Level.FINE, ">> {0}", debugLine);
+        }
+    }
 
-	/**
-	 * @return Currently logged user (but you should check {@link User#isAuthenticated()}, if user is athenticated, or we just trust him)
-	 */
-	public User getUser() {
-		return user;
-	}
+    public void println(final CharSequence line) throws IOException {
+        println(line, charset);
+    }
 
-	/**
-	 * This method is to be called from AUTHINFO USER Command implementation.
-	 * @param username username from AUTHINFO USER username.
-	 */
-	public void setUser(User user) {
-		this.user = user;
-	}
+    public void print(final String line) throws IOException {
+        writeToChannel(CharBuffer.wrap(line), charset, line);
+    }
+
+    public void setCurrentCharset(final Charset charset) {
+        this.charset = charset;
+    }
+
+    void setLastActivity(long timestamp) {
+        this.lastActivity = timestamp;
+    }
+
+    /**
+     * @return Currently logged user (but you should check
+     *         {@link User#isAuthenticated()}, if user is athenticated, or we
+     *         just trust him)
+     */
+    public User getUser() {
+        return user;
+    }
+
+    /**
+     * This method is to be called from AUTHINFO USER Command implementation.
+     * 
+     * @param username
+     *            username from AUTHINFO USER username.
+     */
+    public void setUser(User user) {
+        this.user = user;
+    }
 }
