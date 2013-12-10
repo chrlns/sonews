@@ -1,4 +1,0 @@
-sonews.storage.database=jdbc:mysql://localhost/sonews
-sonews.storage.user=sonews
-sonews.storage.dbmsdriver=com.mysql.jdbc.Driver
-sonews.storage.password=mySecret

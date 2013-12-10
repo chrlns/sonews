@@ -1,0 +1,459 @@
+<?xml version="1.0"?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.2//EN" "http://www.oasis-open.org/docbook/xml/4.2/docbookx.dtd" [
+  <!ENTITY tex "TeX">
+  <!ENTITY latex "LaTeX">
+]>
+<book id="sonews.xml" lang="en">
+  <title>sonews Usenet News Server</title>
+  <para>
+    <emphasis role="bold">sonews</emphasis> is a NNTP server than can provide 
+    access to both local and global Usenets newsgroups. It is written in 
+    <ulink url="http://java.sun.com/">Java</ulink> and uses a relational
+    database as backend.
+  </para>
+
+  <chapter>
+    <title>Introduction</title>
+    <para>sonews is a RCF3977 compliant NNTP Usenet server. 
+    It is written in Java and uses a relation database management system
+    (RDBMS) as backend (currently
+    <ulink url="http://www.postgresql.com/">PostgreSQL</ulink> and
+    <ulink url="http://www.mysql.com/">MySQL</ulink>).
+    sonews is highly multithreaded and uses Java NIO asynchronous sockets
+    to handle thousands of concurrent connections.</para>
+    <para>sonews is Free and Open Source Software (FOSS) licensed under the 
+    terms of the
+    <ulink url="http://www.gnu.org/licenses/gpl.html">GNU General Public License</ulink>
+    Version 3 (or later).</para>
+
+      <para>Ancestor of sonews is probably the Neat NNTP Daemon (n3tpd) 
+      although there is very little code in sonews that can be identified
+      as direct derivation.
+      sonews was developed as diploma thesis project of Christian Lins at
+      <ulink url="http://de.sun.com/">StarOffice development</ulink>
+      in Hamburg and is now a Free Software project.</para>
+  </chapter>
+
+  <chapter label="2">
+    <title>Installation and initial setup</title>
+    <sect1 label="2.1">
+      <title>Download &amp; Installation</title>
+      <sect2 label="2.1.1">
+        <title>Ubuntu and other Debian-based systems</title>
+        <para>You can install sonews with 
+        <ulink url="http://www.debian.org/doc/manuals/apt-howto/">APT</ulink>
+        easily.
+        Christian Lins provides a package repository at Launchpad with
+        sonews Debian packages.
+        See <ulink url="https://launchpad.net/~cli/+archive/sonews">https://launchpad.net/~cli/+archive/sonews</ulink>
+        for more information about how to use an APT repository to install sonews.
+        </para>
+        <para>
+        On recent Ubuntu version you can use the following command to
+        add the sonews package archive:
+        <screen>$ sudo add-apt-repository ppa:cli/sonews</screen>
+        </para>
+        <para>After adding the repository, force an update of your local package list:</para>
+        <screen>$ sudo apt-get update</screen>
+        <para>To install sonews and all prerequisites issue the following command:</para>
+        <screen>$ sudo apt-get install sonews</screen>
+        <para>This method should work for all recent Debian-based distributions
+(<ulink url="http://www.debian.org/">Debian</ulink>, <ulink url="http://www.ubuntu.com/">Ubuntu</ulink>, etc.).</para>
+      </sect2>
+
+      <sect2 label="2.1.2">
+        <title>Other systems</title>
+        <para>See <ulink url="files/">Files Section</ulink> for recent binary and source tarballs.</para>
+        <para>Use the binary archive and extract it in a directory of your choice. Make sure your system
+provides the necessary prerequisites:</para>
+        <itemizedlist>
+          <listitem>
+            <para>Java6 compatible runtime (JRE)</para>
+          </listitem>
+          <listitem>
+            <para>Java Mail API implementation, e.g. <ulink url="http://java.sun.com/products/javamail/">Sun Java Mail</ulink>.
+GNU JavaMail has a broken POP3 Provider and does not work with sonews.</para>
+          </listitem>
+          <listitem>
+            <para>JSP Servlet Container (e.g. Tomcat or GlassFish) [optional]</para>
+          </listitem>
+        </itemizedlist>
+      </sect2>
+    </sect1>
+
+    <sect1 label="2.2">
+      <title>Initial database setup</title>
+      <para>Before you start sonews, you must prepare the database. Currently sonews is known
+to work with PostgreSQL and MySQL.</para>
+      <para>It is highly recommended to create an own database for every sonews instance, e.g.
+called 'sonews'. Additionally, it is recommended to create a unique database user
+for sonews, e.g. 'sonewsuser'. Please do not use the root user for sonews!
+The sonews user needs rights for SELECT, INSERT and UPDATE statements.
+Refer to the database's manual for instructions.</para>
+      <para>You will find the SQL Schema definitions in the helpers subdirectory of
+the source and binary distributions. You can create the tables manually using
+this templates or you can use the setup helper:</para>
+      <screen>user@debian$ sonews setup</screen>
+      <para>or on other *nix systems:</para>
+      <screen>user@nix$ java -jar sonews.jar org.sonews.util.DatabaseSetup</screen>
+      <para>The tool will ask for some information about your database environment,
+connect to the database, create the tables and creates a default bootstrap
+config file called sonews.conf.</para>
+      <para>
+        If the automatic creation tools do not work, use a database tool to
+        create the schema manually with the given SQL files.
+      </para>
+    </sect1>
+  </chapter>
+
+  <chapter label="3">
+    <title>Running sonews</title>
+    <sect1 label="3.1">
+      <title>Configuration values</title>
+      <para>There is a bootstrap configuration in /etc/sonews/sonews.conf and a regular configuration
+in the database table config.</para>
+      <para>There are various configuration values that can be adapted:</para>
+      <variablelist>
+        <varlistentry>
+          <term>&lsquo;<literal>sonews.article.maxsize</literal>&rsquo;</term>
+          <listitem>
+            <para>Maximum allowed body size of a news message given in kilobytes. Please note that
+for MySQL the &lsquo;<literal>max_allowed_packet</literal>&rsquo; configuration variable must
+be set to a value higher than &lsquo;<literal>sonews.article.maxsize</literal>&rsquo; otherwise posting
+of large mails will fail.</para>
+          </listitem>
+        </varlistentry>
+          <varlistentry>
+          <term>&lsquo;<literal>sonews.debug</literal>&rsquo;</term>
+          <listitem>
+            <para>
+            If set to true every(!) data going through sonews' socket
+            is written to sonews.log. After a high traffic night the logfile can be
+            several gigabytes large, so be careful with this setting.
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term>&lsquo;<literal>sonews.hostname</literal>&rsquo;</term>
+          <listitem>
+            <para>
+              Canonical name of the server instance. This variable is part of
+              the server's hello message to the client and used to generate
+              Message-Ids.
+              It is highly recommended to set sonews.hostname to the full
+              qualified domain name (FQDN) of the host machine.
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term>&lsquo;<literal>sonews.timeout</literal>&rsquo;</term>
+          <listitem>
+            <para>
+              Socket timeout for client connections in seconds. Default as
+              recommended in RFC3977 is 180 seconds.
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term>&lsquo;<literal>sonews.port</literal>&rsquo;</term>
+          <listitem>
+            <para>
+              Listening port of sonews daemon. This value can be overridden
+              with the -p command line argument.
+            </para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term>&lsquo;<literal>sonews.xdaemon.host</literal>&rsquo;</term>
+          <listitem>
+            <para>
+              Hostname or IP address of the client machine that is allowed to
+              use the XDAEMON command. Default: localhost
+            </para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+    </sect1>
+
+    <sect1 label="3.2">
+      <title>Command line arguments</title>
+      <para>If you like to start sonews directly, you can use one of the following
+arguments:</para>
+      <screen>java -jar sonews.jar [arguments]
+        where arguments:
+    -c|-config         &lt;path to config file&gt; if custom config file preferred
+    -dumpjdbcdriver    Prints out a list of available JDBC drivers
+    -feed              Enables feed daemon for pulling news from peer servers
+    -h|-help           This output
+    -mlgw              Enables the Mailinglist Gateway poller
+    -p portnumber      Port on which sonews is listening for incoming connections.
+                       Overrides port settings in config file and database.</screen>
+      <para>
+        The source and binary distributions contain a <literal>bin/sonews</literal>
+        script that makes it more comfortable (well it's not comfortable at all)
+        to start and stop sonews daemon.
+      </para>
+    </sect1>
+
+    <sect1 label="3.3">
+      <title>Webinterface</title>
+      <para>The package sonews-web provides an optional webinterface that can be used to
+review statistical information and configuration values of sonews.</para>
+      <screen>sonews-web start|stop</screen>
+      <para>TODO: There is no public release of the webinterface...</para>
+    </sect1>
+
+    <sect1 label="3.4">
+      <title>Newsgroup configuration</title>
+      <para>
+        Currently some manual work is necessary to create a newsgroup hosted
+        by a sonews instance.
+      </para>
+      <para>
+        One possibility is to talk via Telnet to the sonews instance and
+        use the non-standard command XDAEMON. The following usage of XDAEMON
+        creates a "normal" newsgroup named <literal>local.test</literal>.
+      <screen>$ telnet localhost 119
+XDAEMON GROUPADD local.test 0</screen>
+      Please note that the XDAEMON command has restricted access and is only
+      available via local connections (default, can be changed with config
+      value sonews.xdaemon.host).
+      </para>
+      <para>
+        You can create newsgroups manually by inserting a new entry to the
+        SQL table 'groups', e.g.:
+        <screen>INSERT INTO groups (name, flags) VALUES ('local.test', 0)</screen>
+        A flags value '0' denotes a normal newsgroup, a value of '1' means that
+        the newsgroup is a mirrored mailinglist. In that case an entry in table
+        'groups2list' is required.
+      </para>
+    </sect1>
+
+    <sect1 label="3.5">
+      <title>Peering</title>
+      <para>
+        sonews is able to synchronize selected groups with other newsservers
+        using push or pull mechanisms. To enable the peering feature sonews
+        must be started with the <literal>-feed</literal> command-line argument.
+      </para>
+      <para>
+        Currently it's not possible to configure the peering rules on another
+        way than issuing SQL statements to the database backend. This is clumsy
+        but will be fixed in a future version of sonews.
+      </para>
+      <para>
+        For every remote newsserver you'll need an entry in table 'peers'.
+        To add a new peer:
+        <screen>INSERT INTO peers (peer_id, host, port) VALUES (1, 'foo.com', 119)</screen>
+      </para>
+      <para>
+        For every group that should be synchronized, you'll need an entry in
+        table 'peer_subscriptions':
+        <screen>INSERT INTO peer_subscriptions (peer_id, group_id, feedtype)
+    VALUES (1, (SELECT group_id FROM groups WHERE name = 'local.test'), 0)</screen>
+        <literal>peer_id</literal> must match the appropriate id in table 'peers'.
+        feedtype=0 means pulling, feedtype=1 pushing.
+      </para>
+      <para>
+        Currently it is necessary to restart sonews after a change to the 
+        peer settings. Don't forget to enable peering with <literal>-feed</literal>.
+      </para>
+    </sect1>
+
+    <sect1 label="3.6">
+      <title>Mailinglist Gateway</title>
+      <para>
+        sonews is able to synchronize selected groups with mailing lists. 
+        For this functionality sonews needs a POP3 mailbox account for incoming
+        mails and access to a SMTP server for outgoing mails.
+      </para>
+      <para>
+        You have to register the mail address of the mailbox at the mailing list
+        so that every mail of the list is delivered to the mailbox.
+      </para>
+      <para>
+        First, make sure you have created the newsgroup with flag '1', so that
+        sonews knows that this specific group is a mirrored mailinglist.
+      </para>
+      <para>
+        Seconds, use the mailinglist address, e.g. <literal>dev@openoffice.org</literal>,
+        to create an entry in table 'groups2list', e.g.:
+        <screen>INSERT INTO groups2list (group_id, listaddress) VALUES
+((SELECT group_id FROM groups WHERE name = 'local.test'), 'test@xyz.com')</screen>
+      </para>
+      <para>
+        Note that peering rules for mirrored mailinglist groups are not 
+        automatically disabled, so be careful to disturb the list with
+        hundreds of peered news.
+      </para>
+    </sect1>
+  </chapter>
+
+  <chapter label="4">
+    <title>Development</title>
+    <para>You're welcome to create patches with bugfixes or additional features. The
+Mercurial DSCM makes this step an easy task.</para>
+    <para>Just clone the public <ulink url="http://www.selenic.com/mercurial/">Mercurial</ulink> repository:</para>
+    <screen>hg clone http://bitbucket.org/cli/sonews sonews-stable-hg</screen>
+    <para>
+      Then make your changes, create a bundle of changesets and send this to me via email.
+      Or use the "pull request" functionality on the 
+      <ulink url="http://bitbucket.org/">BitBucket website</ulink>.
+      Note that the repository mentioned above contains the stable branch with
+      little updates. Recent development is done on other branched/forked
+      repositories, e.g. the sonews-* <ulink url="http://bitbucket.org/cli">here</ulink>.
+    </para>
+    <para>
+        There is <ulink url="apidoc/">Javadoc API documentation for sonews</ulink> 
+        that will help you to get in touch with the sonews source. Please note
+        that this API doc does not reflect recent development as it is generated
+        from the stable branch.
+    </para>
+    <para>Some debugging hints: if the server blocks and does not longer respond you
+probably found a deadlock. Do not kill the process with "kill -9 &lt;pid&gt;"
+but send a SIGQUIT signal with "kill -3 &lt;pid&gt;" and the Java VM will output
+a stracktrace of all threads. This output is the most valuable information to
+fix the deadlock.</para>
+
+    <sect1 label="4.1">
+      <title>Writing extensions</title>
+      <para>
+        With sonews/1.1 or higher it is possible to easily extend sonews with
+        new functionality using the plugin API.
+      </para>
+
+      <sect2 label="4.1.1">
+        <title>Command plugin</title>
+        <para>
+          To introduce additional NNTP commands, implement the 
+          <ulink url="apidoc/org/sonews/daemon/command/Command.html"><code>org.sonews.command.Command</code></ulink> 
+          interface.
+          Here is an example <code>HelloCommand</code> that simply returns "Hello"
+          to the client:
+          <code><screen>public class HelloCommand implements Command
+{
+  
+  @Override
+  public String[] getSupportedCommandStrings()
+  {
+    return "HELLO";
+  }
+
+  @Override
+  public boolean hasFinished()
+  {
+    return true;
+  }
+
+  @Override
+  public String impliedCapability()
+  {
+    return null;
+  }
+
+  @Override
+  public boolean isStateful()
+  {
+    return false;
+  }
+
+  @Override
+  public void processLine(NNTPConnection conn, final String line, byte[] raw)
+    throws IOException
+  {
+    conn.println("100 Hello Client");
+  }
+  
+}
+          </screen></code> 
+        </para>
+        <para>
+          Compile this example agains sonews.jar and tell sonews to load the
+          plugin at startup:
+          <screen>java -cp .:sonews.jar org.sonews.Main -p 9119 -plugin-command mypkg.HelloCommand</screen>
+
+          Then you can try the new command:
+          <screen>$ telnet localhost 9119
+200 sonews/1.1.0 localhost - posting ok
+hello
+100 Hello Client</screen>
+        </para>
+
+        The <ulink url="apidoc/">API documentation</ulink> contains more 
+        information about the sonews classes and their usage.
+      </sect2>
+
+      <sect2 label="4.1.2">
+        <title>Backend storage plugin</title>
+        <para>
+          It is possible to use a completely different backend storage for
+          sonews than a relational database.
+        </para>
+        <para>
+          Most important classes reside in package <code>org.sonews.storage</code>.
+          To use a custom storage backend in sonews you must implement a
+          <code>StorageProvider</code> by implementing the 
+          <ulink url="apidoc/org/sonews/storage/StorageProvider.html"><code>org.sonews.storage.StorageProvider</code></ulink>
+          interface.
+        </para>
+        <para>
+          The StorageProvider must return an instance of the specific
+          <code>org.sonews.storage.Storage</code> implementation.
+        </para>
+      </sect2>
+    </sect1>
+
+  </chapter>
+
+  <chapter label="5">
+    <title>Links and further information</title>
+    <para>Useful links regarding sonews and the sponsors:</para>
+    <itemizedlist>
+      <listitem>
+        <para><ulink url="http://bugs.xerxys.info/">Bugtracker</ulink>, register necessary, see project 'sonews'.</para>
+      </listitem>
+      <listitem>
+        <para><ulink url="http://www.sun.com/">Sun Microsystems</ulink>, friendly sponsor.</para>
+      </listitem>
+      <listitem>
+        <para><ulink url="http://www.fh-osnabrueck">University of Applied Sciences Osnabrueck</ulink></para>
+      </listitem>
+    </itemizedlist>
+
+    <sect1 label="5.1">
+      <title>Users</title>
+      <para>
+        As sonews is a relatively young project there are little users known,
+        but there are some (if you know more let me know).
+      </para>
+      <itemizedlist>
+      <listitem>
+        <para>
+          <ulink url="http://www.sun.com/">Sun Microsystems</ulink> OpenOffice.org/StarOffice
+          development located in Hamburg uses sonews to mirror the OpenOffice.org
+          mailinglists.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          <ulink url="news://teneon.de:119">teneon.de</ulink> uses sonews to provide
+          a freely accessible Newsserver.
+        </para>
+      </listitem>
+    </itemizedlist>
+    </sect1>
+
+    <sect1 label="5.2">
+      <title>Contributors and sponsors</title>
+      <para>Maintainer and project lead:
+Christian Lins (contact christian.lins (at) fh-osnabrueck.de)</para>
+      <para>Thanks to Sun's Tooling/IT team in Hamburg for the support!
+       </para>
+      <para>The author thanks <ulink url="http://www.sun.com/">Sun Microsystems</ulink> for fully
+financing the first version of sonews. A really free software supporting company!</para>
+      <para>If you like to support sonews with a donation of any kind (hardware, books, money, donuts,...),
+ feel free to contact the project leader.
+A friendly email or a bug report is most welcome, too :-)</para>
+    </sect1>
+  </chapter>
+</book>
