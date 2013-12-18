@@ -1369,7 +1369,7 @@ public class JDBCDatabase implements Storage {
         if (restarts >= MAX_RESTARTS) {
             // Delete the current, probably broken JDBCDatabase instance.
             // So no one can use the instance any more.
-            JDBCDatabaseProvider.instances.remove(Thread.currentThread());
+            JDBCStorageProvider.instances.remove(Thread.currentThread());
 
             // Throw the exception upwards
             throw new StorageBackendException(cause);

@@ -29,7 +29,7 @@ import org.sonews.storage.StorageProvider;
  * @author Christian Lins
  * @since sonews/1.0
  */
-public class JDBCDatabaseProvider implements StorageProvider {
+public class JDBCStorageProvider implements StorageProvider {
 
     protected static final Map<Thread, JDBCDatabase> instances = new ConcurrentHashMap<Thread, JDBCDatabase>();
 
