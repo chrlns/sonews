@@ -45,7 +45,7 @@ import org.sonews.util.io.Resource;
 public final class Main {
 
     /** Version information of the sonews daemon */
-    public static final String VERSION = "sonews/1.1.0";
+    public static final String VERSION = "sonews/2.0.0";
 
     /** The server's startup date */
     public static final Date STARTDATE = new Date();
@@ -111,7 +111,7 @@ public final class Main {
         try {
             String provName = Config.inst().get(Config.LEVEL_FILE,
                     Config.STORAGE_PROVIDER,
-                    "org.sonews.storage.impl.LocalStorageProvider");
+                    "org.sonews.storage.impl.CouchDBStorageProvider");
             StorageProvider sprov = StorageManager.loadProvider(provName);
             StorageManager.enableProvider(sprov);
 

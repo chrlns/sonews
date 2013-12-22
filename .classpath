@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src/main/java"/>
+	<classpathentry exported="true" kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="lib" path="/home/christian/.m2/repository/javax/mail/mail/1.4.7/mail-1.4.7.jar"/>
+	<classpathentry kind="lib" path="/home/christian/.m2/repository/org/lightcouch/lightcouch/0.0.6/lightcouch-0.0.6.jar"/>
+	<classpathentry kind="output" path="build/class"/>
+</classpath>
