@@ -4,5 +4,6 @@
 	<classpathentry exported="true" kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="lib" path="/home/christian/.m2/repository/javax/mail/mail/1.4.7/mail-1.4.7.jar"/>
 	<classpathentry kind="lib" path="/home/christian/.m2/repository/org/lightcouch/lightcouch/0.0.6/lightcouch-0.0.6.jar"/>
+	<classpathentry kind="lib" path="/home/christian/.m2/repository/org/json/json/20131018/json-20131018.jar"/>
 	<classpathentry kind="output" path="build/class"/>
 </classpath>

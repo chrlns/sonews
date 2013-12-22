@@ -72,10 +72,12 @@ public class Config extends AbstractConfig {
     public static final String STORAGE_DBMSDRIVER = "sonews.storage.dbmsdriver";
     /** Key constant. Value is JDBC connect String to the database. */
     public static final String STORAGE_DATABASE = "sonews.storage.database";
+    public static final String STORAGE_HOST = "sonews.storage.host";
     /** Key constant. Value is the username for the DBMS. */
     public static final String STORAGE_USER = "sonews.storage.user";
     /** Key constant. Value is the password for the DBMS. */
     public static final String STORAGE_PASSWORD = "sonews.storage.password";
+    public static final String STORAGE_PORT     = "sonews.storage.port";
     public static final String STORAGE_PROVIDER = "sonews.storage.provider";
 
     /**
@@ -108,10 +110,6 @@ public class Config extends AbstractConfig {
             val = FileConfig.getInstance().get(key, null);
         }
 
-        if (val == null) {
-            val = BackendConfig.getInstance().get(key, def);
-        }
-
         return val;
     }
 
@@ -120,9 +118,6 @@ public class Config extends AbstractConfig {
 
         if (val == null && maxLevel >= LEVEL_FILE) {
             val = FileConfig.getInstance().get(key, null);
-            if (val == null && maxLevel >= LEVEL_BACKEND) {
-                val = BackendConfig.getInstance().get(key, def);
-            }
         }
 
         return val != null ? val : def;
@@ -141,10 +136,6 @@ public class Config extends AbstractConfig {
         }
         case LEVEL_FILE: {
             FileConfig.getInstance().set(key, val);
-            break;
-        }
-        case LEVEL_BACKEND: {
-            BackendConfig.getInstance().set(key, val);
             break;
         }
         }

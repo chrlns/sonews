@@ -2,6 +2,8 @@ package org.sonews.storage.impl;
 
 import java.util.List;
 
+import org.lightcouch.CouchDbClient;
+import org.sonews.config.Config;
 import org.sonews.feed.Subscription;
 import org.sonews.storage.Article;
 import org.sonews.storage.ArticleHead;
@@ -10,11 +12,28 @@ import org.sonews.storage.Storage;
 import org.sonews.storage.StorageBackendException;
 import org.sonews.util.Pair;
 
+/**
+ * 
+ * @author Christian Lins
+ * @since sonews/2.0.0
+ */
 public class CouchDBDatabase implements Storage {
 
+    private CouchDbClient client;
+    
+    public CouchDBDatabase() {
+        String db = Config.inst().get(Config.STORAGE_DATABASE, "sonews");
+        String host = Config.inst().get(Config.STORAGE_HOST, "localhost");
+        String port = Config.inst().get(Config.STORAGE_PORT, "5984");
+        String user = Config.inst().get(Config.STORAGE_USER, "sonews");
+        String password = Config.inst().get(Config.STORAGE_PASSWORD, "sonews");
+        
+        this.client = new CouchDbClient(db, true, "http", host, Integer.parseInt(port), user, password);
+    }
+    
     @Override
     public void addArticle(Article art) throws StorageBackendException {
-        // TODO Auto-generated method stub
+        
         
     }
 
@@ -88,12 +107,6 @@ public class CouchDBDatabase implements Storage {
     @Override
     public List<Long> getArticleNumbers(long groupID)
             throws StorageBackendException {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public String getConfigValue(String key) throws StorageBackendException {
         // TODO Auto-generated method stub
         return null;
     }
@@ -189,13 +202,6 @@ public class CouchDBDatabase implements Storage {
 
     @Override
     public void purgeGroup(Group group) throws StorageBackendException {
-        // TODO Auto-generated method stub
-        
-    }
-
-    @Override
-    public void setConfigValue(String key, String value)
-            throws StorageBackendException {
         // TODO Auto-generated method stub
         
     }

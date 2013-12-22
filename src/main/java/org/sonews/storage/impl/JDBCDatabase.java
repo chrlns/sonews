@@ -793,34 +793,6 @@ public class JDBCDatabase implements Storage {
     }
 
     @Override
-    public String getConfigValue(String key) throws StorageBackendException {
-        ResultSet rs = null;
-        try {
-            this.pstmtGetConfigValue.setString(1, key);
-
-            rs = this.pstmtGetConfigValue.executeQuery();
-            if (rs.next()) {
-                return rs.getString(1); // First data on index 1 not 0
-            } else {
-                return null;
-            }
-        } catch (SQLException ex) {
-            restartConnection(ex);
-            return getConfigValue(key);
-        } finally {
-            if (rs != null) {
-                try {
-                    rs.close();
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
-                }
-                restarts = 0; // Clear the restart count after successful
-                              // request
-            }
-        }
-    }
-
-    @Override
     public int getEventsCount(int type, long start, long end, Group channel)
             throws StorageBackendException {
         ResultSet rs = null;
@@ -1309,24 +1281,6 @@ public class JDBCDatabase implements Storage {
                     ex.printStackTrace();
                 }
             }
-        }
-    }
-
-    @Override
-    public void setConfigValue(String key, String value)
-            throws StorageBackendException {
-        try {
-            conn.setAutoCommit(false);
-            this.pstmtSetConfigValue0.setString(1, key);
-            this.pstmtSetConfigValue0.execute();
-            this.pstmtSetConfigValue1.setString(1, key);
-            this.pstmtSetConfigValue1.setString(2, value);
-            this.pstmtSetConfigValue1.execute();
-            conn.commit();
-            conn.setAutoCommit(true);
-        } catch (SQLException ex) {
-            restartConnection(ex);
-            setConfigValue(key, value);
         }
     }
 

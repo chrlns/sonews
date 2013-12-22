@@ -66,8 +66,6 @@ public interface Storage {
 
     List<Long> getArticleNumbers(long groupID) throws StorageBackendException;
 
-    String getConfigValue(String key) throws StorageBackendException;
-
     int getEventsCount(int eventType, long startTimestamp, long endTimestamp,
             Group group) throws StorageBackendException;
 
@@ -117,9 +115,6 @@ public interface Storage {
     boolean isGroupExisting(String groupname) throws StorageBackendException;
 
     void purgeGroup(Group group) throws StorageBackendException;
-
-    void setConfigValue(String key, String value)
-            throws StorageBackendException;
 
     /**
      * Updates headers and channel references of the given article.
