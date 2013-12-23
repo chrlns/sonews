@@ -2,6 +2,7 @@ package org.sonews.storage.impl;
 
 import java.util.List;
 
+import org.json.JSONObject;
 import org.lightcouch.CouchDbClient;
 import org.sonews.config.Config;
 import org.sonews.feed.Subscription;
