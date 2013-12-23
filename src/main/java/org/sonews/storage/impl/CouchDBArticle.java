@@ -17,16 +17,25 @@
  */
 package org.sonews.storage.impl;
 
+import java.io.UnsupportedEncodingException;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Level;
 
 import javax.mail.Header;
 
+import org.apache.commons.codec.binary.Base64;
 import org.json.JSONObject;
 import org.sonews.storage.Article;
+import org.sonews.util.Log;
 
-public class CouchDBArticle {
+/**
+ * 
+ * @author Christian Lins
+ * @since sonews/2.0.0
+ */
+class CouchDBArticle {
 
     private Article article;
     
@@ -34,6 +43,9 @@ public class CouchDBArticle {
         this.article = article;
     }
     
+    /**
+     * Creates and returns a JSON string representation of the wrapped Article.
+     */
     public String toString() {
         JSONObject json = new JSONObject();
         Map<String, String> headerMap = new HashMap<String, String>();
@@ -44,8 +56,15 @@ public class CouchDBArticle {
             headerMap.put(header.getName(), header.getValue());
         }
         
-        json.put("headers", headerMap);
-        json.put("body", article.getBody());
+        try {
+            json.put("headers", headerMap);
+            json.put("body-encoding", "base64");
+            json.put("body", new String(Base64.encodeBase64(article.getBody()), "UTF-8"));
+        } catch(UnsupportedEncodingException ex) {
+            // This is unlikely to happen as UTF-8 MUST be supported by any
+            // Java runtime environment, but say never no...
+            Log.get().log(Level.SEVERE, ex.getLocalizedMessage());
+        }
         
         return json.toString();
     }

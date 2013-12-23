@@ -2,12 +2,12 @@ AUTHORS of
 
 SONEWS News Server
 
-Copyright (C) 2009, 2010, 2011, 2012 
+Copyright (C) 2009, 2010, 2011, 2012, 2013
   Christian Lins <christian.lins@sonews.org>
   František Kučera <informace@frantovo.cz>
   Bernd Eilers <bernd.eilers@oracle.com>
 
-sonews based partly upon
+sonews is based partly upon
 
 Neat NNTP Daemon (n3tpd)
 Copyright (C) 2007, 2008  Christian Lins <christian.lins@web.de>
