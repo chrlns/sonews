@@ -19,7 +19,7 @@ package org.sonews.config;
 
 /**
  * Configuration facade class.
- * 
+ *
  * @author Christian Lins
  * @since sonews/1.0
  */
@@ -27,7 +27,7 @@ public class Config extends AbstractConfig {
 
     public static final int LEVEL_CLI = 1;
     public static final int LEVEL_FILE = 2;
-    public static final int LEVEL_BACKEND = 3;
+
     public static final String CONFIGFILE = "sonews.configfile";
     /**
      * BackendConfig key constant. Value is the maximum article size in
@@ -103,17 +103,17 @@ public class Config extends AbstractConfig {
     }
 
     @Override
-    public String get(String key, String def) {
+    public String get(final String key, final String def) {
         String val = CommandLineConfig.getInstance().get(key, null);
 
         if (val == null) {
-            val = FileConfig.getInstance().get(key, null);
+            val = FileConfig.getInstance().get(key, def);
         }
 
         return val;
     }
 
-    public String get(int maxLevel, String key, String def) {
+    public String get(final int maxLevel, final String key, final String def) {
         String val = CommandLineConfig.getInstance().get(key, null);
 
         if (val == null && maxLevel >= LEVEL_FILE) {
@@ -124,20 +124,20 @@ public class Config extends AbstractConfig {
     }
 
     @Override
-    public void set(String key, String val) {
-        set(LEVEL_BACKEND, key, val);
+    public void set(final String key, final String val) {
+        set(LEVEL_FILE, key, val);
     }
 
-    public void set(int level, String key, String val) {
+    public void set(final int level, final String key, final String val) {
         switch (level) {
-        case LEVEL_CLI: {
-            CommandLineConfig.getInstance().set(key, val);
-            break;
-        }
-        case LEVEL_FILE: {
-            FileConfig.getInstance().set(key, val);
-            break;
-        }
+            case LEVEL_CLI: {
+                CommandLineConfig.getInstance().set(key, val);
+                break;
+            }
+            case LEVEL_FILE: {
+                FileConfig.getInstance().set(key, val);
+                break;
+            }
         }
     }
 }

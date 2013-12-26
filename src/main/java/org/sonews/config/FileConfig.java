@@ -29,7 +29,7 @@ import java.util.Properties;
  * are needed to establish a database connection. For further configuration
  * values use the Config class instead as that class stores its values within
  * the database.
- * 
+ *
  * @author Christian Lins
  * @since sonews/0.5.0
  */
@@ -40,18 +40,16 @@ class FileConfig extends AbstractConfig {
 
     static {
         // Set some default values
-        defaultConfig.setProperty(Config.STORAGE_DATABASE,
-                "jdbc:mysql://localhost/sonews");
-        defaultConfig.setProperty(Config.STORAGE_DBMSDRIVER,
-                "com.mysql.jdbc.Driver");
+        defaultConfig.setProperty(Config.STORAGE_DATABASE, "sonews");
+        defaultConfig.setProperty(Config.STORAGE_HOST, "localhost");
+        defaultConfig.setProperty(Config.STORAGE_PORT, "5984");
         defaultConfig.setProperty(Config.STORAGE_USER, "sonews_user");
         defaultConfig.setProperty(Config.STORAGE_PASSWORD, "mysecret");
-        defaultConfig.setProperty(Config.DEBUG, "false");
     }
 
     /**
      * Note: this method is not thread-safe
-     * 
+     *
      * @return A Config instance
      */
     public static synchronized FileConfig getInstance() {
@@ -68,14 +66,14 @@ class FileConfig extends AbstractConfig {
      * Config is a singelton class with only one instance at time. So the
      * constructor is private to prevent the creation of more then one Config
      * instance.
-     * 
+     *
      * @see Config.getInstance() to retrieve an instance of Config
      */
     private FileConfig() {
         try {
             // Load settings from file
             load();
-        } catch (IOException ex) {
+        } catch (final IOException ex) {
             ex.printStackTrace();
         }
     }
@@ -84,7 +82,7 @@ class FileConfig extends AbstractConfig {
      * Loads the configuration from the config file. By default this is done by
      * the (private) constructor but it can be useful to reload the config by
      * invoking this method.
-     * 
+     *
      * @throws IOException
      */
     public void load() throws IOException {
@@ -94,7 +92,7 @@ class FileConfig extends AbstractConfig {
             in = new FileInputStream(Config.inst().get(Config.LEVEL_CLI,
                     Config.CONFIGFILE, "sonews.conf"));
             settings.load(in);
-        } catch (FileNotFoundException e) {
+        } catch (final FileNotFoundException e) {
             // MUST NOT use Log otherwise endless loop
             System.err.println(e.getMessage());
             save();
@@ -108,7 +106,7 @@ class FileConfig extends AbstractConfig {
     /**
      * Saves this Config to the config file. By default this is done at program
      * end.
-     * 
+     *
      * @throws FileNotFoundException
      * @throws IOException
      */
@@ -119,7 +117,7 @@ class FileConfig extends AbstractConfig {
                     Config.CONFIGFILE, "sonews.conf"));
             settings.store(out, "SONEWS Config File");
             out.flush();
-        } catch (IOException ex) {
+        } catch (final IOException ex) {
             throw ex;
         } finally {
             if (out != null) {
@@ -131,7 +129,7 @@ class FileConfig extends AbstractConfig {
     /**
      * Returns the value that is stored within this config identified by the
      * given key. If the key cannot be found the default value is returned.
-     * 
+     *
      * @param key
      *            Key to identify the value.
      * @param def
@@ -140,13 +138,13 @@ class FileConfig extends AbstractConfig {
      * @return
      */
     @Override
-    public String get(String key, String def) {
+    public String get(final String key, final String def) {
         return settings.getProperty(key, def);
     }
 
     /**
      * Sets the value for a given key.
-     * 
+     *
      * @param key
      * @param value
      */
