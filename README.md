@@ -1,8 +1,8 @@
-sonews README
-=============
+sonews
+======
 
-sonews is an Usenet News Server written in Java. It uses a relation database as
-backend, currently supported is MySQL, PostgreSQL and HSQLDB.
+**sonews** is an Usenet News Server written in Java. It can use various 
+backend types, currently supported are CouchDB, MySQL and PostgreSQL.
 
 Requirements
 ------------
@@ -10,20 +10,21 @@ Requirements
 The requirements for building and running sonews are:
 
 * Apache Maven
-* Java 6 JDK
+* Java 6 JDK (or newer)
 * CouchDB or MySQL/PostgreSQL installation
 
 Build
 -----
 
 sonews uses Apache Maven for building and dependency managing.
-Use 
-    $ mvn clean compile package
-to build and package sonews.
+Use the following command to build and package sonews:
 
-Use
+    $ mvn clean compile package
+
+
+To start sonews on port 9119:
+
     $ mvn exec:java -Dexec.mainClass="org.sonews.Main" -Dexec.args="-p 9119"
-to start the sonews daemon on port 9119.
 
 
 Setup
