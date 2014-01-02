@@ -34,8 +34,13 @@ public class CouchDBDatabase implements Storage {
         final String db = Config.inst().get(Config.STORAGE_DATABASE, "sonews");
         final String host = Config.inst().get(Config.STORAGE_HOST, "localhost");
         final String port = Config.inst().get(Config.STORAGE_PORT, "5984");
-        final String user = Config.inst().get(Config.STORAGE_USER, "sonews");
-        final String password = Config.inst().get(Config.STORAGE_PASSWORD, "sonews");
+
+        String user = Config.inst().get(Config.STORAGE_USER, null);
+        String password = Config.inst().get(Config.STORAGE_PASSWORD, null);
+        if("".equals(user) || "".equals(password)) {
+            user = null;
+            password = null;
+        }
 
         this.client = new CouchDbClient(db, true, "http", host, Integer.parseInt(port), user, password);
     }
@@ -48,27 +53,7 @@ public class CouchDBDatabase implements Storage {
     }
 
     @Override
-    public void addEvent(final long timestamp, final int type, final long groupID)
-            throws StorageBackendException {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public void addGroup(final String groupname, final int flags)
-            throws StorageBackendException {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
     public int countArticles() throws StorageBackendException {
-        // TODO Auto-generated method stub
-        return 0;
-    }
-
-    @Override
-    public int countGroups() throws StorageBackendException {
         // TODO Auto-generated method stub
         return 0;
     }
@@ -122,20 +107,6 @@ public class CouchDBDatabase implements Storage {
     }
 
     @Override
-    public int getEventsCount(final int eventType, final long startTimestamp,
-            final long endTimestamp, final Group group) throws StorageBackendException {
-        // TODO Auto-generated method stub
-        return 0;
-    }
-
-    @Override
-    public double getEventsPerHour(final int key, final long gid)
-            throws StorageBackendException {
-        // TODO Auto-generated method stub
-        return 0;
-    }
-
-    @Override
     public int getFirstArticleNumber(final Group group)
             throws StorageBackendException {
         // TODO Auto-generated method stub
@@ -143,46 +114,9 @@ public class CouchDBDatabase implements Storage {
     }
 
     @Override
-    public Group getGroup(final String name) throws StorageBackendException {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public List<Group> getGroups() throws StorageBackendException {
-        try {
-            JsonObject  groupsDoc = this.client.find(JsonObject.class, "groups");
-            JsonArray   groupsArray = groupsDoc.getAsJsonArray();
-            List<Group> groups = new ArrayList<Group>(groupsArray.size());
-            for(JsonElement el : groupsArray) {
-                groups.add(new Group(el.getAsString(), 0, 0));
-                Log.get().finest("Found group: " + el.getAsString());
-            }
-            return groups;
-        } catch (NoDocumentException ex) {
-            return null;
-        }
-    }
-
-    @Override
-    @Deprecated
-    public List<String> getGroupsForList(final String listAddress)
-            throws StorageBackendException {
-        throw new StorageBackendException("Not implemented deprecated method");
-    }
-
-    @Override
     public int getLastArticleNumber(final Group group) throws StorageBackendException {
         // TODO Auto-generated method stub
         return 0;
-    }
-
-    @Override
-    @Deprecated
-    public List<String> getListsForGroup(final String groupname)
-            throws StorageBackendException {
-        // TODO Auto-generated method stub
-        return null;
     }
 
     @Override
@@ -210,19 +144,6 @@ public class CouchDBDatabase implements Storage {
             throws StorageBackendException {
         // TODO Auto-generated method stub
         return false;
-    }
-
-    @Override
-    public boolean isGroupExisting(final String groupname)
-            throws StorageBackendException {
-        // TODO Auto-generated method stub
-        return false;
-    }
-
-    @Override
-    public void purgeGroup(final Group group) throws StorageBackendException {
-        // TODO Auto-generated method stub
-
     }
 
     @Override

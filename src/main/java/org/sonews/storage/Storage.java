@@ -41,11 +41,7 @@ public interface Storage {
     void addEvent(long timestamp, int type, long groupID)
             throws StorageBackendException;
 
-    void addGroup(String groupname, int flags) throws StorageBackendException;
-
     int countArticles() throws StorageBackendException;
-
-    int countGroups() throws StorageBackendException;
 
     void delete(String messageID) throws StorageBackendException;
 
@@ -73,35 +69,7 @@ public interface Storage {
 
     int getFirstArticleNumber(Group group) throws StorageBackendException;
 
-    Group getGroup(String name) throws StorageBackendException;
-
-    List<Group> getGroups() throws StorageBackendException;
-
-    /**
-     * Retrieves the collection of groupnames that are associated with the given
-     * list address.
-     *
-     * @param inetaddress
-     * @return
-     * @throws StorageBackendException
-     */
-    @Deprecated
-    List<String> getGroupsForList(String listAddress)
-            throws StorageBackendException;
-
     int getLastArticleNumber(Group group) throws StorageBackendException;
-
-    /**
-     * Returns a list of email addresses that are related to the given
-     * groupname. In most cases the list may contain only one entry.
-     *
-     * @param groupname
-     * @return
-     * @throws StorageBackendException
-     */
-    @Deprecated
-    List<String> getListsForGroup(String groupname)
-            throws StorageBackendException;
 
     String getOldestArticle() throws StorageBackendException;
 
@@ -112,20 +80,14 @@ public interface Storage {
 
     boolean isArticleExisting(String messageID) throws StorageBackendException;
 
-    boolean isGroupExisting(String groupname) throws StorageBackendException;
-
-    void purgeGroup(Group group) throws StorageBackendException;
-
     /**
-     * Updates headers and channel references of the given article.
+     * Updates headers and group references of the given article.
      *
      * @param article
      * @return
      * @throws StorageBackendException
      */
     boolean update(Article article) throws StorageBackendException;
-
-    boolean update(Group group) throws StorageBackendException;
 
     public boolean authenticateUser(String username, char[] password)
             throws StorageBackendException;
