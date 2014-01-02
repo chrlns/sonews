@@ -1,9 +1,11 @@
 package org.sonews.storage.impl;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 
 import org.lightcouch.CouchDbClient;
+import org.lightcouch.NoDocumentException;
 import org.lightcouch.Response;
 import org.sonews.config.Config;
 import org.sonews.feed.Subscription;
@@ -14,6 +16,10 @@ import org.sonews.storage.Storage;
 import org.sonews.storage.StorageBackendException;
 import org.sonews.util.Log;
 import org.sonews.util.Pair;
+
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 
 /**
  *
@@ -144,16 +150,25 @@ public class CouchDBDatabase implements Storage {
 
     @Override
     public List<Group> getGroups() throws StorageBackendException {
-        // TODO Auto-generated method stub
-        return null;
+        try {
+            JsonObject  groupsDoc = this.client.find(JsonObject.class, "groups");
+            JsonArray   groupsArray = groupsDoc.getAsJsonArray();
+            List<Group> groups = new ArrayList<Group>(groupsArray.size());
+            for(JsonElement el : groupsArray) {
+                groups.add(new Group(el.getAsString(), 0, 0));
+                Log.get().finest("Found group: " + el.getAsString());
+            }
+            return groups;
+        } catch (NoDocumentException ex) {
+            return null;
+        }
     }
 
     @Override
     @Deprecated
     public List<String> getGroupsForList(final String listAddress)
             throws StorageBackendException {
-        // TODO Auto-generated method stub
-        return null;
+        throw new StorageBackendException("Not implemented deprecated method");
     }
 
     @Override
