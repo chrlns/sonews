@@ -15,35 +15,34 @@
  *   You should have received a copy of the GNU General Public License
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 package org.sonews.daemon.command;
 
 import java.io.IOException;
+
 import org.sonews.daemon.NNTPConnection;
 import org.sonews.storage.Group;
 import org.sonews.storage.StorageBackendException;
-import org.sonews.storage.StorageManager;
 
 /**
  * Class handling the GROUP command.
- * 
+ *
  * <pre>
  *  Syntax
  *    GROUP group
- * 
+ *
  *  Responses
  *    211 number low high group     Group successfully selected
  *    411                           No such newsgroup
- * 
+ *
  *  Parameters
  *    group     Name of newsgroup
  *    number    Estimated number of articles in the group
  *    low       Reported low water mark
  *    high      Reported high water mark
  * </pre>
- * 
+ *
  * (from RFC 3977)
- * 
+ *
  * @author Christian Lins
  * @author Dennis Schwerdel
  * @since n3tpd/0.1
@@ -77,7 +76,7 @@ public class GroupCommand implements Command {
 
         Group group;
         if (command.length >= 2) {
-            group = StorageManager.current().getGroup(command[1]);
+            group = Group.get(command[1]);
             if (group == null || group.isDeleted()) {
                 conn.println("411 no such news group");
             } else {

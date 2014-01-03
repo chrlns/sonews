@@ -18,9 +18,6 @@
 
 package org.sonews.daemon;
 
-import org.sonews.config.Config;
-import org.sonews.util.Log;
-import org.sonews.util.Stats;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
@@ -31,11 +28,14 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 
+import org.sonews.config.Config;
+import org.sonews.util.Log;
+
 /**
  * Daemon thread collecting all NNTPConnection instances. The thread checks
  * periodically if there are stale/timed out connections and removes and purges
  * them properly.
- * 
+ *
  * @author Christian Lins
  * @since sonews/0.5.0
  */
@@ -59,7 +59,7 @@ public final class Connections extends AbstractDaemon {
 
     /**
      * Adds the given NNTPConnection to the Connections management.
-     * 
+     *
      * @param conn
      * @see org.sonews.daemon.NNTPConnection
      */
@@ -147,8 +147,6 @@ public final class Connections extends AbstractDaemon {
 
                         // Recycle the used buffers
                         conn.getBuffers().recycleBuffers();
-
-                        Stats.getInstance().clientDisconnect();
                     }
                 }
             }

@@ -105,30 +105,12 @@ public final class Main {
             }
         }
 
-        // Try to load the backend:
-        // Do NOT USE BackendConfig or Log classes before this point because
-        // they require a working JDBCDatabase connection.
-        try {
-            String provName = Config.inst().get(Config.LEVEL_FILE,
+        // Load the storage backend
+        String provName = Config.inst().get(Config.LEVEL_FILE,
                     Config.STORAGE_PROVIDER,
                     "org.sonews.storage.impl.CouchDBStorageProvider");
-            StorageProvider sprov = StorageManager.loadProvider(provName);
-            StorageManager.enableProvider(sprov);
-
-            // Make sure some elementary groups are existing
-            if (!StorageManager.current().isGroupExisting("control")) {
-                StorageManager.current().addGroup("control", 0);
-                Log.get().info("Group 'control' created.");
-            }
-        } catch (StorageBackendException ex) {
-            Log.get().log(Level.SEVERE, ex.getLocalizedMessage(), ex);
-            System.err.println("Database initialization failed with "
-                    + ex.toString());
-            System.err
-                    .println("Make sure you have specified the correct database"
-                            + " settings in sonews.conf!");
-            return;
-        }
+        StorageProvider sprov = StorageManager.loadProvider(provName);
+        StorageManager.enableProvider(sprov);
 
         ChannelLineBuffers.allocateDirect();
 

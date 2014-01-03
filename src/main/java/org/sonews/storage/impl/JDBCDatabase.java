@@ -45,12 +45,12 @@ import org.sonews.storage.StorageBackendException;
 import org.sonews.util.Pair;
 
 /**
- * JDBCDatabase facade class.
+ * Storage backend facade class for a relational SQL database using JDBC.
+ * The statements used should work for at least PostgreSQL and MySQL.
  * 
  * @author Christian Lins
  * @since sonews/0.5.0
  */
-// TODO: Refactor this class to reduce size (e.g. ArticleDatabase GroupDatabase)
 public class JDBCDatabase implements Storage {
     public static final int MAX_RESTARTS = 2;
 
@@ -59,10 +59,8 @@ public class JDBCDatabase implements Storage {
     protected PreparedStatement pstmtAddArticle2 = null;
     protected PreparedStatement pstmtAddArticle3 = null;
     protected PreparedStatement pstmtAddArticle4 = null;
-    protected PreparedStatement pstmtAddGroup0 = null;
     protected PreparedStatement pstmtAddEvent = null;
     protected PreparedStatement pstmtCountArticles = null;
-    protected PreparedStatement pstmtCountGroups = null;
     protected PreparedStatement pstmtDeleteArticle0 = null;
     protected PreparedStatement pstmtDeleteArticle1 = null;
     protected PreparedStatement pstmtDeleteArticle2 = null;
@@ -77,9 +75,6 @@ public class JDBCDatabase implements Storage {
     protected PreparedStatement pstmtGetConfigValue = null;
     protected PreparedStatement pstmtGetEventsCount0 = null;
     protected PreparedStatement pstmtGetEventsCount1 = null;
-    protected PreparedStatement pstmtGetGroupForList = null;
-    protected PreparedStatement pstmtGetGroup0 = null;
-    protected PreparedStatement pstmtGetGroup1 = null;
     protected PreparedStatement pstmtGetFirstArticleNumber = null;
     protected PreparedStatement pstmtGetListForGroup = null;
     protected PreparedStatement pstmtGetLastArticleNumber = null;
@@ -89,7 +84,6 @@ public class JDBCDatabase implements Storage {
     protected PreparedStatement pstmtGetPostingsCount = null;
     protected PreparedStatement pstmtGetSubscriptions = null;
     protected PreparedStatement pstmtIsArticleExisting = null;
-    protected PreparedStatement pstmtIsGroupExisting = null;
     protected PreparedStatement pstmtPurgeGroup0 = null;
     protected PreparedStatement pstmtPurgeGroup1 = null;
     protected PreparedStatement pstmtSetConfigValue0 = null;
@@ -97,17 +91,6 @@ public class JDBCDatabase implements Storage {
     protected PreparedStatement pstmtUpdateGroup = null;
     /** How many times the database connection was reinitialized */
     protected int restarts = 0;
-
-    protected void prepareAddGroupStatement() throws SQLException {
-        this.pstmtAddGroup0 = conn
-                .prepareStatement("INSERT INTO groups (name, flags) VALUES (?, ?)");
-    }
-
-    protected void prepareCountGroupsStatement() throws SQLException {
-        this.pstmtCountGroups = conn
-                .prepareStatement("SELECT Count(group_id) FROM groups WHERE "
-                        + "flags & " + Group.DELETED + " = 0");
-    }
 
     protected void prepareGetPostingsCountStatement() throws SQLException {
         this.pstmtGetPostingsCount = conn
@@ -163,15 +146,9 @@ public class JDBCDatabase implements Storage {
             this.pstmtAddEvent = conn
                     .prepareStatement("INSERT INTO events VALUES (?, ?, ?)");
 
-            // Prepare statement for method addGroup()
-            prepareAddGroupStatement();
-
             // Prepare statement for method countArticles()
             this.pstmtCountArticles = conn
                     .prepareStatement("SELECT Count(article_id) FROM article_ids");
-
-            // Prepare statement for method countGroups()
-            prepareCountGroupsStatement();
 
             // Prepare statements for method delete(article)
             this.pstmtDeleteArticle0 = conn
@@ -239,18 +216,6 @@ public class JDBCDatabase implements Storage {
                     .prepareStatement("SELECT Count(*) FROM events WHERE event_key = ? AND "
                             + "event_time >= ? AND event_time < ? AND group_id = ?");
 
-            // Prepare statement for method getGroupForList()
-            this.pstmtGetGroupForList = conn
-                    .prepareStatement("SELECT name FROM groups INNER JOIN groups2list "
-                            + "ON groups.group_id = groups2list.group_id "
-                            + "WHERE groups2list.listaddress = ?");
-
-            // Prepare statement for method getGroup()
-            this.pstmtGetGroup0 = conn
-                    .prepareStatement("SELECT group_id, flags FROM groups WHERE Name = ?");
-            this.pstmtGetGroup1 = conn
-                    .prepareStatement("SELECT name FROM groups WHERE group_id = ?");
-
             // Prepare statement for method getLastArticleNumber()
             this.pstmtGetLastArticleNumber = conn
                     .prepareStatement("SELECT Max(article_index) FROM postings WHERE group_id = ?");
@@ -286,10 +251,6 @@ public class JDBCDatabase implements Storage {
             // Prepare statement for method isArticleExisting()
             this.pstmtIsArticleExisting = conn
                     .prepareStatement("SELECT Count(article_id) FROM article_ids WHERE message_id = ?");
-
-            // Prepare statement for method isGroupExisting()
-            this.pstmtIsGroupExisting = conn
-                    .prepareStatement("SELECT * FROM groups WHERE name = ?");
 
             // Prepare statement for method setConfigValue()
             this.pstmtSetConfigValue0 = conn
@@ -392,36 +353,6 @@ public class JDBCDatabase implements Storage {
         this.pstmtAddArticle4.execute();
     }
 
-    /**
-     * Adds a group to the JDBCDatabase. This method is not accessible via NNTP.
-     * 
-     * @param name
-     * @throws java.sql.SQLException
-     */
-    @Override
-    public void addGroup(String name, int flags) throws StorageBackendException {
-        try {
-            this.conn.setAutoCommit(false);
-            pstmtAddGroup0.setString(1, name);
-            pstmtAddGroup0.setInt(2, flags);
-
-            pstmtAddGroup0.executeUpdate();
-            this.conn.commit();
-            this.conn.setAutoCommit(true);
-            this.restarts = 0; // Reset error count
-        } catch (SQLException ex) {
-            try {
-                this.conn.rollback();
-                this.conn.setAutoCommit(true);
-            } catch (SQLException ex2) {
-                ex2.printStackTrace();
-            }
-
-            restartConnection(ex);
-            addGroup(name, flags);
-        }
-    }
-
     @Override
     public void addEvent(long time, int type, long gid)
             throws StorageBackendException {
@@ -461,32 +392,6 @@ public class JDBCDatabase implements Storage {
         } catch (SQLException ex) {
             restartConnection(ex);
             return countArticles();
-        } finally {
-            if (rs != null) {
-                try {
-                    rs.close();
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
-                }
-                restarts = 0;
-            }
-        }
-    }
-
-    @Override
-    public int countGroups() throws StorageBackendException {
-        ResultSet rs = null;
-
-        try {
-            rs = this.pstmtCountGroups.executeQuery();
-            if (rs.next()) {
-                return rs.getInt(1);
-            } else {
-                return -1;
-            }
-        } catch (SQLException ex) {
-            restartConnection(ex);
-            return countGroups();
         } finally {
             if (rs != null) {
                 try {
@@ -830,139 +735,6 @@ public class JDBCDatabase implements Storage {
         }
     }
 
-    /**
-     * Reads all Groups from the JDBCDatabase.
-     * 
-     * @return
-     * @throws StorageBackendException
-     */
-    @Override
-    public List<Group> getGroups() throws StorageBackendException {
-        ResultSet rs;
-        List<Group> buffer = new ArrayList<Group>();
-        Statement stmt = null;
-
-        try {
-            stmt = conn.createStatement();
-            rs = stmt.executeQuery("SELECT * FROM groups ORDER BY name");
-
-            while (rs.next()) {
-                String name = rs.getString("name");
-                long id = rs.getLong("group_id");
-                int flags = rs.getInt("flags");
-
-                Group group = new Group(name, id, flags);
-                buffer.add(group);
-            }
-
-            return buffer;
-        } catch (SQLException ex) {
-            restartConnection(ex);
-            return getGroups();
-        } finally {
-            if (stmt != null) {
-                try {
-                    stmt.close(); // Implicitely closes ResultSets
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
-                }
-            }
-        }
-    }
-
-    @Override
-    public List<String> getGroupsForList(String listAddress)
-            throws StorageBackendException {
-        ResultSet rs = null;
-
-        try {
-            this.pstmtGetGroupForList.setString(1, listAddress);
-
-            rs = this.pstmtGetGroupForList.executeQuery();
-            List<String> groups = new ArrayList<String>();
-            while (rs.next()) {
-                String group = rs.getString(1);
-                groups.add(group);
-            }
-            return groups;
-        } catch (SQLException ex) {
-            restartConnection(ex);
-            return getGroupsForList(listAddress);
-        } finally {
-            if (rs != null) {
-                try {
-                    rs.close();
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
-                }
-            }
-        }
-    }
-
-    /**
-     * Returns the Group that is identified by the name.
-     * 
-     * @param name
-     * @return
-     * @throws StorageBackendException
-     */
-    @Override
-    public Group getGroup(String name) throws StorageBackendException {
-        ResultSet rs = null;
-
-        try {
-            this.pstmtGetGroup0.setString(1, name);
-            rs = this.pstmtGetGroup0.executeQuery();
-
-            if (!rs.next()) {
-                return null;
-            } else {
-                long id = rs.getLong("group_id");
-                int flags = rs.getInt("flags");
-                return new Group(name, id, flags);
-            }
-        } catch (SQLException ex) {
-            restartConnection(ex);
-            return getGroup(name);
-        } finally {
-            if (rs != null) {
-                try {
-                    rs.close();
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
-                }
-            }
-        }
-    }
-
-    @Override
-    public List<String> getListsForGroup(String group)
-            throws StorageBackendException {
-        ResultSet rs = null;
-        List<String> lists = new ArrayList<String>();
-
-        try {
-            this.pstmtGetListForGroup.setString(1, group);
-            rs = this.pstmtGetListForGroup.executeQuery();
-
-            while (rs.next()) {
-                lists.add(rs.getString(1));
-            }
-            return lists;
-        } catch (SQLException ex) {
-            restartConnection(ex);
-            return getListsForGroup(group);
-        } finally {
-            if (rs != null) {
-                try {
-                    rs.close();
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
-                }
-            }
-        }
-    }
-
     private int getMaxArticleIndex(long groupID) throws StorageBackendException {
         ResultSet rs = null;
 
@@ -1057,39 +829,6 @@ public class JDBCDatabase implements Storage {
         } catch (SQLException ex) {
             restartConnection(ex);
             return getFirstArticleNumber(group);
-        } finally {
-            if (rs != null) {
-                try {
-                    rs.close();
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
-                }
-            }
-        }
-    }
-
-    /**
-     * Returns a group name identified by the given id.
-     * 
-     * @param id
-     * @return
-     * @throws StorageBackendException
-     */
-    public String getGroup(int id) throws StorageBackendException {
-        ResultSet rs = null;
-
-        try {
-            this.pstmtGetGroup1.setInt(1, id);
-            rs = this.pstmtGetGroup1.executeQuery();
-
-            if (rs.next()) {
-                return rs.getString(1);
-            } else {
-                return null;
-            }
-        } catch (SQLException ex) {
-            restartConnection(ex);
-            return getGroup(id);
         } finally {
             if (rs != null) {
                 try {
@@ -1256,35 +995,6 @@ public class JDBCDatabase implements Storage {
     }
 
     /**
-     * Checks if there is a group with the given name in the JDBCDatabase.
-     * 
-     * @param name
-     * @return
-     * @throws StorageBackendException
-     */
-    @Override
-    public boolean isGroupExisting(String name) throws StorageBackendException {
-        ResultSet rs = null;
-
-        try {
-            this.pstmtIsGroupExisting.setString(1, name);
-            rs = this.pstmtIsGroupExisting.executeQuery();
-            return rs.next();
-        } catch (SQLException ex) {
-            restartConnection(ex);
-            return isGroupExisting(name);
-        } finally {
-            if (rs != null) {
-                try {
-                    rs.close();
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
-                }
-            }
-        }
-    }
-
-    /**
      * Closes the JDBCDatabase connection.
      */
     public void shutdown() throws StorageBackendException {
@@ -1377,26 +1087,6 @@ public class JDBCDatabase implements Storage {
             }
             restartConnection(ex);
             return update(article);
-        }
-    }
-
-    /**
-     * Writes the flags and the name of the given group to the database.
-     * 
-     * @param group
-     * @throws StorageBackendException
-     */
-    @Override
-    public boolean update(Group group) throws StorageBackendException {
-        try {
-            this.pstmtUpdateGroup.setInt(1, group.getFlags());
-            this.pstmtUpdateGroup.setString(2, group.getName());
-            this.pstmtUpdateGroup.setLong(3, group.getInternalID());
-            int rs = this.pstmtUpdateGroup.executeUpdate();
-            return rs == 1;
-        } catch (SQLException ex) {
-            restartConnection(ex);
-            return update(group);
         }
     }
 

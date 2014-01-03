@@ -1,11 +1,26 @@
+/*
+ *   SONEWS News Server
+ *   see AUTHORS for the list of contributors
+ *
+ *   This program is free software: you can redistribute it and/or modify
+ *   it under the terms of the GNU General Public License as published by
+ *   the Free Software Foundation, either version 3 of the License, or
+ *   (at your option) any later version.
+ *
+ *   This program is distributed in the hope that it will be useful,
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *   GNU General Public License for more details.
+ *
+ *   You should have received a copy of the GNU General Public License
+ *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 package org.sonews.storage.impl;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 
 import org.lightcouch.CouchDbClient;
-import org.lightcouch.NoDocumentException;
 import org.lightcouch.Response;
 import org.sonews.config.Config;
 import org.sonews.feed.Subscription;
@@ -16,10 +31,6 @@ import org.sonews.storage.Storage;
 import org.sonews.storage.StorageBackendException;
 import org.sonews.util.Log;
 import org.sonews.util.Pair;
-
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 
 /**
  *
@@ -153,16 +164,37 @@ public class CouchDBDatabase implements Storage {
     }
 
     @Override
-    public boolean update(final Group group) throws StorageBackendException {
+    public boolean authenticateUser(final String username, final char[] password)
+            throws StorageBackendException {
         // TODO Auto-generated method stub
         return false;
     }
 
     @Override
-    public boolean authenticateUser(final String username, final char[] password)
+    public void addEvent(long timestamp, int type, long groupID)
             throws StorageBackendException {
         // TODO Auto-generated method stub
-        return false;
+
+    }
+
+    @Override
+    public int getEventsCount(int eventType, long startTimestamp,
+            long endTimestamp, Group group) throws StorageBackendException {
+        // TODO Auto-generated method stub
+        return 0;
+    }
+
+    @Override
+    public double getEventsPerHour(int key, long gid)
+            throws StorageBackendException {
+        // TODO Auto-generated method stub
+        return 0;
+    }
+
+    @Override
+    public void purgeGroup(Group group) throws StorageBackendException {
+        // TODO Auto-generated method stub
+
     }
 
 }

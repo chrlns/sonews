@@ -35,7 +35,6 @@ import org.sonews.storage.Headers;
 import org.sonews.storage.StorageBackendException;
 import org.sonews.storage.StorageManager;
 import org.sonews.util.Log;
-import org.sonews.util.Stats;
 import org.sonews.util.io.SMTPInputStream;
 
 /**
@@ -242,7 +241,7 @@ public class PostCommand implements Command {
                 String[] groupnames = article.getHeader(Headers.NEWSGROUPS)[0]
                         .split(",");
                 for (String groupname : groupnames) {
-                    Group group = StorageManager.current().getGroup(groupname);
+                    Group group = Group.get(groupname);
                     if (group != null && !group.isDeleted()) {
                         if (group.isMailingList() && !conn.isLocalConnection()) {
                             // Send to mailing list; the Dispatcher writes
@@ -254,11 +253,6 @@ public class PostCommand implements Command {
                             if (!StorageManager.current().isArticleExisting(
                                     article.getMessageID())) {
                                 StorageManager.current().addArticle(article);
-
-                                // Log this posting to statistics
-                                Stats.getInstance()
-                                        .mailPosted(
-                                                article.getHeader(Headers.NEWSGROUPS)[0]);
                             }
                             success = true;
                         }

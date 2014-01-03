@@ -81,6 +81,14 @@ public interface Storage {
     boolean isArticleExisting(String messageID) throws StorageBackendException;
 
     /**
+     * Performes a purge operation in the storage backend, e.g. to
+     * delete old messages or release allocated resources.
+     * @param group
+     * @throws StorageBackendException
+     */
+    void purgeGroup(Group group) throws StorageBackendException;
+    
+    /**
      * Updates headers and group references of the given article.
      *
      * @param article

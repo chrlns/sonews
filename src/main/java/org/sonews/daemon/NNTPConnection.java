@@ -31,20 +31,20 @@ import java.util.Arrays;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.logging.Level;
+
 import org.sonews.acl.User;
 import org.sonews.daemon.command.Command;
 import org.sonews.storage.Article;
 import org.sonews.storage.Group;
 import org.sonews.storage.StorageBackendException;
 import org.sonews.util.Log;
-import org.sonews.util.Stats;
 import org.sonews.util.io.CRLFOutputStream;
 import org.sonews.util.io.SMTPOutputStream;
 
 /**
  * For every SocketChannel (so TCP/IP connection) there is an instance of this
  * class.
- * 
+ *
  * @author Christian Lins
  * @since sonews/0.5.0
  */
@@ -62,7 +62,7 @@ public final class NNTPConnection {
     private Article currentArticle = null;
     private Group currentGroup = null;
     private volatile long lastActivity = System.currentTimeMillis();
-    private ChannelLineBuffers lineBuffers = new ChannelLineBuffers();
+    private final ChannelLineBuffers lineBuffers = new ChannelLineBuffers();
     private int readLock = 0;
     private final Object readLockGate = new Object();
     private SelectionKey writeSelKey = null;
@@ -74,7 +74,6 @@ public final class NNTPConnection {
         }
 
         this.channel = channel;
-        Stats.getInstance().clientConnect();
     }
 
     /**
@@ -97,7 +96,7 @@ public final class NNTPConnection {
 
     /**
      * Releases the read lock in a Thread-safe way.
-     * 
+     *
      * @throws IllegalMonitorStateException
      *             if a Thread not holding the lock tries to release it.
      */
@@ -210,7 +209,7 @@ public final class NNTPConnection {
 
     /**
      * Due to the readLockGate there is no need to synchronize this method.
-     * 
+     *
      * @param raw
      * @throws IllegalArgumentException
      *             if raw is null.
@@ -290,7 +289,7 @@ public final class NNTPConnection {
 
     /**
      * This method determines the fitting command processing class.
-     * 
+     *
      * @param line
      * @return
      */
@@ -304,7 +303,7 @@ public final class NNTPConnection {
      * returns. The method returns immediately and does not block until the line
      * was sent. If line is longer than 510 octets it is split up in several
      * lines. Each line is terminated by \r\n (NNTPConnection.NEWLINE).
-     * 
+     *
      * @param line
      */
     public void println(final CharSequence line, final Charset charset)
@@ -316,7 +315,7 @@ public final class NNTPConnection {
     /**
      * Writes the given raw lines to the output buffers and finishes with a
      * newline character (\r\n).
-     * 
+     *
      * @param rawLines
      */
     public void println(final byte[] rawLines) throws IOException {
@@ -327,11 +326,11 @@ public final class NNTPConnection {
     /**
      * Same as {@link #println(byte[]) } but escapes lines containing single dot,
      * which has special meaning in protocol (end of message).
-     * 
+     *
      * This method is safe to be used for writing messages – if message contains
      * a line with single dot, it will be doubled and thus not interpreted by
      * NNTP client as end of message
-     * 
+     *
      * @param rawLines
      * @throws IOException
      */
@@ -353,7 +352,7 @@ public final class NNTPConnection {
      * Encodes the given CharBuffer using the given Charset to a bunch of
      * ByteBuffers (each 512 bytes large) and enqueues them for writing at the
      * connected SocketChannel.
-     * 
+     *
      * @throws java.io.IOException
      */
     private void writeToChannel(CharBuffer characters, final Charset charset,
@@ -418,7 +417,7 @@ public final class NNTPConnection {
 
     /**
      * This method is to be called from AUTHINFO USER Command implementation.
-     * 
+     *
      * @param username
      *            username from AUTHINFO USER username.
      */

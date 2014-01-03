@@ -32,27 +32,27 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
+
 import org.sonews.config.Config;
 import org.sonews.daemon.AbstractDaemon;
-import org.sonews.util.Log;
 import org.sonews.storage.StorageBackendException;
 import org.sonews.storage.StorageManager;
-import org.sonews.util.Stats;
+import org.sonews.util.Log;
 import org.sonews.util.io.ArticleReader;
 import org.sonews.util.io.ArticleWriter;
 
 /**
  * The PullFeeder class regularily checks another Newsserver for new messages.
- * 
+ *
  * @author Christian Lins
  * @since sonews/0.5.0
  */
 class PullFeeder extends AbstractDaemon {
 
-    private Map<Subscription, Integer> highMarks = new HashMap<Subscription, Integer>();
+    private final Map<Subscription, Integer> highMarks = new HashMap<Subscription, Integer>();
     private BufferedReader in;
     private PrintWriter out;
-    private Set<Subscription> subscriptions = new HashSet<Subscription>();
+    private final Set<Subscription> subscriptions = new HashSet<Subscription>();
 
     private void addSubscription(final Subscription sub) {
         subscriptions.add(sub);
@@ -65,7 +65,7 @@ class PullFeeder extends AbstractDaemon {
 
     /**
      * Changes to the given group and returns its high mark.
-     * 
+     *
      * @param groupName
      * @return
      */
@@ -115,7 +115,7 @@ class PullFeeder extends AbstractDaemon {
     /**
      * Uses the OVER or XOVER command to get a list of message overviews that
      * may be unknown to this feeder and are about to be peered.
-     * 
+     *
      * @param start
      * @param end
      * @return A list of message ids with potentially interesting messages.
@@ -218,8 +218,6 @@ class PullFeeder extends AbstractDaemon {
                                             awrite.writeArticle(abuf);
                                             awrite.close();
                                         }
-                                        Stats.getInstance().mailFeeded(
-                                                sub.getGroup());
                                     } catch (IOException ex) {
                                         // There may be a temporary network
                                         // failure

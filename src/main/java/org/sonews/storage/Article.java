@@ -174,27 +174,22 @@ public class Article extends ArticleHead {
     }
 
     /**
-     * @return Numerical IDs of the newsgroups this Article belongs to.
+     * @return List of newsgroups this Article belongs to.
      */
     public List<Group> getGroups() {
         String[] groupnames = getHeader(Headers.NEWSGROUPS)[0].split(",");
-        ArrayList<Group> groups = new ArrayList<Group>();
+        List<Group> groups = new ArrayList<Group>(groupnames.length);
 
-        try {
-            for (String newsgroup : groupnames) {
-                newsgroup = newsgroup.trim();
-                Group group = StorageManager.current().getGroup(newsgroup);
-                if (group != null && // If the server does not provide the
-                                     // group, ignore it
-                        !groups.contains(group)) // Yes, there may be duplicates
-                {
-                    groups.add(group);
-                }
+        for (String newsgroup : groupnames) {
+            newsgroup = newsgroup.trim();
+            Group group = Group.get(newsgroup);
+            if (group != null && // If the server does not provide the group, ignore it
+               !groups.contains(group)) // Yes, there may be duplicates
+            {
+                groups.add(group);
             }
-        } catch (StorageBackendException ex) {
-            Log.get().log(Level.WARNING, ex.getLocalizedMessage(), ex);
-            return null;
         }
+
         return groups;
     }
 

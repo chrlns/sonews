@@ -19,14 +19,14 @@ package org.sonews.daemon.command;
 
 import java.io.IOException;
 import java.util.List;
+
 import org.sonews.daemon.NNTPConnection;
 import org.sonews.storage.Group;
 import org.sonews.storage.StorageBackendException;
-import org.sonews.storage.StorageManager;
 
 /**
  * Class handling the LISTGROUP command.
- * 
+ *
  * @author Christian Lins
  * @author Dennis Schwerdel
  * @since n3tpd/0.1
@@ -60,7 +60,7 @@ public class ListGroupCommand implements Command {
 
         Group group;
         if (command.length >= 2) {
-            group = StorageManager.current().getGroup(command[1]);
+            group = Group.get(command[1]);
         } else {
             group = conn.getCurrentChannel();
         }

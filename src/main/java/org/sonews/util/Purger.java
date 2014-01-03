@@ -23,11 +23,11 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
-import org.sonews.daemon.AbstractDaemon;
 import org.sonews.config.Config;
+import org.sonews.daemon.AbstractDaemon;
 import org.sonews.storage.Article;
-import org.sonews.storage.Headers;
 import org.sonews.storage.Group;
+import org.sonews.storage.Headers;
 import org.sonews.storage.StorageBackendException;
 import org.sonews.storage.StorageManager;
 
@@ -36,7 +36,7 @@ import org.sonews.storage.StorageManager;
  * can be purged. A message must be deleted if its lifetime has exceeded, if it
  * was marked as deleted or if the maximum number of articles in the database is
  * reached.
- * 
+ *
  * @author Christian Lins
  * @since sonews/0.5.0
  */
@@ -63,17 +63,12 @@ public class Purger extends AbstractDaemon {
 
     /**
      * Purge messages from storage backend that have been marked as deleted.
-     * 
+     *
      * @throws StorageBackendException
      */
     private void purgeDeleted() throws StorageBackendException {
-        List<Group> groups = StorageManager.current().getGroups();
-        for (Group channel : groups) {
-            if (!(channel instanceof Group)) {
-                continue;
-            }
-
-            Group group = (Group) channel;
+        List<Group> groups = Group.getAll();
+        for (Group group : groups) {
             // Look for groups that are marked as deleted
             if (group.isDeleted()) {
                 List<Long> ids = StorageManager.current().getArticleNumbers(
@@ -96,7 +91,7 @@ public class Purger extends AbstractDaemon {
 
     /**
      * Purge messages that are older then the given treshold.
-     * 
+     *
      * @throws InterruptedException
      * @throws StorageBackendException
      */
@@ -107,7 +102,7 @@ public class Purger extends AbstractDaemon {
         long lifetime = Config.inst().get("sonews.article.lifetime", -1);
 
         if (lifetime > 0
-                || articleMaximum < Stats.getInstance().getNumberOfNews()) {
+                || articleMaximum < StorageManager.current().countArticles()) {
             Log.get().info("Purging old messages...");
             String mid = StorageManager.current().getOldestArticle();
             if (mid == null) { // No articles in the database
