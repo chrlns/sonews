@@ -2,7 +2,7 @@ sonews
 ======
 
 **sonews** is an Usenet News Server written in Java. It can use various 
-backend types, currently supported are CouchDB, MySQL and PostgreSQL.
+backend types, currently supported are CouchDB (very experimental), MySQL and PostgreSQL.
 
 Requirements
 ------------

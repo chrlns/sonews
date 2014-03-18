@@ -20,8 +20,6 @@ package org.sonews.storage.impl;
 import java.util.List;
 import java.util.logging.Level;
 
-import org.lightcouch.CouchDbClient;
-import org.lightcouch.Response;
 import org.sonews.config.Config;
 import org.sonews.feed.Subscription;
 import org.sonews.storage.Article;
@@ -39,7 +37,7 @@ import org.sonews.util.Pair;
  */
 public class CouchDBDatabase implements Storage {
 
-    private final CouchDbClient client;
+    private final CouchDBClient client;
 
     public CouchDBDatabase() {
         final String db = Config.inst().get(Config.STORAGE_DATABASE, "sonews");
@@ -53,14 +51,16 @@ public class CouchDBDatabase implements Storage {
             password = null;
         }
 
-        this.client = new CouchDbClient(db, true, "http", host, Integer.parseInt(port), user, password);
+        this.client = new CouchDBClient(db, host, Integer.parseInt(port), user, password);
     }
 
     @Override
     public void addArticle(final Article art) throws StorageBackendException {
         final CouchDBArticle cart = new CouchDBArticle(art);
-        final Response resp = this.client.save(cart.toString());
-        Log.get().log(Level.INFO, resp.toString());
+        final String json = cart.toString();
+        //final Response resp = this.client.save(json);
+        //Log.get().log(Level.INFO, resp.toString());
+        //FIXME
     }
 
     @Override

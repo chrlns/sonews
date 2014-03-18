@@ -37,7 +37,7 @@ import org.sonews.util.Log;
  */
 class CouchDBArticle {
 
-    private Article article;
+    private final Article article;
     
     public CouchDBArticle(Article article) {
         this.article = article;
@@ -46,6 +46,7 @@ class CouchDBArticle {
     /**
      * Creates and returns a JSON string representation of the wrapped Article.
      */
+    @Override
     public String toString() {
         JSONObject json = new JSONObject();
         Map<String, String> headerMap = new HashMap<String, String>();

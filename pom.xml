@@ -21,11 +21,6 @@
       <version>1.4.7</version>
     </dependency>
     <dependency>
-      <groupId>org.lightcouch</groupId>
-      <artifactId>lightcouch</artifactId>
-      <version>0.0.6</version>
-    </dependency>
-    <dependency>
       <groupId>org.json</groupId>
       <artifactId>json</artifactId>
       <version>20131018</version>

@@ -68,13 +68,14 @@ public final class NNTPDaemon extends AbstractDaemon {
             final Selector writeSelector = Selector.open();
 
             // Start working threads
-            final int workerThreads = Runtime.getRuntime()
-                    .availableProcessors() * 4;
+            final int workerThreads = Math.max(4, 2 * 
+                    Runtime.getRuntime().availableProcessors());
             ConnectionWorker[] cworkers = new ConnectionWorker[workerThreads];
             for (int n = 0; n < workerThreads; n++) {
                 cworkers[n] = new ConnectionWorker();
                 cworkers[n].start();
             }
+            Log.get().info(workerThreads + " worker threads started.");
 
             ChannelWriter.getInstance().setSelector(writeSelector);
             ChannelReader.getInstance().setSelector(readSelector);
