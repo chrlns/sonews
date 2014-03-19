@@ -18,12 +18,67 @@
 
 package org.sonews.storage.impl;
 
+import java.io.IOException;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+
 /**
  *
- * @author cLins
+ * @author Christian Lins
  */
 public class CouchDBClient {
+
+    private String db;
+    private String host;
+    private int port;
+    private String user;
+    private String password;
+    private String baseURL;
+    
     public CouchDBClient(String db, String host, int port, String user, String password) {
+        this.db = db;
+        this.host = host;
+        this.port = port;
+        this.user = user;
+        this.password = password;
+        
+        this.baseURL = "http://" + host + ":" + port + "/" + db + "/";
+    }
+    
+    /**
+     * Retrieves the document with the given ID.
+     * @param id 
+     */
+    public void get(final String id) throws IOException {
+        String uri = baseURL + id;
+        
+        try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
+            HttpGet get = new HttpGet(uri);
+            CloseableHttpResponse res = httpClient.execute(get);
+            
+        }
+    }
+    
+    public void login(String user, String password) {
+        
+    }
+    
+    /**
+     * Stores the given document in the database.
+     * @param doc JSON-formatted document to be stored
+     */
+    public void put(final String doc) {
+        
+    }
+    
+    /**
+     * Calls a view of a design document.
+     * @param ddoc
+     * @param view 
+     */
+    public void view(String ddoc, String view) {
         
     }
 }
