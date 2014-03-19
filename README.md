@@ -10,7 +10,7 @@ Requirements
 The requirements for building and running sonews are:
 
 * Apache Maven
-* Java 6 JDK (or newer)
+* Java 7 JDK (or newer)
 * CouchDB or MySQL/PostgreSQL installation
 
 Build

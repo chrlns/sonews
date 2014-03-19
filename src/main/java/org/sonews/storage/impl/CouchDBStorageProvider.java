@@ -3,14 +3,13 @@ package org.sonews.storage.impl;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.lightcouch.CouchDbException;
 import org.sonews.storage.Storage;
 import org.sonews.storage.StorageBackendException;
 import org.sonews.storage.StorageProvider;
 
 public class CouchDBStorageProvider implements StorageProvider {
     
-    protected static final Map<Thread, CouchDBDatabase> instances = new ConcurrentHashMap<Thread, CouchDBDatabase>();
+    protected static final Map<Thread, CouchDBDatabase> instances = new ConcurrentHashMap<>();
 
     @Override
     public boolean isSupported(String uri) {
@@ -27,7 +26,7 @@ public class CouchDBStorageProvider implements StorageProvider {
             } else {
                 return instances.get(Thread.currentThread());
             }
-        } catch (CouchDbException ex) {
+        } catch (Exception ex) {
             throw new StorageBackendException(ex);
         }
     }

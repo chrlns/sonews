@@ -33,8 +33,8 @@ import java.nio.charset.CoderResult;
  */
 class LineEncoder {
 
-    private CharBuffer characters;
-    private Charset charset;
+    private final CharBuffer characters;
+    private final Charset charset;
 
     /**
      * Constructs new LineEncoder.

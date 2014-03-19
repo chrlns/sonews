@@ -26,6 +26,7 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 import java.util.Iterator;
+import java.util.logging.Level;
 
 /**
  * A Thread task that processes OP_WRITE events for SocketChannels.
@@ -35,7 +36,7 @@ import java.util.Iterator;
  */
 class ChannelWriter extends AbstractDaemon {
 
-    private static ChannelWriter instance = new ChannelWriter();
+    private static final ChannelWriter instance = new ChannelWriter();
 
     /**
      * @return Returns the active ChannelWriter instance.
@@ -112,12 +113,14 @@ class ChannelWriter extends AbstractDaemon {
                         // order.
                         processSelectionKey(connection, socketChannel, selKey);
                     } catch (IOException ex) {
-                        Log.get().warning("Error writing to channel: " + ex);
+                        Log.get().log(Level.WARNING, "Error writing to channel: {0}", ex);
 
                         // Cancel write events for this channel
                         selKey.cancel();
-                        connection.shutdownInput();
-                        connection.shutdownOutput();
+                        if (connection != null) {
+                            connection.shutdownInput();
+                            connection.shutdownOutput();
+                        }
                     }
                 }
 
@@ -125,7 +128,7 @@ class ChannelWriter extends AbstractDaemon {
                 synchronized (NNTPDaemon.RegisterGate) { /* do nothing */
                 }
             } catch (CancelledKeyException ex) {
-                Log.get().info("ChannelWriter.run(): " + ex);
+                Log.get().log(Level.INFO, "ChannelWriter.run(): {0}", ex);
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
@@ -179,7 +182,7 @@ class ChannelWriter extends AbstractDaemon {
                 }
             }
         } else {
-            Log.get().warning("Invalid OP_WRITE key: " + selKey);
+            Log.get().log(Level.WARNING, "Invalid OP_WRITE key: {0}", selKey);
 
             if (socketChannel.socket().isClosed()) {
                 connection.shutdownInput();

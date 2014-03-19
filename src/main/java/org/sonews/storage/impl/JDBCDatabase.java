@@ -107,7 +107,7 @@ public class JDBCDatabase implements Storage {
     /**
      * Rises the database: reconnect and recreate all prepared statements.
      * 
-     * @throws java.lang.SQLException
+     * @throws java.sql.SQLException
      */
     protected void arise() throws SQLException {
         try {
@@ -277,7 +277,7 @@ public class JDBCDatabase implements Storage {
      * 
      * @param article
      * @return
-     * @throws java.sql.SQLException
+     * @throws java.lang.SQLException
      */
     @Override
     public void addArticle(final Article article)
@@ -295,14 +295,14 @@ public class JDBCDatabase implements Storage {
             try {
                 this.conn.rollback(); // Rollback changes
             } catch (SQLException ex2) {
-                Log.get().severe("Rollback of addArticle() failed: " + ex2);
+                Log.get().log(Level.SEVERE, "Rollback of addArticle() failed: {0}", ex2);
             }
 
             try {
                 this.conn.setAutoCommit(true); // and release locks
             } catch (SQLException ex2) {
-                Log.get().severe(
-                        "setAutoCommit(true) of addArticle() failed: " + ex2);
+                Log.get().log(
+                        Level.SEVERE, "setAutoCommit(true) of addArticle() failed: {0}", ex2);
             }
 
             restartConnection(ex);
@@ -419,13 +419,13 @@ public class JDBCDatabase implements Storage {
             // We do not trust the ON DELETE CASCADE functionality to delete
             // orphaned references...
             this.pstmtDeleteArticle1.setString(1, messageID);
-            rs = this.pstmtDeleteArticle1.executeUpdate();
+            this.pstmtDeleteArticle1.executeUpdate();
 
             this.pstmtDeleteArticle2.setString(1, messageID);
-            rs = this.pstmtDeleteArticle2.executeUpdate();
+            this.pstmtDeleteArticle2.executeUpdate();
 
             this.pstmtDeleteArticle3.setString(1, messageID);
-            rs = this.pstmtDeleteArticle3.executeUpdate();
+            this.pstmtDeleteArticle3.executeUpdate();
 
             this.conn.commit();
             this.conn.setAutoCommit(true);

@@ -37,7 +37,7 @@ public class AuthInfoCommand implements Command {
 
     private static final Logger log = Logger.getLogger(AuthInfoCommand.class
             .getName());
-    private static String[] SUPPORTED_COMMANDS = { "AUTHINFO" };
+    private static final String[] SUPPORTED_COMMANDS = { "AUTHINFO" };
 
     @Override
     public boolean hasFinished() {
@@ -91,7 +91,6 @@ public class AuthInfoCommand implements Command {
                             .authenticateUser(conn.getUser().getUserName(),
                                     password);
                     Arrays.fill(password, '*');
-                    commandMatcher = null;
 
                     if (goodPassword) {
                         conn.println("281 Authentication accepted");

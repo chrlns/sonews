@@ -263,7 +263,7 @@ public final class NNTPConnection {
                 strBuf.append(ex0);
                 Log.get().info(strBuf.toString());
             } catch (Exception ex0a) {
-                ex0a.printStackTrace();
+                Log.get().log(Level.INFO, ex0a.getLocalizedMessage(), ex0a);
             }
         } catch (Exception ex1) { // This will catch a second
                                   // StorageBackendException
@@ -305,6 +305,8 @@ public final class NNTPConnection {
      * lines. Each line is terminated by \r\n (NNTPConnection.NEWLINE).
      *
      * @param line
+     * @param charset
+     * @throws java.io.IOException
      */
     public void println(final CharSequence line, final Charset charset)
             throws IOException {
@@ -317,6 +319,7 @@ public final class NNTPConnection {
      * newline character (\r\n).
      *
      * @param rawLines
+     * @throws java.io.IOException
      */
     public void println(final byte[] rawLines) throws IOException {
         this.lineBuffers.addOutputBuffer(ByteBuffer.wrap(rawLines));
@@ -340,12 +343,10 @@ public final class NNTPConnection {
         ByteArrayOutputStream baos = new ByteArrayOutputStream(
                 rawLines.length + 10);
         CRLFOutputStream crlfStream = new CRLFOutputStream(baos);
-        SMTPOutputStream smtpStream = new SMTPOutputStream(crlfStream);
-        smtpStream.write(rawLines);
-
-        println(baos.toByteArray());
-
-        smtpStream.close();
+        try (SMTPOutputStream smtpStream = new SMTPOutputStream(crlfStream)) {
+            smtpStream.write(rawLines);
+            println(baos.toByteArray());
+        }
     }
 
     /**
@@ -418,8 +419,7 @@ public final class NNTPConnection {
     /**
      * This method is to be called from AUTHINFO USER Command implementation.
      *
-     * @param username
-     *            username from AUTHINFO USER username.
+     * @param user username from AUTHINFO USER username.
      */
     public void setUser(User user) {
         this.user = user;

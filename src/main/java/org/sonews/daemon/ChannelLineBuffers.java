@@ -38,8 +38,8 @@ public class ChannelLineBuffers {
      * standard line.
      */
     public static final int BUFFER_SIZE = 512;
-    private static int maxCachedBuffers = 2048; // Cached buffers maximum
-    private static final List<ByteBuffer> freeSmallBuffers = new ArrayList<ByteBuffer>(
+    private static final int maxCachedBuffers = 2048; // Cached buffers maximum
+    private static final List<ByteBuffer> freeSmallBuffers = new ArrayList<>(
             maxCachedBuffers);
 
     /**
@@ -56,8 +56,12 @@ public class ChannelLineBuffers {
         }
     }
 
+    // Both input and output buffers should be final as we synchronize on them,
+    // but the buffers are set somewhere to another object or null. We should 
+    // investigate if this is an issue
+    // FIXME
     private ByteBuffer inputBuffer = newLineBuffer();
-    private List<ByteBuffer> outputBuffers = new ArrayList<ByteBuffer>();
+    private List<ByteBuffer> outputBuffers = new ArrayList<>();
 
     /**
      * Add the given ByteBuffer to the list of buffers to be send to the client.
@@ -82,7 +86,6 @@ public class ChannelLineBuffers {
      * Currently a channel has only one input buffer. This *may* be a bottleneck
      * and should investigated in the future.
      * 
-     * @param channel
      * @return The input buffer associated with given channel.
      */
     public ByteBuffer getInputBuffer() {
@@ -92,7 +95,6 @@ public class ChannelLineBuffers {
     /**
      * Returns the current output buffer for writing(!) to SocketChannel.
      * 
-     * @param channel
      * @return The next input buffer that contains unprocessed data or null if
      *         the connection was closed or there are no more unprocessed
      *         buffers.
@@ -154,18 +156,13 @@ public class ChannelLineBuffers {
                 if (b == 10) // '\n'
                 {
                     // The bytes between the buffer's current position and its
-                    // limit,
-                    // if any, are copied to the beginning of the buffer. That
-                    // is, the
-                    // byte at index p = position() is copied to index zero, the
-                    // byte at
-                    // index p + 1 is copied to index one, and so forth until
-                    // the byte
-                    // at index limit() - 1 is copied to index n = limit() - 1 -
-                    // p.
+                    // limit, if any, are copied to the beginning of the buffer.
+                    // That is, the byte at index p = position() is copied to 
+                    // index zero, the byte at index p + 1 is copied to index 
+                    // one, and so forth until the byte at index limit() - 1 
+                    // is copied to index n = limit() - 1 - p.
                     // The buffer's position is then set to n+1 and its limit is
-                    // set to
-                    // its capacity.
+                    // set to its capacity.
                     buffer.compact();
 
                     lineBuffer.flip(); // limit to position, position to 0

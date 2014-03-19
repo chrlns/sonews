@@ -20,6 +20,7 @@ package org.sonews.util;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -30,13 +31,15 @@ import java.util.concurrent.ConcurrentHashMap;
  * for example.
  * 
  * @author Christian Lins
+ * @param <K>
+ * @param <V>
  * @since sonews/0.5.0
  */
 @SuppressWarnings("serial")
 public class TimeoutMap<K, V> extends ConcurrentHashMap<K, V> {
 
-    private int timeout = 60000; // 60 sec
-    private transient Map<K, Long> timeoutMap = new HashMap<K, Long>();
+    private int timeout;
+    private transient final Map<K, Long> timeoutMap = new HashMap<>();
 
     /**
      * Constructor.
@@ -52,6 +55,7 @@ public class TimeoutMap<K, V> extends ConcurrentHashMap<K, V> {
      * Uses default timeout (60 sec).
      */
     public TimeoutMap() {
+        this(60000);
     }
 
     /**
@@ -59,7 +63,7 @@ public class TimeoutMap<K, V> extends ConcurrentHashMap<K, V> {
      * @param key
      * @return true if key is still valid.
      */
-    protected boolean checkTimeOut(Object key) {
+    protected boolean checkTimeOut(K key) {
         synchronized (this.timeoutMap) {
             if (this.timeoutMap.containsKey(key)) {
                 long keytime = this.timeoutMap.get(key);
@@ -77,12 +81,12 @@ public class TimeoutMap<K, V> extends ConcurrentHashMap<K, V> {
 
     @Override
     public boolean containsKey(Object key) {
-        return checkTimeOut(key);
+        return checkTimeOut((K)key);
     }
 
     @Override
     public synchronized V get(Object key) {
-        if (checkTimeOut(key)) {
+        if (checkTimeOut((K)key)) {
             return super.get(key);
         } else {
             return null;
@@ -113,9 +117,8 @@ public class TimeoutMap<K, V> extends ConcurrentHashMap<K, V> {
 
     protected void removeStaleKeys() {
         synchronized (this.timeoutMap) {
-            Set<Object> keySet = new HashSet<Object>(this.timeoutMap.keySet());
-            for (Object key : keySet) {
-                // The key/value is removed by the checkTimeOut() method if true
+            Set<K> keySet = new HashSet<>(this.timeoutMap.keySet());
+            for (K key : keySet) {
                 checkTimeOut(key);
             }
         }

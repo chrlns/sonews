@@ -29,7 +29,6 @@ import org.sonews.daemon.CommandSelector;
 import org.sonews.daemon.Connections;
 import org.sonews.daemon.NNTPDaemon;
 import org.sonews.feed.FeedManager;
-import org.sonews.storage.StorageBackendException;
 import org.sonews.storage.StorageManager;
 import org.sonews.storage.StorageProvider;
 import org.sonews.util.Log;
@@ -66,42 +65,60 @@ public final class Main {
         int port = -1;
 
         for (int n = 0; n < args.length; n++) {
-            if (args[n].equals("-c") || args[n].equals("-config")) {
-                Config.inst().set(Config.LEVEL_CLI, Config.CONFIGFILE,
-                        args[++n]);
-                System.out.println("Using config file " + args[n]);
-            } else if (args[n].equals("-dumpjdbcdriver")) {
-                System.out.println("Available JDBC drivers:");
-                Enumeration<Driver> drvs = DriverManager.getDrivers();
-                while (drvs.hasMoreElements()) {
-                    System.out.println(drvs.nextElement());
+            switch (args[n]) {
+                case "-c":
+                case "-config": {
+                    Config.inst().set(Config.LEVEL_CLI, Config.CONFIGFILE,
+                            args[++n]);
+                    System.out.println("Using config file " + args[n]);
+                    break;
                 }
-                return;
-            } else if (args[n].equals("-feed")) {
-                feed = true;
-            } else if (args[n].equals("-h") || args[n].equals("-help")) {
-                printArguments();
-                return;
-            } else if (args[n].equals("-p")) {
-                port = Integer.parseInt(args[++n]);
-            } else if (args[n].equals("-plugin-storage")) {
-                System.out
-                        .println("Warning: -plugin-storage is not implemented!");
-            } else if (args[n].equals("-plugin-command")) {
-                try {
-                    CommandSelector.addCommandHandler(args[++n]);
-                } catch (Exception ex) {
-                    StringBuilder strBuf = new StringBuilder();
-                    strBuf.append("Could not load command plugin: ");
-                    strBuf.append(args[n]);
-                    Log.get().warning(strBuf.toString());
-                    Log.get().log(Level.INFO, "Main.java", ex);
+                case "-dumpjdbcdriver": {
+                    System.out.println("Available JDBC drivers:");
+                    Enumeration<Driver> drvs = DriverManager.getDrivers();
+                    while (drvs.hasMoreElements()) {
+                        System.out.println(drvs.nextElement());
+                    }
+                    return;
                 }
-            } else if (args[n].equals("-purger")) {
-                purger = true;
-            } else if (args[n].equals("-v") || args[n].equals("-version")) {
-                // Simply return as the version info is already printed above
-                return;
+                case "-feed": {
+                    feed = true;
+                    break;
+                }
+                case "-h":
+                case "-help": {
+                    printArguments();
+                    return;
+                }
+                case "-p": {
+                    port = Integer.parseInt(args[++n]);
+                    break;
+                }
+                case "-plugin-storage": {
+                    System.out
+                            .println("Warning: -plugin-storage is not implemented!");
+                    break;
+                }
+                case "-plugin-command": {
+                    try {
+                        CommandSelector.addCommandHandler(args[++n]);
+                    } catch (ClassNotFoundException | InstantiationException | IllegalAccessException ex) {
+                        StringBuilder strBuf = new StringBuilder();
+                        strBuf.append("Could not load command plugin: ");
+                        strBuf.append(args[n]);
+                        Log.get().warning(strBuf.toString());
+                        Log.get().log(Level.INFO, "Main.java", ex);
+                    }   
+                    break;
+                }
+                case "-purger": {
+                    purger = true;
+                    break;
+                }
+                case "-v":
+                case "-version":
+                    // Simply return as the version info is already printed above
+                    return;
             }
         }
 

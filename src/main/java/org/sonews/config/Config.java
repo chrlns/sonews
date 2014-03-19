@@ -93,7 +93,7 @@ public class Config extends AbstractConfig {
             MLPOLL_HOST, MLPOLL_PASSWORD, MLPOLL_USER, MLSEND_ADDRESS,
             MLSEND_HOST, MLSEND_PASSWORD, MLSEND_PORT, MLSEND_RW_FROM,
             MLSEND_RW_SENDER, MLSEND_USER, PORT, TIMEOUT, XDAEMON_HOST };
-    private static Config instance = new Config();
+    private static final Config instance = new Config();
 
     public static Config inst() {
         return instance;

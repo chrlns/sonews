@@ -23,6 +23,8 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Properties;
+import java.util.logging.Level;
+import org.sonews.util.Log;
 
 /**
  * Manages the bootstrap configuration. It MUST contain all config values that
@@ -74,7 +76,7 @@ class FileConfig extends AbstractConfig {
             // Load settings from file
             load();
         } catch (final IOException ex) {
-            ex.printStackTrace();
+            Log.get().log(Level.SEVERE, "Exception while loading config file", ex);
         }
     }
 
@@ -85,21 +87,15 @@ class FileConfig extends AbstractConfig {
      *
      * @throws IOException
      */
-    public void load() throws IOException {
-        FileInputStream in = null;
-
-        try {
-            in = new FileInputStream(Config.inst().get(Config.LEVEL_CLI,
-                    Config.CONFIGFILE, "sonews.conf"));
+    public final void load() throws IOException {
+        final String cfgFile = Config.inst().get(Config.LEVEL_CLI,
+                Config.CONFIGFILE, "sonews.conf");
+        try (FileInputStream in = new FileInputStream(cfgFile)) {
             settings.load(in);
         } catch (final FileNotFoundException e) {
             // MUST NOT use Log otherwise endless loop
             System.err.println(e.getMessage());
             save();
-        } finally {
-            if (in != null) {
-                in.close();
-            }
         }
     }
 
@@ -111,18 +107,13 @@ class FileConfig extends AbstractConfig {
      * @throws IOException
      */
     public void save() throws FileNotFoundException, IOException {
-        FileOutputStream out = null;
-        try {
-            out = new FileOutputStream(Config.inst().get(Config.LEVEL_CLI,
-                    Config.CONFIGFILE, "sonews.conf"));
+        final String cfgFile = Config.inst().get(Config.LEVEL_CLI,
+                Config.CONFIGFILE, "sonews.conf");
+        try (FileOutputStream out = new FileOutputStream(cfgFile)) {
             settings.store(out, "SONEWS Config File");
             out.flush();
         } catch (final IOException ex) {
             throw ex;
-        } finally {
-            if (out != null) {
-                out.close();
-            }
         }
     }
 

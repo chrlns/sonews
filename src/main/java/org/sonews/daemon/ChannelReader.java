@@ -37,7 +37,7 @@ import org.sonews.util.Log;
  */
 class ChannelReader extends AbstractDaemon {
 
-    private static ChannelReader instance = new ChannelReader();
+    private static final ChannelReader instance = new ChannelReader();
 
     /**
      * @return Active ChannelReader instance.
@@ -122,10 +122,10 @@ class ChannelReader extends AbstractDaemon {
                 }
 
             } catch (CancelledKeyException ex) {
-                Log.get().warning("ChannelReader.run(): " + ex);
+                Log.get().log(Level.WARNING, "ChannelReader.run(): {0}", ex);
                 Log.get().log(Level.INFO, "", ex);
-            } catch (Exception ex) {
-                ex.printStackTrace();
+            } catch (IOException | InterruptedException ex) {
+                Log.get().log(Level.WARNING, ex.getLocalizedMessage(), ex);
             }
 
             // Eventually wait for a register operation
@@ -160,11 +160,11 @@ class ChannelReader extends AbstractDaemon {
                 } catch (IOException ex) {
                     // The connection was probably closed by the remote host
                     // in a non-clean fashion
-                    Log.get()
-                            .info("ChannelReader.processSelectionKey(): " + ex);
+                    Log.get().log(Level.INFO, 
+                            "ChannelReader.processSelectionKey(): {0}", ex);
                 } catch (Exception ex) {
-                    Log.get().warning(
-                            "ChannelReader.processSelectionKey(): " + ex);
+                    Log.get().log(Level.WARNING, 
+                            "ChannelReader.processSelectionKey(): {0}", ex);
                 }
 
                 if (read == -1) // End of stream
@@ -177,7 +177,7 @@ class ChannelReader extends AbstractDaemon {
             }
         } else {
             // Should not happen
-            Log.get().severe("Should not happen: " + selKey.toString());
+            Log.get().log(Level.SEVERE, "Should not happen: {0}", selKey.toString());
         }
     }
 }

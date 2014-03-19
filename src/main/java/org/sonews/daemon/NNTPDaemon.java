@@ -31,6 +31,7 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
+import java.util.logging.Level;
 
 /**
  * NNTP daemon using SelectableChannels.
@@ -53,10 +54,10 @@ public final class NNTPDaemon extends AbstractDaemon {
         }
     }
 
-    private int port;
+    private final int port;
 
     private NNTPDaemon(final int port) {
-        Log.get().info("Server listening on port " + port);
+        Log.get().log(Level.INFO, "Server listening on port {0}", port);
         this.port = port;
     }
 
@@ -75,7 +76,7 @@ public final class NNTPDaemon extends AbstractDaemon {
                 cworkers[n] = new ConnectionWorker();
                 cworkers[n].start();
             }
-            Log.get().info(workerThreads + " worker threads started.");
+            Log.get().log(Level.INFO, "{0} worker threads started.", workerThreads);
 
             ChannelWriter.getInstance().setSelector(writeSelector);
             ChannelReader.getInstance().setSelector(readSelector);
@@ -104,12 +105,10 @@ public final class NNTPDaemon extends AbstractDaemon {
                 } catch (IOException ex) {
                     // Under heavy load an IOException "Too many open files may
                     // be thrown. It most cases we should slow down the
-                    // connection
-                    // accepting, to give the worker threads some time to
-                    // process work.
-                    Log.get().severe(
-                            "IOException while accepting connection: "
-                                    + ex.getMessage());
+                    // connection accepting, to give the worker threads some 
+                    // time to process work.
+                    Log.get().log(
+                            Level.SEVERE, "IOException while accepting connection: {0}", ex.getMessage());
                     Log.get().info(
                             "Connection accepting sleeping for seconds...");
                     Thread.sleep(5000); // 5 seconds
@@ -132,10 +131,9 @@ public final class NNTPDaemon extends AbstractDaemon {
                     registerSelector(readSelector, socketChannel,
                             SelectionKey.OP_READ);
 
-                    Log.get().info(
-                            "Connected: "
-                                    + socketChannel.socket()
-                                            .getRemoteSocketAddress());
+                    Log.get().log(
+                            Level.INFO, "Connected: {0}", socketChannel.socket()
+                                    .getRemoteSocketAddress());
 
                     // Set write selection key and send hello to client
                     conn.setWriteSelectionKey(selKeyWrite);
@@ -144,13 +142,13 @@ public final class NNTPDaemon extends AbstractDaemon {
                             + " " + Main.VERSION
                             + " news server ready - (posting ok).");
                 } catch (CancelledKeyException cke) {
-                    Log.get().warning(
-                            "CancelledKeyException " + cke.getMessage()
-                                    + " was thrown: " + socketChannel.socket());
+                    Log.get().log(
+                            Level.WARNING, "CancelledKeyException {0} was thrown: {1}", 
+                            new Object[]{cke.getMessage(), socketChannel.socket()});
                 } catch (ClosedChannelException cce) {
-                    Log.get().warning(
-                            "ClosedChannelException " + cce.getMessage()
-                                    + " was thrown: " + socketChannel.socket());
+                    Log.get().log(
+                            Level.WARNING, "ClosedChannelException {0} was thrown: {1}", 
+                            new Object[]{cce.getMessage(), socketChannel.socket()});
                 }
             }
         } catch (BindException ex) {
