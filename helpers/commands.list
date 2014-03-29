@@ -11,5 +11,4 @@ org.sonews.daemon.command.OverCommand
 org.sonews.daemon.command.PostCommand
 org.sonews.daemon.command.QuitCommand
 org.sonews.daemon.command.StatCommand
-org.sonews.daemon.command.XDaemonCommand
 org.sonews.daemon.command.XPatCommand

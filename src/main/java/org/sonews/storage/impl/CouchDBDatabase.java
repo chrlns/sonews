@@ -66,6 +66,9 @@ public class CouchDBDatabase implements Storage {
             final String json = cart.toString();
             final int resp = this.client.put(json, sanitizeID(art.getMessageID()));
             Log.get().log(Level.INFO, "CouchDBDatabase.addArticle: {0}", resp);
+            if(resp != 201) { // HTTP Created
+                throw new StorageBackendException("Unexpected reply from backend: " + resp);
+            }
         } catch(IOException ex) {
             throw new StorageBackendException(ex);
         }
