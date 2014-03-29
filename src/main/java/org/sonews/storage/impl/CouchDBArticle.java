@@ -49,7 +49,7 @@ class CouchDBArticle {
     @Override
     public String toString() {
         JSONObject json = new JSONObject();
-        Map<String, String> headerMap = new HashMap<String, String>();
+        Map<String, String> headerMap = new HashMap<>();
         
         Enumeration<?> headers = article.getAllHeaders();
         while(headers.hasMoreElements()) {

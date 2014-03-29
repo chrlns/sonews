@@ -17,6 +17,7 @@
  */
 package org.sonews.storage.impl;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.logging.Level;
 
@@ -37,6 +38,10 @@ import org.sonews.util.Pair;
  */
 public class CouchDBDatabase implements Storage {
 
+    private static String sanitizeID(String id) {
+        return id.replaceAll("[<>]", "");
+    }
+    
     private final CouchDBClient client;
 
     public CouchDBDatabase() {
@@ -56,11 +61,14 @@ public class CouchDBDatabase implements Storage {
 
     @Override
     public void addArticle(final Article art) throws StorageBackendException {
-        final CouchDBArticle cart = new CouchDBArticle(art);
-        final String json = cart.toString();
-        //final Response resp = this.client.save(json);
-        //Log.get().log(Level.INFO, resp.toString());
-        //FIXME
+        try {
+            final CouchDBArticle cart = new CouchDBArticle(art);
+            final String json = cart.toString();
+            final int resp = this.client.put(json, sanitizeID(art.getMessageID()));
+            Log.get().log(Level.INFO, "CouchDBDatabase.addArticle: {0}", resp);
+        } catch(IOException ex) {
+            throw new StorageBackendException(ex);
+        }
     }
 
     @Override

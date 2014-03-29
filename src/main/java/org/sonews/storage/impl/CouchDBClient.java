@@ -21,6 +21,9 @@ package org.sonews.storage.impl;
 import java.io.IOException;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPut;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 
@@ -29,7 +32,7 @@ import org.apache.http.impl.client.HttpClients;
  * @author Christian Lins
  */
 public class CouchDBClient {
-
+    
     private String db;
     private String host;
     private int port;
@@ -49,14 +52,15 @@ public class CouchDBClient {
     
     /**
      * Retrieves the document with the given ID.
-     * @param id 
+     * @param id
+     * @throws IOException
      */
     public void get(final String id) throws IOException {
         String uri = baseURL + id;
         
         try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
             HttpGet get = new HttpGet(uri);
-            CloseableHttpResponse res = httpClient.execute(get);
+            CloseableHttpResponse resp = httpClient.execute(get);
             
         }
     }
@@ -68,9 +72,17 @@ public class CouchDBClient {
     /**
      * Stores the given document in the database.
      * @param doc JSON-formatted document to be stored
+     * @throws IOException
+     * @return HTTP status code of the CouchDB's response
      */
-    public void put(final String doc) {
-        
+    public int put(final String doc, final String id) throws IOException {
+        try(CloseableHttpClient httpClient = HttpClients.createDefault()) {
+            HttpPut put = new HttpPut(this.baseURL + id);
+            put.setEntity(new StringEntity(doc, ContentType.APPLICATION_JSON));
+            CloseableHttpResponse resp = httpClient.execute(put);
+            
+            return resp.getStatusLine().getStatusCode();
+        }
     }
     
     /**
