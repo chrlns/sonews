@@ -1,0 +1,12 @@
+{
+    "_id":"_design/access",
+    "version": 1,
+    "language": "javascript",
+    "views":
+    {
+        "article": {
+            "map": "",
+            "reduce" : "_count"
+        }
+    }
+}
