@@ -27,13 +27,13 @@ import org.sonews.config.Config;
 
 /**
  * Provides logging and debugging methods.
- * 
+ *
  * @author Christian Lins
  * @since sonews/0.5.0
  */
 public class Log extends Logger {
 
-    private static Log instance = new Log();
+    private static final Log instance = new Log();
 
     private Log() {
         super("org.sonews", null);

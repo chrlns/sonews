@@ -37,7 +37,7 @@ import org.sonews.util.Log;
 
 /**
  * Represents a newsgroup article.
- * 
+ *
  * @author Christian Lins
  * @author Dennis Schwerdel
  * @since n3tpd/0.1
@@ -46,7 +46,7 @@ public class Article extends ArticleHead {
 
     /**
      * Loads the Article identified by the given ID from the JDBCDatabase.
-     * 
+     *
      * @param messageID
      * @return null if Article is not found or if an error occurred.
      */
@@ -70,6 +70,8 @@ public class Article extends ArticleHead {
 
     /**
      * Creates a new Article object using the date from the given raw data.
+     * @param headers
+     * @param body
      */
     public Article(String headers, byte[] body) {
         try {
@@ -88,7 +90,7 @@ public class Article extends ArticleHead {
     /**
      * Creates an Article instance using the data from the javax.mail.Message
      * object. This constructor is called by the Mailinglist gateway.
-     * 
+     *
      * @see javax.mail.Message
      * @param msg
      * @throws IOException
@@ -111,7 +113,7 @@ public class Article extends ArticleHead {
 
     /**
      * Reads from the given Message into a byte array.
-     * 
+     *
      * @param in
      * @return
      * @throws IOException
@@ -125,7 +127,7 @@ public class Article extends ArticleHead {
 
     /**
      * Removes the header identified by the given key.
-     * 
+     *
      * @param headerKey
      */
     public void removeHeader(final String headerKey) {
@@ -198,7 +200,7 @@ public class Article extends ArticleHead {
     }
 
     /**
-     * 
+     *
      * @param groupname
      *            Name(s) of newsgroups
      */
@@ -209,7 +211,7 @@ public class Article extends ArticleHead {
     /**
      * Returns the Message-ID of this Article. If the appropriate header is
      * empty, a new Message-ID is created.
-     * 
+     *
      * @return Message-ID of this Article.
      */
     public String getMessageID() {
@@ -235,7 +237,7 @@ public class Article extends ArticleHead {
 
     /**
      * This method is to be called from POST Command implementation.
-     * 
+     *
      * @param sender
      *            current username – or null, if user is not authenticated.
      */

@@ -30,7 +30,7 @@ import org.sonews.util.io.Resource;
 
 /**
  * Selects the correct command processing class.
- * 
+ *
  * @author Christian Lins
  * @since sonews/1.0
  */
@@ -40,8 +40,7 @@ public class CommandSelector {
     private static Map<String, Class<?>> commandClassesMapping = new ConcurrentHashMap<>();
 
     static {
-        String[] classes = Resource.getAsString("commands.list", true)
-                .split("\n");
+        String[] classes = Resource.getAsString("commands.list", true).split("\n");
         for (String className : classes) {
             if (className.charAt(0) == '#') {
                 // Skip comments
@@ -84,7 +83,7 @@ public class CommandSelector {
         return csel;
     }
 
-    private Map<String, Command> commandMapping = new HashMap<String, Command>();
+    private Map<String, Command> commandMapping = new HashMap<>();
     private Command unsupportedCmd = new UnsupportedCommand();
 
     private CommandSelector() {
@@ -108,7 +107,7 @@ public class CommandSelector {
             }
 
             return cmd;
-        } catch (Exception ex) {
+        } catch (InstantiationException | IllegalAccessException ex) {
             ex.printStackTrace();
             return this.unsupportedCmd;
         }

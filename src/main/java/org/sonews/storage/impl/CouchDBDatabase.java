@@ -30,6 +30,7 @@ import org.sonews.storage.Storage;
 import org.sonews.storage.StorageBackendException;
 import org.sonews.util.Log;
 import org.sonews.util.Pair;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 /**
  *
@@ -41,7 +42,7 @@ public class CouchDBDatabase implements Storage {
     private static String sanitizeID(String id) {
         return id.replaceAll("[<>]", "");
     }
-    
+
     private final CouchDBClient client;
 
     public CouchDBDatabase() {
@@ -76,136 +77,116 @@ public class CouchDBDatabase implements Storage {
 
     @Override
     public int countArticles() throws StorageBackendException {
-        // TODO Auto-generated method stub
-        return 0;
+        throw new NotImplementedException();
     }
 
     @Override
     public void delete(final String messageID) throws StorageBackendException {
-        // TODO Auto-generated method stub
-
+        throw new NotImplementedException();
     }
 
     @Override
     public Article getArticle(final String messageID) throws StorageBackendException {
-        // TODO Auto-generated method stub
-        return null;
+        throw new NotImplementedException();
     }
 
     @Override
     public Article getArticle(final long articleIndex, final long groupID)
             throws StorageBackendException {
-        // TODO Auto-generated method stub
-        return null;
+        throw new NotImplementedException();
     }
 
     @Override
     public List<Pair<Long, ArticleHead>> getArticleHeads(final Group group,
             final long first, final long last) throws StorageBackendException {
-        // TODO Auto-generated method stub
-        return null;
+        throw new NotImplementedException();
     }
 
     @Override
     public List<Pair<Long, String>> getArticleHeaders(final Group group, final long start,
             final long end, final String header, final String pattern)
             throws StorageBackendException {
-        // TODO Auto-generated method stub
-        return null;
+        throw new NotImplementedException();
     }
 
     @Override
     public long getArticleIndex(final Article art, final Group group)
             throws StorageBackendException {
-        // TODO Auto-generated method stub
-        return 0;
+        throw new NotImplementedException();
     }
 
     @Override
     public List<Long> getArticleNumbers(final long groupID)
             throws StorageBackendException {
-        // TODO Auto-generated method stub
-        return null;
+        throw new NotImplementedException();
     }
 
     @Override
     public int getFirstArticleNumber(final Group group)
             throws StorageBackendException {
-        // TODO Auto-generated method stub
-        return 0;
+        throw new NotImplementedException();
     }
 
     @Override
     public int getLastArticleNumber(final Group group) throws StorageBackendException {
-        // TODO Auto-generated method stub
-        return 0;
+        throw new NotImplementedException();
     }
 
     @Override
     public String getOldestArticle() throws StorageBackendException {
-        // TODO Auto-generated method stub
-        return null;
+        throw new NotImplementedException();
     }
 
     @Override
     public int getPostingsCount(final String groupname)
             throws StorageBackendException {
-        // TODO Auto-generated method stub
-        return 0;
+        throw new NotImplementedException();
     }
 
     @Override
     public List<Subscription> getSubscriptions(final int type)
             throws StorageBackendException {
-        // TODO Auto-generated method stub
-        return null;
+        throw new NotImplementedException();
     }
 
     @Override
     public boolean isArticleExisting(final String messageID)
             throws StorageBackendException {
-        // TODO Auto-generated method stub
-        return false;
+        throw new NotImplementedException();
     }
 
     @Override
     public boolean update(final Article article) throws StorageBackendException {
-        // TODO Auto-generated method stub
-        return false;
+        throw new NotImplementedException();
     }
 
     @Override
     public boolean authenticateUser(final String username, final char[] password)
             throws StorageBackendException {
-        // TODO Auto-generated method stub
-        return false;
+        throw new NotImplementedException();
     }
 
     @Override
     public void addEvent(long timestamp, int type, long groupID)
             throws StorageBackendException {
-        // TODO Auto-generated method stub
-
+        throw new NotImplementedException();
     }
 
     @Override
     public int getEventsCount(int eventType, long startTimestamp,
             long endTimestamp, Group group) throws StorageBackendException {
-        // TODO Auto-generated method stub
-        return 0;
+        throw new NotImplementedException();
     }
 
     @Override
     public double getEventsPerHour(int key, long gid)
             throws StorageBackendException {
-        // TODO Auto-generated method stub
-        return 0;
+        throw new NotImplementedException();
     }
 
     @Override
     public void purgeGroup(Group group) throws StorageBackendException {
-        // TODO Auto-generated method stub
-
+        throw new NotImplementedException();
     }
 
 }

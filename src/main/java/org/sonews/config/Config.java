@@ -17,6 +17,9 @@
  */
 package org.sonews.config;
 
+import java.util.logging.Level;
+import org.sonews.util.Log;
+
 /**
  * Configuration facade class.
  *
@@ -110,6 +113,9 @@ public class Config extends AbstractConfig {
             val = FileConfig.getInstance().get(key, def);
         }
 
+        if (val == null) {
+            Log.get().log(Level.WARNING, "Returning default value for {0}", key);
+        }
         return val;
     }
 
