@@ -1,21 +1,24 @@
 #!/bin/bash
 
 CLASSPATH=/usr/share/java/sonews.jar:\
-/usr/share/java/sonews-helpers.jar:\
-/usr/share/java/mysql-connector-java.jar:\
+/usr/share/java/mysql.jar:\
 /usr/share/java/glassfish-mail.jar:\
-/usr/share/java/postgresql.jar
+/usr/share/java/postgresql.jar:\
+/usr/share/java/commons-net.jar
 
 LOGFILE=/var/log/sonews.log
 PIDFILE=/var/run/sonews.pid
-ARGS="-mlgw -c /etc/sonews/sonews.conf -feed"
+PORT=9119
+ARGS="-p $PORT -c /etc/sonews/sonews.conf -feed"
 RUNAS=sonews
 MAINCLASS=org.sonews.Main
-JAVA=sudo -u $RUNAS /usr/bin/java
+JAVA="sudo -u $RUNAS -s /usr/bin/java"
 
 case "$1" in
   start)
-    echo "Starting sonews Newsserver..."
+    echo "Redirect port 119 to $PORT..."
+	iptables -t nat -A PREROUTING -p tcp --dport 119 -j REDIRECT --to-port $PORT
+    echo "Starting sonews Newsserver with user $RUNAS..."
     $JAVA -classpath $CLASSPATH $MAINCLASS $ARGS &> $LOGFILE &
     PID=$!
     echo $PID > $PIDFILE
