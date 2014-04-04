@@ -42,7 +42,7 @@ public final class StorageManager {
             Class<?> clazz = Class.forName(pluginClassName);
             Object inst = clazz.newInstance();
             return (StorageProvider) inst;
-        } catch (Exception ex) {
+        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException ex) {
             // Do not use logging here as the Log class requires a working
             // backend which is in most cases not available at this point
             System.out.println("Could not instantiate StorageProvider: " + ex);

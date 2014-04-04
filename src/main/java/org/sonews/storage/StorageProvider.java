@@ -32,7 +32,9 @@ public interface StorageProvider {
      * reference MAY be unique for each thread. In any case it MUST be
      * thread-safe to use this method.
      * 
+     * @param thread
      * @return The reference to the associated Storage.
+     * @throws org.sonews.storage.StorageBackendException
      */
     public Storage storage(Thread thread) throws StorageBackendException;
 }

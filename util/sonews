@@ -9,7 +9,7 @@ CLASSPATH=/usr/share/java/sonews.jar:\
 LOGFILE=/var/log/sonews.log
 PIDFILE=/var/run/sonews.pid
 PORT=9119
-ARGS="-p $PORT -c /etc/sonews/sonews.conf -feed"
+ARGS="-p $PORT -c /etc/sonews/sonews.conf"
 RUNAS=sonews
 MAINCLASS=org.sonews.Main
 JAVA="sudo -u $RUNAS -s /usr/bin/java"
@@ -19,6 +19,7 @@ case "$1" in
     echo "Redirect port 119 to $PORT..."
 	iptables -t nat -A PREROUTING -p tcp --dport 119 -j REDIRECT --to-port $PORT
     echo "Starting sonews Newsserver with user $RUNAS..."
+	cd /etc/sonews/
     $JAVA -classpath $CLASSPATH $MAINCLASS $ARGS &> $LOGFILE &
     PID=$!
     echo $PID > $PIDFILE

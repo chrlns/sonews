@@ -31,7 +31,7 @@ import org.sonews.storage.StorageProvider;
  */
 public class JDBCStorageProvider implements StorageProvider {
 
-    protected static final Map<Thread, JDBCDatabase> instances = new ConcurrentHashMap<Thread, JDBCDatabase>();
+    protected static final Map<Thread, JDBCDatabase> instances = new ConcurrentHashMap<>();
 
     @Override
     public boolean isSupported(String uri) {
