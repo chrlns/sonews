@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Level;
 import org.sonews.daemon.command.Command;
 import org.sonews.daemon.command.UnsupportedCommand;
 import org.sonews.util.Log;
@@ -35,11 +36,11 @@ import org.sonews.util.io.Resource;
  */
 public class CommandSelector {
 
-    private static Map<Thread, CommandSelector> instances = new ConcurrentHashMap<Thread, CommandSelector>();
-    private static Map<String, Class<?>> commandClassesMapping = new ConcurrentHashMap<String, Class<?>>();
+    private static Map<Thread, CommandSelector> instances = new ConcurrentHashMap<>();
+    private static Map<String, Class<?>> commandClassesMapping = new ConcurrentHashMap<>();
 
     static {
-        String[] classes = Resource.getAsString("helpers/commands.list", true)
+        String[] classes = Resource.getAsString("commands.list", true)
                 .split("\n");
         for (String className : classes) {
             if (className.charAt(0) == '#') {
@@ -50,11 +51,11 @@ public class CommandSelector {
             try {
                 addCommandHandler(className);
             } catch (ClassNotFoundException ex) {
-                Log.get().warning("Could not load command class: " + ex);
+                Log.get().log(Level.WARNING, "Could not load command class: {0}", ex);
             } catch (InstantiationException ex) {
-                Log.get().severe("Could not instantiate command class: " + ex);
+                Log.get().log(Level.SEVERE, "Could not instantiate command class: {0}", ex);
             } catch (IllegalAccessException ex) {
-                Log.get().severe("Could not access command class: " + ex);
+                Log.get().log(Level.SEVERE, "Could not access command class: {0}", ex);
             }
         }
     }

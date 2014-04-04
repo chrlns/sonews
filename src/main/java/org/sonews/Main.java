@@ -159,7 +159,7 @@ public final class Main {
     }
 
     private static void printArguments() {
-        String usage = Resource.getAsString("helpers/usage", true);
+        String usage = Resource.getAsString("usage", true);
         System.out.println(usage);
     }
 

@@ -67,5 +67,14 @@
         </configuration>
       </plugin>
     </plugins>
+	<resources>
+		<resource>
+			<directory>util</directory>
+			<includes>
+				<include>commands.list</include>
+				<include>usage</include>
+			</includes>
+		</resource>
+	</resources>
   </build>
 </project>
