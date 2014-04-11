@@ -1,3 +1,0 @@
-helpers/sonews.conf.sample	/etc/sonews/sonews.conf
-helpers/sonews			/usr/bin/
-build/sonews*.jar 		/usr/share/java/
