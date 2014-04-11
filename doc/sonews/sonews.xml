@@ -62,22 +62,26 @@
       </sect2>
 
       <sect2 label="2.1.2">
-        <title>Other systems</title>
-        <para>See <ulink url="files/">Files Section</ulink> for recent binary and source tarballs.</para>
-        <para>Use the binary archive and extract it in a directory of your choice. Make sure your system
-provides the necessary prerequisites:</para>
+        <title>Build from source</title>
+        <para>
+          See <ulink url="http://www.sonews.org/">sonews.org</ulink> for recent binary and source tarballs. 
+          You may also checkout a recent version from Git at <ulink url="https://github.com/cli/sonews.git">Github</ulink>
+        </para>
+        <para>
+          Use the archive and extract it in a directory of your choice. Or use the checked-out source of course.
+          Make sure your system provides the necessary prerequisites:</para>
         <itemizedlist>
           <listitem>
-            <para>Java6 compatible runtime (JRE)</para>
-          </listitem>
-          <listitem>
-            <para>Java Mail API implementation, e.g. <ulink url="http://java.sun.com/products/javamail/">Sun Java Mail</ulink>.
-GNU JavaMail has a broken POP3 Provider and does not work with sonews.</para>
-          </listitem>
-          <listitem>
-            <para>JSP Servlet Container (e.g. Tomcat or GlassFish) [optional]</para>
+            <para>Java 7 JDK (or higher)</para>
+            <para>Apache Maven 3 (or higher)</para>
           </listitem>
         </itemizedlist>
+        <para>
+          Maven will download all necessary dependencies from a repository automatically.
+          Use the following command to build and package sonews:
+        </para>
+        <screen>$ mvn clean compile package</screen>
+        <para>You'll find the resulting jar file in the target/ directory.</para>
       </sect2>
     </sect1>
 
@@ -436,8 +440,8 @@ hello
       </listitem>
       <listitem>
         <para>
-          <ulink url="news://teneon.de:119">teneon.de</ulink> uses sonews to provide
-          a freely accessible Newsserver.
+          <ulink url="news://news.sonews.org:119">news.sonews.org</ulink> uses sonews to provide
+          a freely accessible demo Newsserver.
         </para>
       </listitem>
     </itemizedlist>
@@ -446,7 +450,7 @@ hello
     <sect1 label="5.2">
       <title>Contributors and sponsors</title>
       <para>Maintainer and project lead:
-Christian Lins (contact christian.lins (at) fh-osnabrueck.de)</para>
+Christian Lins (contact christian at lins dot me)</para>
       <para>Thanks to Sun's Tooling/IT team in Hamburg for the support!
        </para>
       <para>The author thanks <ulink url="http://www.sun.com/">Sun Microsystems</ulink> for fully
