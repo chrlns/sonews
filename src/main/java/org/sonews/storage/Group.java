@@ -56,7 +56,7 @@ public class Group {
     public static final int DELETED = 0x80;
 
     private static List<Group> allGroups = null;
-    private static Map<String, Group> allGroupNames = new HashMap<String, Group>();
+    private static final Map<String, Group> allGroupNames = new HashMap<>();
 
     private long id = 0;
     private int flags = -1;
@@ -74,7 +74,7 @@ public class Group {
             }
 
             String[] groupLines = groupsStr.split("\n");
-            List<Group> groups = new ArrayList<Group>(groupLines.length);
+            List<Group> groups = new ArrayList<>(groupLines.length);
             for(String groupLine : groupLines) {
                 if(groupLine.startsWith("#")) {
                     continue;
@@ -83,9 +83,9 @@ public class Group {
                 groupLine = groupLine.trim();
                 String[] groupLineChunks = groupLine.split("\\s+");
                 if(groupLineChunks.length != 3) {
-                    Log.get().log(Level.WARNING, "Malformed group.conf line: " + groupLine);
+                    Log.get().log(Level.WARNING, "Malformed group.conf line: {0}", groupLine);
                 } else {
-                    Log.get().log(Level.INFO, "Found group " + groupLineChunks[0]);
+                    Log.get().log(Level.INFO, "Found group {0}", groupLineChunks[0]);
                     Group group = new Group(
                             groupLineChunks[0],
                             Long.parseLong(groupLineChunks[1]),
@@ -163,7 +163,7 @@ public class Group {
     }
 
     /**
-     * Returns the group id.
+     * @return Internal group id used for referencing in the backend
      */
     public long getInternalID() {
         assert id > 0;
@@ -210,7 +210,7 @@ public class Group {
 
     /**
      * @return Number of posted articles in this group.
-     * @throws java.sql.SQLException
+     * @throws StorageBackendException
      */
     public long getPostingsCount() throws StorageBackendException {
         return StorageManager.current().getPostingsCount(this.name);

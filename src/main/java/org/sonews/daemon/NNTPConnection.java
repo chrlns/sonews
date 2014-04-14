@@ -17,6 +17,7 @@
  */
 package org.sonews.daemon;
 
+import com.sun.mail.util.CRLFOutputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -38,7 +39,6 @@ import org.sonews.storage.Article;
 import org.sonews.storage.Group;
 import org.sonews.storage.StorageBackendException;
 import org.sonews.util.Log;
-import org.sonews.util.io.CRLFOutputStream;
 import org.sonews.util.io.SMTPOutputStream;
 
 /**

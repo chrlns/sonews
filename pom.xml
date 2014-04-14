@@ -7,7 +7,7 @@
   <artifactId>sonews</artifactId>
   <packaging>jar</packaging>
   <version>2.0-SNAPSHOT</version>
-  <name>sonews Usenet Server</name>
+  <name>sonews NNTP Usenet Server</name>
   <url>http://www.sonews.org/</url>
   <dependencies>
     <dependency>
@@ -29,6 +29,17 @@
       <groupId>org.json</groupId>
       <artifactId>json</artifactId>
       <version>20131018</version>
+    </dependency>
+    <dependency>
+      <groupId>org.postgresql</groupId>
+      <artifactId>postgresql</artifactId>
+      <version>9.3-1101-jdbc41</version>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>mysql</groupId>
+      <artifactId>mysql-connector-java</artifactId>
+      <version>5.1.30</version>
     </dependency>
   </dependencies>
   <properties>
@@ -68,14 +79,14 @@
         </configuration>
       </plugin>
     </plugins>
-	<resources>
-		<resource>
-			<directory>util</directory>
-			<includes>
-				<include>commands.list</include>
-				<include>usage</include>
-			</includes>
-		</resource>
-	</resources>
+    <resources>
+      <resource>
+        <directory>util</directory>
+        <includes>
+          <include>commands.list</include>
+          <include>usage</include>
+        </includes>
+      </resource>
+    </resources>
   </build>
 </project>

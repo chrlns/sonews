@@ -94,8 +94,7 @@ public class JDBCDatabase implements Storage {
 
     protected void prepareGetPostingsCountStatement() throws SQLException {
         this.pstmtGetPostingsCount = conn
-                .prepareStatement("SELECT Count(*) FROM postings NATURAL JOIN groups "
-                        + "WHERE groups.name = ?");
+                .prepareStatement("SELECT Count(*) FROM postings WHERE group_id = ?");
     }
 
     protected void prepareGetSubscriptionsStatement() throws SQLException {
@@ -909,7 +908,13 @@ public class JDBCDatabase implements Storage {
         ResultSet rs = null;
 
         try {
-            this.pstmtGetPostingsCount.setString(1, groupname);
+            Group group = Group.get(groupname);
+            if (group == null) {
+                Log.get().log(Level.WARNING, "Group {0} does not exist!", groupname);
+                return 0;
+            }
+            
+            this.pstmtGetPostingsCount.setLong(1, group.getInternalID());
             rs = this.pstmtGetPostingsCount.executeQuery();
             if (rs.next()) {
                 return rs.getInt(1);

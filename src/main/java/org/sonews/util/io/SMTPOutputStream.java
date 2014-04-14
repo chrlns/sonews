@@ -55,7 +55,7 @@ public class SMTPOutputStream extends FilterOutputStream {
      * @param out
      *            a CRLFOutputStream
      */
-    public SMTPOutputStream(CRLFOutputStream out) {
+    public SMTPOutputStream(com.sun.mail.util.CRLFOutputStream out) {
         super(out);
     }
 
