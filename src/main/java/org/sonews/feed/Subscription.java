@@ -18,6 +18,13 @@
 
 package org.sonews.feed;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.logging.Level;
+import org.sonews.storage.Group;
+import org.sonews.util.Log;
+import org.sonews.util.io.Resource;
+
 /**
  * For every group that is synchronized with or from a remote newsserver a
  * Subscription instance exists.
@@ -27,10 +34,53 @@ package org.sonews.feed;
  */
 public class Subscription {
 
-    private String host;
-    private int port;
-    private int feedtype;
-    private String group;
+    private static List<Subscription> allSubs;
+    
+    /**
+     * @return List of all groups this server handles.
+     */
+    public static List<Subscription> getAll() {
+        if(allSubs == null) {
+            String peersStr = Resource.getAsString("peers.conf", true);
+            if(peersStr == null) {
+                Log.get().log(Level.WARNING, "Could not read peers.conf");
+                return null;
+            }
+
+            String[] peersLines = peersStr.split("\n");
+            List<Subscription> subs = new ArrayList<>(peersLines.length);
+            for(String subLine : peersLines) {
+                if(subLine.startsWith("#")) {
+                    continue;
+                }
+
+                subLine = subLine.trim();
+                String[] subLineChunks = subLine.split("\\s+");
+                if(subLineChunks.length != 3) {
+                    Log.get().log(Level.WARNING, "Malformed peers.conf line: {0}", subLine);
+                } else {
+                    Log.get().log(Level.INFO, "Found peer subscription {0}", subLineChunks[0]);
+                    int feedtype = FeedManager.TYPE_PULL;
+                    if (subLineChunks[1].equals("PUSH")) {
+                        feedtype = FeedManager.TYPE_PUSH;
+                    }
+                    Subscription sub = new Subscription(subLineChunks[2], 119, feedtype, subLineChunks[1]);
+                    subs.add(sub);
+                }
+            }
+
+            // The subscription loading is not synchronized so it is possible that
+            // this method is called multiple times parallel.
+            // Therefore we better set allSubs in a (more or less) atomic way...
+            Subscription.allSubs = subs;
+        }
+        return allSubs;
+    }
+    
+    private final String host;
+    private final int port;
+    private final int feedtype;
+    private final String group;
 
     public Subscription(String host, int port, int feedtype, String group) {
         this.host = host;

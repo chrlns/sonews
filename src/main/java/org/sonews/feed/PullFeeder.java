@@ -49,10 +49,10 @@ import org.sonews.util.io.ArticleWriter;
  */
 class PullFeeder extends AbstractDaemon {
 
-    private final Map<Subscription, Integer> highMarks = new HashMap<Subscription, Integer>();
+    private final Map<Subscription, Integer> highMarks = new HashMap<>();
     private BufferedReader in;
     private PrintWriter out;
-    private final Set<Subscription> subscriptions = new HashSet<Subscription>();
+    private final Set<Subscription> subscriptions = new HashSet<>();
 
     private void addSubscription(final Subscription sub) {
         subscriptions.add(sub);
@@ -134,7 +134,7 @@ class PullFeeder extends AbstractDaemon {
         }
 
         if (line.startsWith("224 ")) {
-            List<String> messages = new ArrayList<String>();
+            List<String> messages = new ArrayList<>();
             line = this.in.readLine();
             while (!".".equals(line)) {
                 String mid = line.split("\t")[4]; // 5th should be the
@@ -157,16 +157,11 @@ class PullFeeder extends AbstractDaemon {
             int port = 119;
 
             Log.get().info("Start PullFeeder run...");
-
-            try {
-                this.subscriptions.clear();
-                List<Subscription> subsPull = StorageManager.current()
-                        .getSubscriptions(FeedManager.TYPE_PULL);
-                for (Subscription sub : subsPull) {
+            this.subscriptions.clear();
+            for (Subscription sub : Subscription.getAll()) {
+                if (sub.getFeedtype() == FeedManager.TYPE_PULL) {
                     addSubscription(sub);
                 }
-            } catch (StorageBackendException ex) {
-                Log.get().log(Level.SEVERE, host, ex);
             }
 
             try {
@@ -175,9 +170,8 @@ class PullFeeder extends AbstractDaemon {
                     port = sub.getPort();
 
                     try {
-                        Log.get().info(
-                                "Feeding " + sub.getGroup() + " from "
-                                        + sub.getHost());
+                        Log.get().log(
+                                Level.INFO, "Feeding {0} from {1}", new Object[]{sub.getGroup(), sub.getHost()});
                         try {
                             connectTo(host, port);
                         } catch (SocketException ex) {
@@ -222,9 +216,8 @@ class PullFeeder extends AbstractDaemon {
                                         // There may be a temporary network
                                         // failure
                                         ex.printStackTrace();
-                                        Log.get().warning(
-                                                "Skipping mail " + messageID
-                                                        + " due to exception.");
+                                        Log.get().log(
+                                                Level.WARNING, "Skipping mail {0} due to exception.", messageID);
                                     }
                                 }
                             } // for(;;)
@@ -241,9 +234,8 @@ class PullFeeder extends AbstractDaemon {
                     }
                 } // for(Subscription sub : subscriptions)
 
-                Log.get().info(
-                        "PullFeeder run ended. Waiting " + pullInterval / 1000
-                                + "s");
+                Log.get().log(
+                        Level.INFO, "PullFeeder run ended. Waiting {0}s", pullInterval / 1000);
                 Thread.sleep(pullInterval);
             } catch (InterruptedException ex) {
                 Log.get().warning(ex.getMessage());

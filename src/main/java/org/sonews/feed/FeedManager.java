@@ -30,14 +30,18 @@ public final class FeedManager {
 
     public static final int TYPE_PULL = 0;
     public static final int TYPE_PUSH = 1;
-    private static PullFeeder pullFeeder = new PullFeeder();
-    private static PushFeeder pushFeeder = new PushFeeder();
+    
+    private static final PullFeeder pullFeeder = new PullFeeder();
+    private static final PushFeeder pushFeeder = new PushFeeder();
 
     /**
      * Reads the peer subscriptions from database and starts the appropriate
      * PullFeeder or PushFeeder.
      */
     public static synchronized void startFeeding() {
+        // Force loading of peers.conf
+        Subscription.getAll();
+        
         pullFeeder.start();
         pushFeeder.start();
     }

@@ -1,0 +1,5 @@
+# Configuration file for Usenet peering
+# Format:
+# [PUSH|PULL] GROUPNAME HOST
+PULL news.software.servers.sonews news.sonews.org
+PUSH news.software.servers.sonews news.sonews.org

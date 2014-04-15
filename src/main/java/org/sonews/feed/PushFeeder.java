@@ -21,6 +21,7 @@ package org.sonews.feed;
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.logging.Level;
 import org.sonews.daemon.AbstractDaemon;
 import org.sonews.storage.Article;
 import org.sonews.storage.Headers;
@@ -38,7 +39,7 @@ import org.sonews.util.io.ArticleWriter;
  */
 class PushFeeder extends AbstractDaemon {
 
-    private ConcurrentLinkedQueue<Article> articleQueue = new ConcurrentLinkedQueue<Article>();
+    private ConcurrentLinkedQueue<Article> articleQueue = new ConcurrentLinkedQueue<>();
 
     @Override
     public void run() {
@@ -48,20 +49,20 @@ class PushFeeder extends AbstractDaemon {
                     this.wait();
                 }
 
-                List<Subscription> subscriptions = StorageManager.current()
-                        .getSubscriptions(FeedManager.TYPE_PUSH);
-
                 Article article = this.articleQueue.poll();
                 String[] groups = article.getHeader(Headers.NEWSGROUPS)[0]
                         .split(",");
-                Log.get().info("PushFeed: " + article.getMessageID());
-                for (Subscription sub : subscriptions) {
+                Log.get().log(Level.INFO, "PushFeed: {0}", article.getMessageID());
+                for (Subscription sub : Subscription.getAll()) {
+                    if (sub.getFeedtype() != FeedManager.TYPE_PUSH) {
+                        continue;
+                    }
+                    
                     // Circle check
-                    if (article.getHeader(Headers.PATH)[0].contains(sub
-                            .getHost())) {
-                        Log.get().info(
-                                article.getMessageID() + " skipped for host "
-                                        + sub.getHost());
+                    if (article.getHeader(Headers.PATH)[0].contains(sub.getHost())) {
+                        Log.get().log(
+                                Level.INFO, "{0} skipped for host {1}", 
+                                new Object[]{article.getMessageID(), sub.getHost()});
                         continue;
                     }
 
@@ -86,10 +87,8 @@ class PushFeeder extends AbstractDaemon {
                         Log.get().warning(ex.toString());
                     }
                 }
-            } catch (StorageBackendException ex) {
-                Log.get().severe(ex.toString());
             } catch (InterruptedException ex) {
-                Log.get().warning("PushFeeder interrupted: " + ex);
+                Log.get().log(Level.WARNING, "PushFeeder interrupted: {0}", ex);
             }
         }
     }
