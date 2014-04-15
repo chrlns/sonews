@@ -18,11 +18,13 @@
 
 package org.sonews.util;
 
+import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 import java.util.logging.StreamHandler;
+
 import org.sonews.config.Config;
 
 /**
@@ -38,18 +40,20 @@ public class Log extends Logger {
     private Log() {
         super("org.sonews", null);
 
-        StreamHandler handler = new StreamHandler(System.out,
+        StreamHandler sHandler = new StreamHandler(System.out,
                 new SimpleFormatter());
+        addHandler(sHandler);
+        
         Level level = Level.parse(Config.inst().get(Config.LOGLEVEL, "INFO"));
-        handler.setLevel(level);
-        addHandler(handler);
         setLevel(level);
+        for (Handler handler : getHandlers()) {
+            handler.setLevel(level);
+        }
+        
         LogManager.getLogManager().addLogger(this);
     }
 
     public static Logger get() {
-        Level level = Level.parse(Config.inst().get(Config.LOGLEVEL, "INFO"));
-        instance.setLevel(level);
         return instance;
     }
 }

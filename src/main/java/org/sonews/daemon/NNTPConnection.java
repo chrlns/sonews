@@ -291,7 +291,7 @@ public final class NNTPConnection {
      * @return
      */
     private Command parseCommandLine(String line) {
-        String cmdStr = line.split("\\s+")[0];
+        String cmdStr = line.trim().split("\\s+")[0];
         return CommandSelector.getInstance().get(cmdStr);
     }
 

@@ -98,7 +98,7 @@ public class CommandSelector {
             if (cmd == null) {
                 Class<?> clazz = commandClassesMapping.get(commandName);
                 if (clazz == null) {
-                    Log.get().log(Level.INFO, "No class found for command: {0}", commandName);
+                    Log.get().log(Level.INFO, "No class found for command: '{0}'", commandName);
                     cmd = this.unsupportedCmd;
                 } else {
                     cmd = (Command) clazz.newInstance();
