@@ -1,6 +1,6 @@
 AUTHORS of
 
-SONEWS News Server
+sonews NNTP Usenet Server
 
 Copyright (C) 2009-2014
   Christian Lins <christian@sonews.org>
@@ -11,9 +11,6 @@ sonews is based partly upon
 
 Neat NNTP Daemon (n3tpd)
 Copyright (C) 2007, 2008  Christian Lins <christian.lins@web.de>
-
-GNU Classpath
-Copyright (C) 2002, 2003, 2004  Free Software Foundation, Inc.
 
 tNNTPd
 Copyright (C) 2003  Dennis Schwerdel
@@ -30,4 +27,3 @@ GNU General Public License for more details.
 
 See COPYING file for a full copy of the GNU General Public License
 or see <http://www.gnu.org/licenses/>.
-

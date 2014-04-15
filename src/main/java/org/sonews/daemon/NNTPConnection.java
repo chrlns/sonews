@@ -17,8 +17,6 @@
  */
 package org.sonews.daemon;
 
-import com.sun.mail.util.CRLFOutputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.SocketException;
@@ -39,7 +37,6 @@ import org.sonews.storage.Article;
 import org.sonews.storage.Group;
 import org.sonews.storage.StorageBackendException;
 import org.sonews.util.Log;
-import org.sonews.util.io.SMTPOutputStream;
 
 /**
  * For every SocketChannel (so TCP/IP connection) there is an instance of this
@@ -168,7 +165,7 @@ public final class NNTPConnection {
                     // Socket was already disconnected
                     Log.get().log(Level.INFO,
                             "NNTPConnection.shutdownOutput(): {0}", ex);
-                } catch (Exception ex) {
+                } catch (IOException ex) {
                     Log.get().log(Level.WARNING,
                             "NNTPConnection.shutdownOutput(): {0}", ex);
                 }
@@ -265,8 +262,8 @@ public final class NNTPConnection {
             } catch (Exception ex0a) {
                 Log.get().log(Level.INFO, ex0a.getLocalizedMessage(), ex0a);
             }
-        } catch (Exception ex1) { // This will catch a second
-                                  // StorageBackendException
+        } catch (IOException | StorageBackendException ex1) { 
+            // This will catch a second StorageBackendException
             try {
                 command = null;
                 Log.get().log(Level.WARNING, ex1.getLocalizedMessage(), ex1);
@@ -276,7 +273,7 @@ public final class NNTPConnection {
                 // RFC says we MUST return 400 before closing the connection
                 shutdownInput();
                 shutdownOutput();
-            } catch (Exception ex2) {
+            } catch (IOException ex2) {
                 ex2.printStackTrace();
             }
         }
@@ -324,29 +321,6 @@ public final class NNTPConnection {
     public void println(final byte[] rawLines) throws IOException {
         this.lineBuffers.addOutputBuffer(ByteBuffer.wrap(rawLines));
         writeToChannel(CharBuffer.wrap(NEWLINE), charset, null);
-    }
-
-    /**
-     * Same as {@link #println(byte[]) } but escapes lines containing single dot,
-     * which has special meaning in protocol (end of message).
-     *
-     * This method is safe to be used for writing messages – if message contains
-     * a line with single dot, it will be doubled and thus not interpreted by
-     * NNTP client as end of message
-     *
-     * @param rawLines
-     * @throws IOException
-     */
-    public void printlnEscapeDots(final byte[] rawLines) throws IOException {
-        // TODO: optimalizace
-
-        ByteArrayOutputStream baos = new ByteArrayOutputStream(
-                rawLines.length + 10);
-        CRLFOutputStream crlfStream = new CRLFOutputStream(baos);
-        try (SMTPOutputStream smtpStream = new SMTPOutputStream(crlfStream)) {
-            smtpStream.write(rawLines);
-            println(baos.toByteArray());
-        }
     }
 
     /**
