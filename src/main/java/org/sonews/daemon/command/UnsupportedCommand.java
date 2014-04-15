@@ -19,6 +19,7 @@
 package org.sonews.daemon.command;
 
 import java.io.IOException;
+
 import org.sonews.daemon.NNTPConnection;
 
 /**

@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
+
 import org.sonews.daemon.command.Command;
 import org.sonews.daemon.command.UnsupportedCommand;
 import org.sonews.util.Log;
@@ -83,8 +84,8 @@ public class CommandSelector {
         return csel;
     }
 
-    private Map<String, Command> commandMapping = new HashMap<>();
-    private Command unsupportedCmd = new UnsupportedCommand();
+    private final Map<String, Command> commandMapping = new HashMap<>();
+    private final Command unsupportedCmd = new UnsupportedCommand();
 
     private CommandSelector() {
     }
@@ -108,7 +109,7 @@ public class CommandSelector {
 
             return cmd;
         } catch (InstantiationException | IllegalAccessException ex) {
-            ex.printStackTrace();
+            Log.get().log(Level.SEVERE,"Could not load command handling class", ex);
             return this.unsupportedCmd;
         }
     }

@@ -86,13 +86,10 @@ class PullFeeder extends AbstractDaemon {
             throws IOException, UnknownHostException {
         Socket socket = new Socket(host, port);
         this.out = new PrintWriter(socket.getOutputStream());
-        this.in = new BufferedReader(new InputStreamReader(
-                socket.getInputStream()));
+        this.in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
         String line = in.readLine();
-        if (!(line.charAt(0) == '2')) // Could be 200 or 2xx if posting is not
-                                      // allowed
-        {
+        if (!(line.charAt(0) == '2')) { // Could be 200 or 2xx if posting is not allowed
             throw new IOException(line);
         }
 
@@ -100,6 +97,9 @@ class PullFeeder extends AbstractDaemon {
         this.out.println("MODE READER\r\n");
         this.out.flush();
         line = this.in.readLine();
+        if (!(line.charAt(0) == '2')) {
+            throw new IOException(line);
+        }
     }
 
     private void disconnect() throws IOException {
@@ -153,8 +153,6 @@ class PullFeeder extends AbstractDaemon {
         while (isRunning()) {
             int pullInterval = 1000 * Config.inst().get(
                     Config.FEED_PULLINTERVAL, 3600);
-            String host = "localhost";
-            int port = 119;
 
             Log.get().info("Start PullFeeder run...");
             this.subscriptions.clear();
@@ -166,8 +164,8 @@ class PullFeeder extends AbstractDaemon {
 
             try {
                 for (Subscription sub : this.subscriptions) {
-                    host = sub.getHost();
-                    port = sub.getPort();
+                    String host = sub.getHost();
+                    int port = sub.getPort();
 
                     try {
                         Log.get().log(
@@ -175,8 +173,8 @@ class PullFeeder extends AbstractDaemon {
                         try {
                             connectTo(host, port);
                         } catch (SocketException ex) {
-                            Log.get().info(
-                                    "Skipping " + sub.getHost() + ": " + ex);
+                            Log.get().log(
+                                    Level.INFO, "Skipping {0}: {1}", new Object[]{sub.getHost(), ex});
                             continue;
                         }
 
@@ -197,18 +195,14 @@ class PullFeeder extends AbstractDaemon {
                                                 messageID);
                                         byte[] abuf = aread.getArticleData();
                                         if (abuf == null) {
-                                            Log.get().warning(
-                                                    "Could not feed "
-                                                            + messageID
-                                                            + " from "
-                                                            + sub.getHost());
+                                            Log.get().log(
+                                                    Level.WARNING, "Could not feed {0} from {1}", 
+                                                    new Object[]{messageID, sub.getHost()});
                                         } else {
-                                            Log.get().info(
-                                                    "Feeding " + messageID);
+                                            Log.get().log(
+                                                    Level.INFO, "Feeding {0}", messageID);
                                             ArticleWriter awrite = new ArticleWriter(
-                                                    "localhost", Config.inst()
-                                                            .get(Config.PORT,
-                                                                    119));
+                                                    "localhost", Config.inst().get(Config.PORT, 119));
                                             awrite.writeArticle(abuf);
                                             awrite.close();
                                         }
