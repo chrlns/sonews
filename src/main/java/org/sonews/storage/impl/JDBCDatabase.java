@@ -22,7 +22,6 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.sql.PreparedStatement;
 import java.util.ArrayList;
 import java.util.Enumeration;
@@ -36,7 +35,6 @@ import javax.mail.internet.MimeUtility;
 
 import org.sonews.config.Config;
 import org.sonews.util.Log;
-import org.sonews.feed.Subscription;
 import org.sonews.storage.Article;
 import org.sonews.storage.ArticleHead;
 import org.sonews.storage.Group;
@@ -59,7 +57,6 @@ public class JDBCDatabase implements Storage {
     protected PreparedStatement pstmtAddArticle2 = null;
     protected PreparedStatement pstmtAddArticle3 = null;
     protected PreparedStatement pstmtAddArticle4 = null;
-    protected PreparedStatement pstmtAddEvent = null;
     protected PreparedStatement pstmtCountArticles = null;
     protected PreparedStatement pstmtDeleteArticle0 = null;
     protected PreparedStatement pstmtDeleteArticle1 = null;
@@ -72,22 +69,15 @@ public class JDBCDatabase implements Storage {
     protected PreparedStatement pstmtGetArticleHeads = null;
     protected PreparedStatement pstmtGetArticleIDs = null;
     protected PreparedStatement pstmtGetArticleIndex = null;
-    protected PreparedStatement pstmtGetConfigValue = null;
-    protected PreparedStatement pstmtGetEventsCount0 = null;
-    protected PreparedStatement pstmtGetEventsCount1 = null;
     protected PreparedStatement pstmtGetFirstArticleNumber = null;
-    protected PreparedStatement pstmtGetListForGroup = null;
     protected PreparedStatement pstmtGetLastArticleNumber = null;
     protected PreparedStatement pstmtGetMaxArticleID = null;
     protected PreparedStatement pstmtGetMaxArticleIndex = null;
     protected PreparedStatement pstmtGetOldestArticle = null;
     protected PreparedStatement pstmtGetPostingsCount = null;
-    protected PreparedStatement pstmtGetSubscriptions = null;
     protected PreparedStatement pstmtIsArticleExisting = null;
     protected PreparedStatement pstmtPurgeGroup0 = null;
     protected PreparedStatement pstmtPurgeGroup1 = null;
-    protected PreparedStatement pstmtSetConfigValue0 = null;
-    protected PreparedStatement pstmtSetConfigValue1 = null;
     protected PreparedStatement pstmtUpdateGroup = null;
     /** How many times the database connection was reinitialized */
     protected int restarts = 0;
@@ -95,12 +85,6 @@ public class JDBCDatabase implements Storage {
     protected void prepareGetPostingsCountStatement() throws SQLException {
         this.pstmtGetPostingsCount = conn
                 .prepareStatement("SELECT Count(*) FROM postings WHERE group_id = ?");
-    }
-
-    protected void prepareGetSubscriptionsStatement() throws SQLException {
-        this.pstmtGetSubscriptions = conn
-                .prepareStatement("SELECT host, port, name FROM peers NATURAL JOIN "
-                        + "peer_subscriptions NATURAL JOIN groups WHERE feedtype = ?");
     }
 
     /**
@@ -140,10 +124,6 @@ public class JDBCDatabase implements Storage {
                             + "VALUES (?, ?, ?)");
             this.pstmtAddArticle4 = conn
                     .prepareStatement("INSERT INTO article_ids (article_id, message_id) VALUES (?, ?)");
-
-            // Prepare statement for method addStatValue()
-            this.pstmtAddEvent = conn
-                    .prepareStatement("INSERT INTO events VALUES (?, ?, ?)");
 
             // Prepare statement for method countArticles()
             this.pstmtCountArticles = conn
@@ -202,27 +182,9 @@ public class JDBCDatabase implements Storage {
                             + "postings.group_id = ? AND article_index >= ? AND "
                             + "article_index <= ?");
 
-            // Prepare statements for method getConfigValue()
-            this.pstmtGetConfigValue = conn
-                    .prepareStatement("SELECT config_value FROM config WHERE config_key = ?");
-
-            // Prepare statements for method getEventsCount()
-            this.pstmtGetEventsCount0 = conn
-                    .prepareStatement("SELECT Count(*) FROM events WHERE event_key = ? AND "
-                            + "event_time >= ? AND event_time < ?");
-
-            this.pstmtGetEventsCount1 = conn
-                    .prepareStatement("SELECT Count(*) FROM events WHERE event_key = ? AND "
-                            + "event_time >= ? AND event_time < ? AND group_id = ?");
-
             // Prepare statement for method getLastArticleNumber()
             this.pstmtGetLastArticleNumber = conn
                     .prepareStatement("SELECT Max(article_index) FROM postings WHERE group_id = ?");
-
-            // Prepare statement for method getListForGroup()
-            this.pstmtGetListForGroup = conn
-                    .prepareStatement("SELECT listaddress FROM groups2list INNER JOIN groups "
-                            + "ON groups.group_id = groups2list.group_id WHERE name = ?");
 
             // Prepare statement for method getMaxArticleID()
             this.pstmtGetMaxArticleID = conn
@@ -244,18 +206,9 @@ public class JDBCDatabase implements Storage {
             // Prepare statement for method getPostingsCount()
             prepareGetPostingsCountStatement();
 
-            // Prepare statement for method getSubscriptions()
-            prepareGetSubscriptionsStatement();
-
             // Prepare statement for method isArticleExisting()
             this.pstmtIsArticleExisting = conn
                     .prepareStatement("SELECT Count(article_id) FROM article_ids WHERE message_id = ?");
-
-            // Prepare statement for method setConfigValue()
-            this.pstmtSetConfigValue0 = conn
-                    .prepareStatement("DELETE FROM config WHERE config_key = ?");
-            this.pstmtSetConfigValue1 = conn
-                    .prepareStatement("INSERT INTO config VALUES(?, ?)");
 
             // Prepare statements for method purgeGroup()
             this.pstmtPurgeGroup0 = conn
@@ -275,8 +228,7 @@ public class JDBCDatabase implements Storage {
      * Adds an article to the database.
      * 
      * @param article
-     * @return
-     * @throws java.lang.SQLException
+     * @throws StorageBackendException
      */
     @Override
     public void addArticle(final Article article)
@@ -350,31 +302,6 @@ public class JDBCDatabase implements Storage {
         this.pstmtAddArticle4.setInt(1, newArticleID);
         this.pstmtAddArticle4.setString(2, article.getMessageID());
         this.pstmtAddArticle4.execute();
-    }
-
-    @Override
-    public void addEvent(long time, int type, long gid)
-            throws StorageBackendException {
-        try {
-            this.conn.setAutoCommit(false);
-            this.pstmtAddEvent.setLong(1, time);
-            this.pstmtAddEvent.setInt(2, type);
-            this.pstmtAddEvent.setLong(3, gid);
-            this.pstmtAddEvent.executeUpdate();
-            this.conn.commit();
-            this.conn.setAutoCommit(true);
-            this.restarts = 0;
-        } catch (SQLException ex) {
-            try {
-                this.conn.rollback();
-                this.conn.setAutoCommit(true);
-            } catch (SQLException ex2) {
-                ex2.printStackTrace();
-            }
-
-            restartConnection(ex);
-            addEvent(time, type, gid);
-        }
     }
 
     @Override
@@ -696,44 +623,6 @@ public class JDBCDatabase implements Storage {
         }
     }
 
-    @Override
-    public int getEventsCount(int type, long start, long end, Group channel)
-            throws StorageBackendException {
-        ResultSet rs = null;
-
-        try {
-            if (channel == null) {
-                this.pstmtGetEventsCount0.setInt(1, type);
-                this.pstmtGetEventsCount0.setLong(2, start);
-                this.pstmtGetEventsCount0.setLong(3, end);
-                rs = this.pstmtGetEventsCount0.executeQuery();
-            } else {
-                this.pstmtGetEventsCount1.setInt(1, type);
-                this.pstmtGetEventsCount1.setLong(2, start);
-                this.pstmtGetEventsCount1.setLong(3, end);
-                this.pstmtGetEventsCount1.setLong(4, channel.getInternalID());
-                rs = this.pstmtGetEventsCount1.executeQuery();
-            }
-
-            if (rs.next()) {
-                return rs.getInt(1);
-            } else {
-                return -1;
-            }
-        } catch (SQLException ex) {
-            restartConnection(ex);
-            return getEventsCount(type, start, end, channel);
-        } finally {
-            if (rs != null) {
-                try {
-                    rs.close();
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
-                }
-            }
-        }
-    }
-
     private int getMaxArticleIndex(long groupID) throws StorageBackendException {
         ResultSet rs = null;
 
@@ -840,44 +729,6 @@ public class JDBCDatabase implements Storage {
     }
 
     @Override
-    public double getEventsPerHour(int key, long gid)
-            throws StorageBackendException {
-        String gidquery = "";
-        if (gid >= 0) {
-            gidquery = " AND group_id = " + gid;
-        }
-
-        Statement stmt = null;
-        ResultSet rs = null;
-
-        try {
-            stmt = this.conn.createStatement();
-            rs = stmt
-                    .executeQuery("SELECT Count(*) / (Max(event_time) - Min(event_time))"
-                            + " * 1000 * 60 * 60 FROM events WHERE event_key = "
-                            + key + gidquery);
-
-            if (rs.next()) {
-                restarts = 0; // reset error count
-                return rs.getDouble(1);
-            } else {
-                return Double.NaN;
-            }
-        } catch (SQLException ex) {
-            restartConnection(ex);
-            return getEventsPerHour(key, gid);
-        } finally {
-            try {
-                if (stmt != null) {
-                    stmt.close(); // Implicitely closes the result sets
-                }
-            } catch (SQLException ex) {
-                ex.printStackTrace();
-            }
-        }
-    }
-
-    @Override
     public String getOldestArticle() throws StorageBackendException {
         ResultSet rs = null;
 
@@ -936,43 +787,11 @@ public class JDBCDatabase implements Storage {
         }
     }
 
-    @Override
-    public List<Subscription> getSubscriptions(int feedtype)
-            throws StorageBackendException {
-        ResultSet rs = null;
-
-        try {
-            List<Subscription> subs = new ArrayList<Subscription>();
-            this.pstmtGetSubscriptions.setInt(1, feedtype);
-            rs = this.pstmtGetSubscriptions.executeQuery();
-
-            while (rs.next()) {
-                String host = rs.getString("host");
-                String group = rs.getString("name");
-                int port = rs.getInt("port");
-                subs.add(new Subscription(host, port, feedtype, group));
-            }
-
-            return subs;
-        } catch (SQLException ex) {
-            restartConnection(ex);
-            return getSubscriptions(feedtype);
-        } finally {
-            if (rs != null) {
-                try {
-                    rs.close();
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
-                }
-            }
-        }
-    }
-
     /**
      * Checks if there is an article with the given messageid in the
      * JDBCDatabase.
      * 
-     * @param name
+     * @param messageID
      * @return
      * @throws StorageBackendException
      */

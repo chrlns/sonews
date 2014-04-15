@@ -22,7 +22,6 @@ import java.util.List;
 import java.util.logging.Level;
 
 import org.sonews.config.Config;
-import org.sonews.feed.Subscription;
 import org.sonews.storage.Article;
 import org.sonews.storage.ArticleHead;
 import org.sonews.storage.Group;
@@ -144,12 +143,6 @@ public class CouchDBDatabase implements Storage {
     }
 
     @Override
-    public List<Subscription> getSubscriptions(final int type)
-            throws StorageBackendException {
-        throw new NotImplementedException();
-    }
-
-    @Override
     public boolean isArticleExisting(final String messageID)
             throws StorageBackendException {
         throw new NotImplementedException();
@@ -162,24 +155,6 @@ public class CouchDBDatabase implements Storage {
 
     @Override
     public boolean authenticateUser(final String username, final char[] password)
-            throws StorageBackendException {
-        throw new NotImplementedException();
-    }
-
-    @Override
-    public void addEvent(long timestamp, int type, long groupID)
-            throws StorageBackendException {
-        throw new NotImplementedException();
-    }
-
-    @Override
-    public int getEventsCount(int eventType, long startTimestamp,
-            long endTimestamp, Group group) throws StorageBackendException {
-        throw new NotImplementedException();
-    }
-
-    @Override
-    public double getEventsPerHour(int key, long gid)
             throws StorageBackendException {
         throw new NotImplementedException();
     }

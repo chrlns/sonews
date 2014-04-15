@@ -19,7 +19,6 @@ package org.sonews.storage;
 
 import java.util.List;
 
-import org.sonews.feed.Subscription;
 import org.sonews.util.Pair;
 
 /**
@@ -37,9 +36,6 @@ public interface Storage {
      * @throws StorageBackendException
      */
     void addArticle(Article art) throws StorageBackendException;
-
-    void addEvent(long timestamp, int type, long groupID)
-            throws StorageBackendException;
 
     int countArticles() throws StorageBackendException;
 
@@ -62,11 +58,6 @@ public interface Storage {
 
     List<Long> getArticleNumbers(long groupID) throws StorageBackendException;
 
-    int getEventsCount(int eventType, long startTimestamp, long endTimestamp,
-            Group group) throws StorageBackendException;
-
-    double getEventsPerHour(int key, long gid) throws StorageBackendException;
-
     int getFirstArticleNumber(Group group) throws StorageBackendException;
 
     int getLastArticleNumber(Group group) throws StorageBackendException;
@@ -74,9 +65,6 @@ public interface Storage {
     String getOldestArticle() throws StorageBackendException;
 
     int getPostingsCount(String groupname) throws StorageBackendException;
-
-    List<Subscription> getSubscriptions(int type)
-            throws StorageBackendException;
 
     boolean isArticleExisting(String messageID) throws StorageBackendException;
 
@@ -97,6 +85,15 @@ public interface Storage {
      */
     boolean update(Article article) throws StorageBackendException;
 
+    /**
+     * TODO Move to separate Authentication Backend
+     * @param username
+     * @param password
+     * @return
+     * @throws StorageBackendException
+     * @deprecated
+     */
+    @Deprecated
     public boolean authenticateUser(String username, char[] password)
             throws StorageBackendException;
 }
