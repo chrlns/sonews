@@ -111,6 +111,31 @@ class PullFeeder extends AbstractDaemon {
         this.out = null;
         this.in = null;
     }
+    
+    private void getAndRepostArticle(Subscription sub, String messageID) {
+        try {
+            // Post the message via common socket connection
+            ArticleReader aread = new ArticleReader(sub.getHost(), sub.getPort(), messageID);
+            byte[] abuf = aread.getArticleData();
+            if (abuf == null) {
+                Log.get().log(
+                        Level.WARNING, "Could not feed {0} from {1}",
+                        new Object[]{messageID, sub.getHost()});
+            } else {
+                Log.get().log(
+                        Level.INFO, "Feeding {0}", messageID);
+                ArticleWriter awrite = new ArticleWriter(
+                        "localhost", Config.inst().get(Config.PORT, 119));
+                awrite.writeArticle(abuf);
+                awrite.close();
+            }
+        } catch (IOException ex) {
+            // There may be a temporary network failure
+            ex.printStackTrace();
+            Log.get().log(
+                    Level.WARNING, "Skipping mail {0} due to exception.", messageID);
+        }
+    }
 
     /**
      * Uses the OVER or XOVER command to get a list of message overviews that
@@ -185,34 +210,8 @@ class PullFeeder extends AbstractDaemon {
                             List<String> messageIDs = over(oldMark, newMark);
 
                             for (String messageID : messageIDs) {
-                                if (!StorageManager.current()
-                                        .isArticleExisting(messageID)) {
-                                    try {
-                                        // Post the message via common socket
-                                        // connection
-                                        ArticleReader aread = new ArticleReader(
-                                                sub.getHost(), sub.getPort(),
-                                                messageID);
-                                        byte[] abuf = aread.getArticleData();
-                                        if (abuf == null) {
-                                            Log.get().log(
-                                                    Level.WARNING, "Could not feed {0} from {1}", 
-                                                    new Object[]{messageID, sub.getHost()});
-                                        } else {
-                                            Log.get().log(
-                                                    Level.INFO, "Feeding {0}", messageID);
-                                            ArticleWriter awrite = new ArticleWriter(
-                                                    "localhost", Config.inst().get(Config.PORT, 119));
-                                            awrite.writeArticle(abuf);
-                                            awrite.close();
-                                        }
-                                    } catch (IOException ex) {
-                                        // There may be a temporary network
-                                        // failure
-                                        ex.printStackTrace();
-                                        Log.get().log(
-                                                Level.WARNING, "Skipping mail {0} due to exception.", messageID);
-                                    }
+                                if (!StorageManager.current().isArticleExisting(messageID)) {
+                                    getAndRepostArticle(sub, messageID);
                                 }
                             } // for(;;)
                             this.highMarks.put(sub, newMark);

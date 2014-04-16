@@ -26,6 +26,7 @@ import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.logging.Level;
 import org.sonews.config.Config;
 import org.sonews.util.Log;
 
@@ -61,9 +62,13 @@ public class ArticleReader {
         }
 
         int l = buf.length - 1;
-        return buf[l - 3] == 10 // '*\n'
-                && buf[l - 2] == '.' // '.'
-                && buf[l - 1] == 13 && buf[l] == 10; // '\r\n'
+        return (buf[l - 3] == '\n'
+                && buf[l - 2] == '.' 
+                && buf[l - 1] == '\r'
+                && buf[l] == '\n')
+            || (buf[l - 2] == '\n'
+                && buf[l - 1] == '.'
+                && buf[l] == '\n');
     }
 
     public byte[] getArticleData() throws IOException,
@@ -71,8 +76,7 @@ public class ArticleReader {
         long maxSize = Config.inst().get(Config.ARTICLE_MAXSIZE, 1024) * 1024L;
 
         try {
-            this.out.write(("ARTICLE " + this.messageID + "\r\n")
-                    .getBytes("UTF-8"));
+            this.out.write(("ARTICLE " + this.messageID + "\r\n").getBytes("UTF-8"));
             this.out.flush();
 
             String line = readln(this.in);
@@ -83,19 +87,19 @@ public class ArticleReader {
                     for (int b = in.read(); b != 10; b = in.read()) {
                         buf.write(b);
                     }
-
                     buf.write(10);
+
                     if (buf.size() > maxSize) {
-                        Log.get().warning(
-                                "Skipping message that is too large: "
-                                        + buf.size());
+                        Log.get().log(
+                                Level.WARNING, "Skipping message that is too large: {0}",
+                                buf.size());
                         return null;
                     }
                 }
 
                 return buf.toByteArray();
             } else {
-                Log.get().warning("ArticleReader: " + line);
+                Log.get().log(Level.WARNING, "ArticleReader: {0}", line);
                 return null;
             }
         } catch (IOException ex) {

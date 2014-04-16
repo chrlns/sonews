@@ -84,7 +84,6 @@ public class PostCommand implements Command {
      * @param line
      * @throws java.io.IOException
      * @throws org.sonews.storage.StorageBackendException
-     * @throws java.sql.SQLException
      */
     @Override
     // TODO: Refactor this method to reduce complexity!
