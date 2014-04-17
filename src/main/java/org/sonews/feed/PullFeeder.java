@@ -38,8 +38,7 @@ import org.sonews.daemon.AbstractDaemon;
 import org.sonews.storage.StorageBackendException;
 import org.sonews.storage.StorageManager;
 import org.sonews.util.Log;
-import org.sonews.util.io.ArticleReader;
-import org.sonews.util.io.ArticleWriter;
+import org.sonews.util.io.ArticleTransmitter;
 
 /**
  * The PullFeeder class regularily checks another Newsserver for new messages.
@@ -111,29 +110,16 @@ class PullFeeder extends AbstractDaemon {
         this.out = null;
         this.in = null;
     }
-    
+
     private void getAndRepostArticle(Subscription sub, String messageID) {
         try {
-            // Post the message via common socket connection
-            ArticleReader aread = new ArticleReader(sub.getHost(), sub.getPort(), messageID);
-            byte[] abuf = aread.getArticleData();
-            if (abuf == null) {
-                Log.get().log(
-                        Level.WARNING, "Could not feed {0} from {1}",
-                        new Object[]{messageID, sub.getHost()});
-            } else {
-                Log.get().log(
-                        Level.INFO, "Feeding {0}", messageID);
-                ArticleWriter awrite = new ArticleWriter(
-                        "localhost", Config.inst().get(Config.PORT, 119));
-                awrite.writeArticle(abuf);
-                awrite.close();
-            }
+            ArticleTransmitter at = new ArticleTransmitter(sub.getGroup(), messageID);
+            at.transfer(sub.getHost(), sub.getPort(), "localhost", Config.inst().get(Config.PORT, 119));
         } catch (IOException ex) {
             // There may be a temporary network failure
-            ex.printStackTrace();
-            Log.get().log(
-                    Level.WARNING, "Skipping mail {0} due to exception.", messageID);
+            Log.get().log(Level.WARNING,
+                    "Skipping message {0} due to exception: {1}",
+                    new Object[]{messageID, ex});
         }
     }
 

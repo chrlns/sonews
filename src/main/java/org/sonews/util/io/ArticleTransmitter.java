@@ -18,6 +18,15 @@
 
 package org.sonews.util.io;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
+import java.net.Socket;
+import java.util.logging.Level;
+import org.sonews.util.Log;
+
 /**
  * The ArticleTransmitter class encapsulates the functionality to transmit
  * a news article from one newsserver to another.
@@ -25,21 +34,114 @@ package org.sonews.util.io;
  * article.
  * There is no conversation done, the raw header and body parts are simply
  * read from one stream and written to the other.
- * 
+ *
  * @author Christian Lins
  * @since sonews/2.0
  */
 public class ArticleTransmitter {
-    
-    private String group; 
-    private String messageID;
-    
-    public ArticleTransmitter(String messageID, String group) {
+
+    private static class Endpoint {
+        public PrintWriter out;
+        public BufferedReader in;
+    }
+
+    private final String group;
+    private final String messageID;
+
+    public ArticleTransmitter(String group, String messageID) {
         this.messageID = messageID;
         this.group = group;
     }
-    
-    public void transfer(String srcHost, int srcPort, String dstHost, int dstPort) {
-        
+
+    private static void changeGroup(String group, Endpoint ep)
+            throws IOException {
+        ep.out.print("GROUP " + group + "\r\n");
+        ep.out.flush();
+
+        String line = ep.in.readLine();
+        if (!line.startsWith("211 ")) {
+            throw new IOException("Unexpected reply to GROUP change: " + line);
+        }
+    }
+
+    /**
+     * Connects to the NNTP server identified by host and port and
+     * reads the first server HELLO message of the server.
+     * @param host
+     * @param port
+     * @return
+     * @throws IOException
+     */
+    private static Endpoint connect(String host, int port) throws IOException {
+        Endpoint ep = new Endpoint();
+
+        // Connect to NNTP server
+        Socket socket = new Socket(host, port);
+        ep.out = new PrintWriter(new OutputStreamWriter(socket.getOutputStream()));
+        ep.in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+
+        String line = ep.in.readLine();
+        if (!line.startsWith("200 ")) {
+            throw new IOException("Invalid hello from server: " + line);
+        }
+
+        return ep;
+    }
+
+    public void transfer(String srcHost, int srcPort, String dstHost, int dstPort)
+            throws IOException {
+        Endpoint src = connect(srcHost, srcPort);
+        Endpoint dst = connect(dstHost, dstPort);
+        String line;
+
+        changeGroup(group, dst);
+
+        src.out.print("ARTICLE " + this.messageID + "\r\n");
+        src.out.flush();
+        line = src.in.readLine();
+        if (line.startsWith("430 ")) {
+            Log.get().log(Level.WARNING, "Message {0} not available at {1}",
+                    new Object[]{this.messageID, srcHost});
+            return;
+        }
+        if (!line.startsWith("220 ")) {
+            throw new IOException("Unexpected reply to ARTICLE");
+        }
+
+        dst.out.print("POST\r\n");
+        dst.out.flush();
+        line = dst.in.readLine();
+        if (!line.startsWith("340 ")) {
+            throw new IOException("Unexpected reply to POST");
+        }
+
+        for(;;) {
+            line = src.in.readLine();
+            if (line == null) {
+                Log.get().warning("Hmm, to early disconnect?");
+                break;
+            }
+
+            dst.out.print(line);
+            dst.out.print("\r\n");
+
+            if (".".equals(line.trim())) {
+                // End of article stream reached
+                break;
+            }
+        }
+
+        dst.out.flush();
+
+        src.out.println("QUIT");
+        src.out.flush();
+        src.out.close();
+
+        line = dst.in.readLine();
+        if (line.startsWith("240 ")) {
+            Log.get().log(Level.INFO, "Message {0} successfully transmitted", messageID);
+        } else {
+            Log.get().log(Level.WARNING, "POST: {0}", line);
+        }
     }
 }

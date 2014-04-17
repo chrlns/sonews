@@ -33,13 +33,13 @@ import org.sonews.util.io.ArticleWriter;
 /**
  * Pushes new articles to remote newsservers. This feeder sleeps until a new
  * message is posted to the sonews instance.
- * 
+ *
  * @author Christian Lins
  * @since sonews/0.5.0
  */
 class PushFeeder extends AbstractDaemon {
 
-    private ConcurrentLinkedQueue<Article> articleQueue = new ConcurrentLinkedQueue<>();
+    private final ConcurrentLinkedQueue<Article> articleQueue = new ConcurrentLinkedQueue<>();
 
     @Override
     public void run() {
@@ -50,18 +50,18 @@ class PushFeeder extends AbstractDaemon {
                 }
 
                 Article article = this.articleQueue.poll();
-                String[] groups = article.getHeader(Headers.NEWSGROUPS)[0]
-                        .split(",");
+                String[] groups = article.getHeader(Headers.NEWSGROUPS)[0].split(",");
+
                 Log.get().log(Level.INFO, "PushFeed: {0}", article.getMessageID());
                 for (Subscription sub : Subscription.getAll()) {
                     if (sub.getFeedtype() != FeedManager.TYPE_PUSH) {
                         continue;
                     }
-                    
+                     
                     // Circle check
                     if (article.getHeader(Headers.PATH)[0].contains(sub.getHost())) {
                         Log.get().log(
-                                Level.INFO, "{0} skipped for host {1}", 
+                                Level.INFO, "{0} skipped for host {1}",
                                 new Object[]{article.getMessageID(), sub.getHost()});
                         continue;
                     }
