@@ -21,21 +21,20 @@ package org.sonews.feed;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
-import org.sonews.storage.Group;
 import org.sonews.util.Log;
 import org.sonews.util.io.Resource;
 
 /**
  * For every group that is synchronized with or from a remote newsserver a
  * Subscription instance exists.
- * 
+ *
  * @author Christian Lins
  * @since sonews/0.5.0
  */
 public class Subscription {
 
     private static List<Subscription> allSubs;
-    
+
     /**
      * @return List of all groups this server handles.
      */
@@ -59,11 +58,11 @@ public class Subscription {
                 if(subLineChunks.length != 3) {
                     Log.get().log(Level.WARNING, "Malformed peers.conf line: {0}", subLine);
                 } else {
-                    Log.get().log(Level.INFO, "Found peer subscription {0}", subLineChunks[0]);
                     int feedtype = FeedManager.TYPE_PULL;
-                    if (subLineChunks[1].equals("PUSH")) {
+                    if (subLineChunks[0].contains("PUSH")) {
                         feedtype = FeedManager.TYPE_PUSH;
                     }
+                    Log.get().log(Level.INFO, "Found peer subscription {0}", feedtype);
                     Subscription sub = new Subscription(subLineChunks[2], 119, feedtype, subLineChunks[1]);
                     subs.add(sub);
                 }
@@ -76,7 +75,7 @@ public class Subscription {
         }
         return allSubs;
     }
-    
+
     private final String host;
     private final int port;
     private final int feedtype;

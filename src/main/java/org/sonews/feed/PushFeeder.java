@@ -19,14 +19,11 @@
 package org.sonews.feed;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.logging.Level;
 import org.sonews.daemon.AbstractDaemon;
 import org.sonews.storage.Article;
 import org.sonews.storage.Headers;
-import org.sonews.storage.StorageBackendException;
-import org.sonews.storage.StorageManager;
 import org.sonews.util.Log;
 import org.sonews.util.io.ArticleWriter;
 
@@ -57,7 +54,7 @@ class PushFeeder extends AbstractDaemon {
                     if (sub.getFeedtype() != FeedManager.TYPE_PUSH) {
                         continue;
                     }
-                     
+
                     // Circle check
                     if (article.getHeader(Headers.PATH)[0].contains(sub.getHost())) {
                         Log.get().log(
