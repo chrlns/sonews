@@ -15,10 +15,10 @@
   <chapter>
     <title>Introduction</title>
     <para>sonews is a RCF3977 compliant NNTP Usenet server. 
-    It is written in Java and uses a relation database management system
-    (RDBMS) as backend (currently
+    It is written in Java and uses a database management system
+    as backend (currently
     <ulink url="http://www.postgresql.com/">PostgreSQL</ulink> and
-    <ulink url="http://www.mysql.com/">MySQL</ulink>).
+    <ulink url="http://www.mysql.com/">MySQL</ulink>, CouchDB is in development).
     sonews is highly multithreaded and uses Java NIO asynchronous sockets
     to handle thousands of concurrent connections.</para>
     <para>sonews is Free and Open Source Software (FOSS) licensed under the 
