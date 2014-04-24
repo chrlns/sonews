@@ -14,4 +14,4 @@ addons:
     notification_email: christian@lins.me
     build_command_prepend: mvn clean
     build_command: mvn compile package
-    branch_pattern: coverity_scan
+    branch_pattern: master
