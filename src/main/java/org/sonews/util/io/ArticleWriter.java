@@ -29,14 +29,14 @@ import org.sonews.storage.Article;
 
 /**
  * Posts an Article to a NNTP server using the POST command.
- * 
+ *
  * @author Christian Lins
  * @since sonews/0.5.0
  */
 public class ArticleWriter {
 
-    private BufferedOutputStream out;
-    private BufferedReader inr;
+    private final BufferedOutputStream out;
+    private final BufferedReader inr;
 
     public ArticleWriter(String host, int port) throws IOException,
             UnknownHostException {
@@ -44,7 +44,7 @@ public class ArticleWriter {
         Socket socket = new Socket(host, port);
         this.out = new BufferedOutputStream(socket.getOutputStream());
         this.inr = new BufferedReader(new InputStreamReader(
-                socket.getInputStream()));
+                socket.getInputStream(), "UTF-8"));
         String line = inr.readLine();
         if (line == null || !line.startsWith("200 ")) {
             throw new IOException("Invalid hello from server: " + line);
@@ -57,7 +57,7 @@ public class ArticleWriter {
     }
 
     protected void finishPOST() throws IOException {
-        this.out.write("\r\n.\r\n".getBytes());
+        this.out.write("\r\n.\r\n".getBytes("UTF-8"));
         this.out.flush();
         String line = inr.readLine();
         if (line == null || !line.startsWith("240 ")
@@ -96,7 +96,7 @@ public class ArticleWriter {
      * Writes the raw content of an article to the remote server. This method
      * does no charset conversion/handling of any kind so its the preferred
      * method for sending an article to remote peers.
-     * 
+     *
      * @param rawArticle
      * @throws IOException
      */
@@ -108,7 +108,7 @@ public class ArticleWriter {
 
     /**
      * Writes the given buffer to the connect remote server.
-     * 
+     *
      * @param buffer
      * @param len
      * @throws IOException

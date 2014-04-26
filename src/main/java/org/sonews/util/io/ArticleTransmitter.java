@@ -59,7 +59,7 @@ public class ArticleTransmitter {
         ep.out.flush();
 
         String line = ep.in.readLine();
-        if (!line.startsWith("211 ")) {
+        if (null == line || !line.startsWith("211 ")) {
             throw new IOException("Unexpected reply to GROUP change: " + line);
         }
     }
@@ -77,11 +77,11 @@ public class ArticleTransmitter {
 
         // Connect to NNTP server
         Socket socket = new Socket(host, port);
-        ep.out = new PrintWriter(new OutputStreamWriter(socket.getOutputStream()));
-        ep.in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+        ep.out = new PrintWriter(new OutputStreamWriter(socket.getOutputStream(), "UTF-8"));
+        ep.in = new BufferedReader(new InputStreamReader(socket.getInputStream(), "UTF-8"));
 
         String line = ep.in.readLine();
-        if (!line.startsWith("200 ")) {
+        if (line == null || !line.startsWith("200 ")) {
             throw new IOException("Invalid hello from server: " + line);
         }
 
