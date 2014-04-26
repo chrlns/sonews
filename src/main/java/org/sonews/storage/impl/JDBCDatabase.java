@@ -45,7 +45,7 @@ import org.sonews.util.Pair;
 /**
  * Storage backend facade class for a relational SQL database using JDBC.
  * The statements used should work for at least PostgreSQL and MySQL.
- * 
+ *
  * @author Christian Lins
  * @since sonews/0.5.0
  */
@@ -78,7 +78,6 @@ public class JDBCDatabase implements Storage {
     protected PreparedStatement pstmtIsArticleExisting = null;
     protected PreparedStatement pstmtPurgeGroup0 = null;
     protected PreparedStatement pstmtPurgeGroup1 = null;
-    protected PreparedStatement pstmtUpdateGroup = null;
     /** How many times the database connection was reinitialized */
     protected int restarts = 0;
 
@@ -89,7 +88,7 @@ public class JDBCDatabase implements Storage {
 
     /**
      * Rises the database: reconnect and recreate all prepared statements.
-     * 
+     *
      * @throws java.sql.SQLException
      */
     protected void arise() throws SQLException {
@@ -215,10 +214,6 @@ public class JDBCDatabase implements Storage {
                     .prepareStatement("DELETE FROM peer_subscriptions WHERE group_id = ?");
             this.pstmtPurgeGroup1 = conn
                     .prepareStatement("DELETE FROM groups WHERE group_id = ?");
-
-            // Prepare statement for method update(Group)
-            this.pstmtUpdateGroup = conn
-                    .prepareStatement("UPDATE groups SET flags = ?, name = ? WHERE group_id = ?");
         } catch (ClassNotFoundException ex) {
             throw new Error("JDBC Driver not found!", ex);
         }
@@ -226,7 +221,7 @@ public class JDBCDatabase implements Storage {
 
     /**
      * Adds an article to the database.
-     * 
+     *
      * @param article
      * @throws StorageBackendException
      */
@@ -263,7 +258,7 @@ public class JDBCDatabase implements Storage {
 
     /**
      * Adds an article to the database.
-     * 
+     *
      * @param article
      * @return
      * @throws java.sql.SQLException
@@ -391,7 +386,7 @@ public class JDBCDatabase implements Storage {
 
     /**
      * Retrieves an article by its ID.
-     * 
+     *
      * @param articleID
      * @return
      * @throws StorageBackendException
@@ -431,7 +426,7 @@ public class JDBCDatabase implements Storage {
 
     /**
      * Searches for fitting header values using the given regular expression.
-     * 
+     *
      * @param group
      * @param start
      * @param end
@@ -556,7 +551,7 @@ public class JDBCDatabase implements Storage {
 
     /**
      * Returns a list of Long/Article Pairs.
-     * 
+     *
      * @throws java.sql.SQLException
      */
     @Override
@@ -764,7 +759,7 @@ public class JDBCDatabase implements Storage {
                 Log.get().log(Level.WARNING, "Group {0} does not exist!", groupname);
                 return 0;
             }
-            
+
             this.pstmtGetPostingsCount.setLong(1, group.getInternalID());
             rs = this.pstmtGetPostingsCount.executeQuery();
             if (rs.next()) {
@@ -790,7 +785,7 @@ public class JDBCDatabase implements Storage {
     /**
      * Checks if there is an article with the given messageid in the
      * JDBCDatabase.
-     * 
+     *
      * @param messageID
      * @return
      * @throws StorageBackendException

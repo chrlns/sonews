@@ -20,6 +20,7 @@ package org.sonews.storage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.UUID;
@@ -141,15 +142,15 @@ public class Article extends ArticleHead {
      * persistent. Note: a Message-ID should never be changed and only generated
      * once.
      */
-    private String generateMessageID() {
+    private String generateMessageID() throws UnsupportedEncodingException {
         String randomString;
         MessageDigest md5;
         try {
             md5 = MessageDigest.getInstance("MD5");
             md5.reset();
             md5.update(getBody());
-            md5.update(getHeader(Headers.SUBJECT)[0].getBytes());
-            md5.update(getHeader(Headers.FROM)[0].getBytes());
+            md5.update(getHeader(Headers.SUBJECT)[0].getBytes("UTF-8"));
+            md5.update(getHeader(Headers.FROM)[0].getBytes("UTF-8"));
             byte[] result = md5.digest();
             StringBuilder hexString = new StringBuilder();
             for (int i = 0; i < result.length; i++) {
@@ -215,8 +216,21 @@ public class Article extends ArticleHead {
      * @return Message-ID of this Article.
      */
     public String getMessageID() {
-        String[] msgID = getHeader(Headers.MESSAGE_ID);
-        return msgID[0].equals("") ? generateMessageID() : msgID[0];
+        String msgID;
+
+        try {
+            String[] msgIDHeader = getHeader(Headers.MESSAGE_ID);
+            if (msgIDHeader[0].equals("")) {
+                msgID = generateMessageID();
+            } else {
+                msgID = msgIDHeader[0];
+            }
+        } catch(UnsupportedEncodingException ex) {
+            Log.get().log(Level.SEVERE, "UTF-8 not supported by VM", ex);
+            msgID = UUID.randomUUID().toString();
+        }
+
+        return msgID;
     }
 
     /**

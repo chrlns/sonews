@@ -19,16 +19,21 @@
 package org.sonews.storage;
 
 import java.io.ByteArrayInputStream;
+import java.io.UnsupportedEncodingException;
 import java.util.Enumeration;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.mail.Header;
 import javax.mail.MessagingException;
 import javax.mail.internet.InternetHeaders;
 import javax.mail.internet.MimeUtility;
+
 import org.sonews.config.Config;
+import org.sonews.util.Log;
 
 /**
  * An article with no body only headers.
- * 
+ *
  * @author Christian Lins
  * @since sonews/0.5.0
  */
@@ -40,19 +45,21 @@ public class ArticleHead {
     protected ArticleHead() {
     }
 
-    public ArticleHead(String headers) {
+    public ArticleHead(String headers){
         try {
             // Parse the header
             this.headers = new InternetHeaders(new ByteArrayInputStream(
-                    headers.getBytes()));
+                    headers.getBytes("UTF-8")));
         } catch (MessagingException ex) {
-            ex.printStackTrace();
+            Log.get().log(Level.INFO, null, ex);
+        } catch (UnsupportedEncodingException ex) {
+            Log.get().log(Level.SEVERE, null, ex);
         }
     }
 
     /**
      * Returns the header field with given name.
-     * 
+     *
      * @param name
      *            Name of the header field(s).
      * @param returnNull
@@ -74,7 +81,7 @@ public class ArticleHead {
 
     /**
      * Sets the header value identified through the header name.
-     * 
+     *
      * @param name
      * @param value
      */
@@ -118,7 +125,7 @@ public class ArticleHead {
     /**
      * Sets the headers of this Article. If headers contain no Message-Id a new
      * one is created.
-     * 
+     *
      * @param headers
      */
     public void setHeaders(InternetHeaders headers) {
@@ -131,7 +138,7 @@ public class ArticleHead {
      * Checks some headers for their validity and generates an appropriate
      * Path-header for this host if not yet existing. This method is called by
      * some Article constructors and the method setHeaders().
-     * 
+     *
      * @return true if something on the headers was changed.
      */
     protected void validateHeaders() {

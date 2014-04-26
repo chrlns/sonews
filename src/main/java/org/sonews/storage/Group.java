@@ -56,6 +56,7 @@ public class Group {
     public static final int DELETED = 0x80;
 
     private static List<Group> allGroups = null;
+    private static final Object allGroupsGate = new Object();
     private static final Map<String, Group> allGroupNames = new HashMap<>();
 
     private long id = 0;
@@ -66,43 +67,38 @@ public class Group {
      * @return List of all groups this server handles.
      */
     public static List<Group> getAll() {
-        if(allGroups == null) {
-            String groupsStr = Resource.getAsString("groups.conf", true);
-            if(groupsStr == null) {
-                Log.get().log(Level.WARNING, "Could not read groups.conf");
-                return null;
-            }
-
-            String[] groupLines = groupsStr.split("\n");
-            List<Group> groups = new ArrayList<>(groupLines.length);
-            for(String groupLine : groupLines) {
-                if(groupLine.startsWith("#")) {
-                    continue;
+        synchronized(allGroupsGate) {
+            if(allGroups == null) {
+                String groupsStr = Resource.getAsString("groups.conf", true);
+                if(groupsStr == null) {
+                    Log.get().log(Level.WARNING, "Could not read groups.conf");
+                    return null;
                 }
 
-                groupLine = groupLine.trim();
-                String[] groupLineChunks = groupLine.split("\\s+");
-                if(groupLineChunks.length != 3) {
-                    Log.get().log(Level.WARNING, "Malformed group.conf line: {0}", groupLine);
-                } else {
-                    Log.get().log(Level.INFO, "Found group {0}", groupLineChunks[0]);
-                    Group group = new Group(
-                            groupLineChunks[0],
-                            Long.parseLong(groupLineChunks[1]),
-                            Integer.parseInt(groupLineChunks[2]));
-                    groups.add(group);
-                    synchronized (allGroupNames) {
+                allGroups = new ArrayList<>();
+                String[] groupLines = groupsStr.split("\n");
+                for(String groupLine : groupLines) {
+                    if(groupLine.startsWith("#")) {
+                        continue;
+                    }
+
+                    groupLine = groupLine.trim();
+                    String[] groupLineChunks = groupLine.split("\\s+");
+                    if(groupLineChunks.length != 3) {
+                        Log.get().log(Level.WARNING, "Malformed group.conf line: {0}", groupLine);
+                    } else {
+                        Log.get().log(Level.INFO, "Found group {0}", groupLineChunks[0]);
+                        Group group = new Group(
+                                groupLineChunks[0],
+                                Long.parseLong(groupLineChunks[1]),
+                                Integer.parseInt(groupLineChunks[2]));
+                        allGroups.add(group);
                         allGroupNames.put(groupLineChunks[0], group);
                     }
                 }
             }
-
-            // The group loading is not synchronized so it is possible that
-            // this method is called multiple times parallel.
-            // Therefore we better set allGroups in a (more or less) atomic way...
-            Group.allGroups = groups;
+            return allGroups;
         }
-        return allGroups;
     }
 
     public static Group get(String name) {
@@ -135,6 +131,11 @@ public class Group {
         } else {
             return false;
         }
+    }
+
+    @Override
+    public int hashCode() {
+        return (name + id).hashCode();
     }
 
     public Article getArticle(long idx) throws StorageBackendException {

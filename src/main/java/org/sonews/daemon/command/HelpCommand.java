@@ -20,15 +20,17 @@ package org.sonews.daemon.command;
 
 import java.io.IOException;
 import java.util.Set;
+
 import org.sonews.daemon.CommandSelector;
 import org.sonews.daemon.NNTPConnection;
+import org.sonews.util.Log;
 import org.sonews.util.io.Resource;
 
 /**
  * This command provides a short summary of the commands that are understood by
  * this implementation of the server. The help text will be presented as a
  * multi-line data block following the 100 response code (taken from RFC).
- * 
+ *
  * @author Christian Lins
  * @since sonews/0.5.0
  */
@@ -61,8 +63,14 @@ public class HelpCommand implements Command {
         conn.println("100 help text follows");
 
         if (line.length() <= 1) {
-            final String[] help = Resource
-                    .getAsString("helpers/helptext", true).split("\n");
+            final String helpRes = Resource.getAsString("helpers/helptext", true);
+            if (helpRes == null) {
+                Log.get().warning("helpers/helptext could not be loaded");
+                conn.println("500 Internal Server Error");
+                return;
+            }
+
+            final String[] help = helpRes.split("\n");
             for (String hstr : help) {
                 conn.println(hstr);
             }

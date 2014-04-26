@@ -41,21 +41,26 @@ public class CommandSelector {
     private static Map<String, Class<?>> commandClassesMapping = new ConcurrentHashMap<>();
 
     static {
-        String[] classes = Resource.getAsString("commands.list", true).split("\n");
-        for (String className : classes) {
-            if (className.charAt(0) == '#') {
-                // Skip comments
-                continue;
-            }
+        String classesRes = Resource.getAsString("commands.list", true);
+        if (classesRes == null) {
+            Log.get().log(Level.SEVERE, "Could not load command classes list");
+        } else {
+            String[] classes = classesRes.split("\n");
+            for (String className : classes) {
+                if (className.charAt(0) == '#') {
+                    // Skip comments
+                    continue;
+                }
 
-            try {
-                addCommandHandler(className);
-            } catch (ClassNotFoundException ex) {
-                Log.get().log(Level.WARNING, "Could not load command class: {0}", ex);
-            } catch (InstantiationException ex) {
-                Log.get().log(Level.SEVERE, "Could not instantiate command class: {0}", ex);
-            } catch (IllegalAccessException ex) {
-                Log.get().log(Level.SEVERE, "Could not access command class: {0}", ex);
+                try {
+                    addCommandHandler(className);
+                } catch (ClassNotFoundException ex) {
+                    Log.get().log(Level.WARNING, "Could not load command class: {0}", ex);
+                } catch (InstantiationException ex) {
+                    Log.get().log(Level.SEVERE, "Could not instantiate command class: {0}", ex);
+                } catch (IllegalAccessException ex) {
+                    Log.get().log(Level.SEVERE, "Could not access command class: {0}", ex);
+                }
             }
         }
     }
