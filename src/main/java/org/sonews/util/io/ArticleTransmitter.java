@@ -144,7 +144,7 @@ public class ArticleTransmitter {
         src.out.close();
 
         line = dst.in.readLine();
-        if (line.startsWith("240 ")) {
+        if (line != null && line.startsWith("240 ")) {
             Log.get().log(Level.INFO, "Message {0} successfully transmitted", messageID);
         } else {
             Log.get().log(Level.WARNING, "POST: {0}", line);
