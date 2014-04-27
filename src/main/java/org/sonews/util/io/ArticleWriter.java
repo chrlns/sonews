@@ -25,6 +25,7 @@ import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.net.Socket;
 import java.net.UnknownHostException;
+
 import org.sonews.storage.Article;
 
 /**
@@ -60,8 +61,7 @@ public class ArticleWriter {
         this.out.write("\r\n.\r\n".getBytes("UTF-8"));
         this.out.flush();
         String line = inr.readLine();
-        if (line == null || !line.startsWith("240 ")
-                || !line.startsWith("441 ")) {
+        if (line == null || (!line.startsWith("240 ") && !line.startsWith("441 "))) {
             throw new IOException(line);
         }
     }

@@ -30,7 +30,7 @@ import java.util.logging.Level;
 
 /**
  * A Thread task that processes OP_WRITE events for SocketChannels.
- * 
+ *
  * @author Christian Lins
  * @since sonews/0.5.0
  */
@@ -59,7 +59,7 @@ class ChannelWriter extends AbstractDaemon {
 
     /**
      * Sets the selector that is used by this ChannelWriter.
-     * 
+     *
      * @param selector
      */
     public void setSelector(final Selector selector) {
@@ -81,8 +81,7 @@ class ChannelWriter extends AbstractDaemon {
 
                 // select() blocks until some SelectableChannels are ready for
                 // processing. There is no need to synchronize the selector as
-                // we
-                // have only one thread per selector.
+                // we have only one thread per selector.
                 selector.select(); // The return value of select can be ignored
 
                 // Get list of selection keys with pending OP_WRITE events.

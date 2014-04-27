@@ -99,6 +99,10 @@ public class ArticleTransmitter {
         src.out.print("ARTICLE " + this.messageID + "\r\n");
         src.out.flush();
         line = src.in.readLine();
+        if (line == null) {
+            Log.get().warning("Unexpected null reply from remote host");
+            return;
+        }
         if (line.startsWith("430 ")) {
             Log.get().log(Level.WARNING, "Message {0} not available at {1}",
                     new Object[]{this.messageID, srcHost});

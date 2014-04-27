@@ -19,8 +19,10 @@
 package org.sonews.feed;
 
 import java.io.IOException;
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import org.sonews.daemon.AbstractDaemon;
 import org.sonews.storage.Article;
 import org.sonews.storage.Headers;
@@ -36,18 +38,23 @@ import org.sonews.util.io.ArticleWriter;
  */
 class PushFeeder extends AbstractDaemon {
 
-    private final ConcurrentLinkedQueue<Article> articleQueue = new ConcurrentLinkedQueue<>();
+    // TODO Make configurable
+    public static final int QUEUE_SIZE = 128;
+
+    private final LinkedBlockingQueue<Article> articleQueue = new LinkedBlockingQueue<>(QUEUE_SIZE);
 
     @Override
     public void run() {
         while (isRunning()) {
             try {
-                synchronized (this) {
-                    this.wait();
+                Article article = this.articleQueue.take();
+                String[] newsgroupsHeader = article.getHeader(Headers.NEWSGROUPS);
+                if (newsgroupsHeader == null) {
+                    Log.get().warning("Article has no newsgroups header(s). Skipping.");
+                    continue;
                 }
 
-                Article article = this.articleQueue.poll();
-                String[] groups = article.getHeader(Headers.NEWSGROUPS)[0].split(",");
+                String[] groups = newsgroupsHeader[0].split(",");
 
                 Log.get().log(Level.INFO, "PushFeed: {0}", article.getMessageID());
                 for (Subscription sub : Subscription.getAll()) {
@@ -91,9 +98,12 @@ class PushFeeder extends AbstractDaemon {
     }
 
     public void queueForPush(Article article) {
-        this.articleQueue.add(article);
-        synchronized (this) {
-            this.notifyAll();
+        try {
+            // If queue is full, this call blocks until the queue has free space;
+            // This is probably a bottleneck for article posting
+            this.articleQueue.put(article);
+        } catch (InterruptedException ex) {
+            Log.get().log(Level.WARNING, null, ex);
         }
     }
 }

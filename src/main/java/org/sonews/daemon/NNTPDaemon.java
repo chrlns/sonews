@@ -18,9 +18,6 @@
 
 package org.sonews.daemon;
 
-import org.sonews.config.Config;
-import org.sonews.Main;
-import org.sonews.util.Log;
 import java.io.IOException;
 import java.net.BindException;
 import java.net.InetSocketAddress;
@@ -33,9 +30,13 @@ import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.logging.Level;
 
+import org.sonews.config.Config;
+import org.sonews.Main;
+import org.sonews.util.Log;
+
 /**
  * NNTP daemon using SelectableChannels.
- * 
+ *
  * @author Christian Lins
  * @since sonews/0.5.0
  */
@@ -69,7 +70,7 @@ public final class NNTPDaemon extends AbstractDaemon {
             final Selector writeSelector = Selector.open();
 
             // Start working threads
-            final int workerThreads = Math.max(4, 2 * 
+            final int workerThreads = Math.max(4, 2 *
                     Runtime.getRuntime().availableProcessors());
             ConnectionWorker[] cworkers = new ConnectionWorker[workerThreads];
             for (int n = 0; n < workerThreads; n++) {
@@ -105,7 +106,7 @@ public final class NNTPDaemon extends AbstractDaemon {
                 } catch (IOException ex) {
                     // Under heavy load an IOException "Too many open files may
                     // be thrown. It most cases we should slow down the
-                    // connection accepting, to give the worker threads some 
+                    // connection accepting, to give the worker threads some
                     // time to process work.
                     Log.get().log(
                             Level.SEVERE, "IOException while accepting connection: {0}", ex.getMessage());
@@ -143,11 +144,11 @@ public final class NNTPDaemon extends AbstractDaemon {
                             + " news server ready - (posting ok).");
                 } catch (CancelledKeyException cke) {
                     Log.get().log(
-                            Level.WARNING, "CancelledKeyException {0} was thrown: {1}", 
+                            Level.WARNING, "CancelledKeyException {0} was thrown: {1}",
                             new Object[]{cke.getMessage(), socketChannel.socket()});
                 } catch (ClosedChannelException cce) {
                     Log.get().log(
-                            Level.WARNING, "ClosedChannelException {0} was thrown: {1}", 
+                            Level.WARNING, "ClosedChannelException {0} was thrown: {1}",
                             new Object[]{cce.getMessage(), socketChannel.socket()});
                 }
             }
@@ -170,13 +171,11 @@ public final class NNTPDaemon extends AbstractDaemon {
         // on the socket's events
         synchronized (RegisterGate) {
             // Wakeup the currently blocking reader/writer thread; we have
-            // locked
-            // the RegisterGate to prevent the awakened thread to block again
+            // locked the RegisterGate to prevent the awakened thread to block again
             selector.wakeup();
 
             // Lock the selector to prevent the waiting worker threads going
-            // into
-            // selector.select() which would block the selector.
+            // into selector.select() which would block the selector.
             synchronized (selector) {
                 return channel.register(selector, op, null);
             }

@@ -27,11 +27,12 @@ import java.nio.channels.SocketChannel;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.logging.Level;
+
 import org.sonews.util.Log;
 
 /**
  * A Thread task listening for OP_READ events from SocketChannels.
- * 
+ *
  * @author Christian Lins
  * @since sonews/0.5.0
  */
@@ -54,7 +55,7 @@ class ChannelReader extends AbstractDaemon {
     /**
      * Sets the selector which is used by this reader to determine the channel
      * to read from.
-     * 
+     *
      * @param selector
      */
     public void setSelector(final Selector selector) {
@@ -160,10 +161,10 @@ class ChannelReader extends AbstractDaemon {
                 } catch (IOException ex) {
                     // The connection was probably closed by the remote host
                     // in a non-clean fashion
-                    Log.get().log(Level.INFO, 
+                    Log.get().log(Level.INFO,
                             "ChannelReader.processSelectionKey(): {0}", ex);
                 } catch (Exception ex) {
-                    Log.get().log(Level.WARNING, 
+                    Log.get().log(Level.WARNING,
                             "ChannelReader.processSelectionKey(): {0}", ex);
                 }
 

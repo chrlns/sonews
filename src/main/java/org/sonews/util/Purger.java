@@ -22,6 +22,7 @@ import java.text.ParseException;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.logging.Level;
 
 import org.sonews.config.Config;
 import org.sonews.daemon.AbstractDaemon;
@@ -68,22 +69,28 @@ public class Purger extends AbstractDaemon {
      */
     private void purgeDeleted() throws StorageBackendException {
         List<Group> groups = Group.getAll();
+        if (groups == null) {
+            Log.get().warning("No groups?");
+            return;
+        }
+
         for (Group group : groups) {
             // Look for groups that are marked as deleted
             if (group.isDeleted()) {
                 List<Long> ids = StorageManager.current().getArticleNumbers(
                         group.getInternalID());
-                if (ids.size() == 0) {
+                if (ids.isEmpty()) {
                     StorageManager.current().purgeGroup(group);
-                    Log.get().info("Group " + group.getName() + " purged.");
+                    Log.get().log(Level.INFO, "Group {0} purged.", group.getName());
                 }
 
                 for (int n = 0; n < ids.size() && n < 10; n++) {
                     Article art = StorageManager.current().getArticle(
                             ids.get(n), group.getInternalID());
-                    StorageManager.current().delete(art.getMessageID());
-                    Log.get()
-                            .info("Article " + art.getMessageID() + " purged.");
+                    if(art != null) {
+                        StorageManager.current().delete(art.getMessageID());
+                        Log.get().log(Level.INFO, "Article {0} purged.", art.getMessageID());
+                    }
                 }
             }
         }
