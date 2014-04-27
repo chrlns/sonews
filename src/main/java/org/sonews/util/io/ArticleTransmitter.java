@@ -25,6 +25,7 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.logging.Level;
+
 import org.sonews.util.Log;
 
 /**
@@ -43,6 +44,7 @@ public class ArticleTransmitter {
     private static class Endpoint {
         public PrintWriter out;
         public BufferedReader in;
+        public Socket socket;
     }
 
     private final String group;
@@ -72,13 +74,13 @@ public class ArticleTransmitter {
      * @return
      * @throws IOException
      */
-    private static Endpoint connect(String host, int port) throws IOException {
+    private Endpoint connect(String host, int port) throws IOException {
         Endpoint ep = new Endpoint();
 
         // Connect to NNTP server
-        Socket socket = new Socket(host, port);
-        ep.out = new PrintWriter(new OutputStreamWriter(socket.getOutputStream(), "UTF-8"));
-        ep.in = new BufferedReader(new InputStreamReader(socket.getInputStream(), "UTF-8"));
+        ep.socket = new Socket(host, port);
+        ep.out = new PrintWriter(new OutputStreamWriter(ep.socket.getOutputStream(), "UTF-8"));
+        ep.in = new BufferedReader(new InputStreamReader(ep.socket.getInputStream(), "UTF-8"));
 
         String line = ep.in.readLine();
         if (line == null || !line.startsWith("200 ")) {
@@ -147,5 +149,8 @@ public class ArticleTransmitter {
         } else {
             Log.get().log(Level.WARNING, "POST: {0}", line);
         }
+
+        dst.socket.close();
+        src.socket.close();
     }
 }

@@ -38,11 +38,12 @@ public class ArticleWriter {
 
     private final BufferedOutputStream out;
     private final BufferedReader inr;
+    private final Socket socket;
 
     public ArticleWriter(String host, int port) throws IOException,
             UnknownHostException {
         // Connect to NNTP server
-        Socket socket = new Socket(host, port);
+        this.socket = new Socket(host, port);
         this.out = new BufferedOutputStream(socket.getOutputStream());
         this.inr = new BufferedReader(new InputStreamReader(
                 socket.getInputStream(), "UTF-8"));
@@ -55,6 +56,8 @@ public class ArticleWriter {
     public void close() throws IOException, UnsupportedEncodingException {
         this.out.write("QUIT\r\n".getBytes("UTF-8"));
         this.out.flush();
+
+        this.socket.close();
     }
 
     protected void finishPOST() throws IOException {

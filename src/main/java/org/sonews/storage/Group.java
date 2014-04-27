@@ -55,8 +55,7 @@ public class Group {
      */
     public static final int DELETED = 0x80;
 
-    private static List<Group> allGroups = null;
-    private static final Object allGroupsGate = new Object();
+    private static final List<Group> allGroups = new ArrayList<>();
     private static final Map<String, Group> allGroupNames = new HashMap<>();
 
     private long id = 0;
@@ -64,18 +63,22 @@ public class Group {
     private String name = null;
 
     /**
+     * Reads and parses the groups.conf file if not done yet and returns
+     * a list of loaded Group objects.
+     *
+     * If groups.conf cannot be read an empty list is returned, never null.
+     *
      * @return List of all groups this server handles.
      */
     public static List<Group> getAll() {
-        synchronized(allGroupsGate) {
-            if(allGroups == null) {
+        synchronized(allGroups) {
+            if(allGroups.isEmpty()) {
                 String groupsStr = Resource.getAsString("groups.conf", true);
                 if(groupsStr == null) {
                     Log.get().log(Level.WARNING, "Could not read groups.conf");
-                    return null;
+                    return allGroups;
                 }
 
-                allGroups = new ArrayList<>();
                 String[] groupLines = groupsStr.split("\n");
                 for(String groupLine : groupLines) {
                     if(groupLine.startsWith("#")) {
@@ -102,8 +105,8 @@ public class Group {
     }
 
     public static Group get(String name) {
-        synchronized(allGroupsGate) {
-            if(allGroups == null) {
+        synchronized(allGroups) {
+            if(allGroups.isEmpty()) {
                 getAll();
             }
             return allGroupNames.get(name);

@@ -159,7 +159,7 @@ public class PostCommand implements Command {
 
                 // Add line to body buffer
                 bufBody.write(raw, 0, raw.length);
-                bufBody.write(NNTPConnection.NEWLINE.getBytes());
+                bufBody.write(NNTPConnection.NEWLINE.getBytes("UTF-8"));
 
                 if (bodySize > maxBodySize) {
                     conn.println("500 article is too long");

@@ -18,26 +18,28 @@
 
 package org.sonews.daemon;
 
-import org.sonews.util.Log;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.logging.Level;
+
+import org.sonews.util.Log;
 
 /**
  * Does most of the work: parsing input, talking to client and Database.
- * 
+ *
  * @author Christian Lins
  * @since sonews/0.5.0
  */
 class ConnectionWorker extends AbstractDaemon {
 
     // 256 pending events should be enough
-    private static ArrayBlockingQueue<SocketChannel> pendingChannels = new ArrayBlockingQueue<SocketChannel>(
-            256, true);
+    private static final ArrayBlockingQueue<SocketChannel> pendingChannels =
+            new ArrayBlockingQueue<>(256, true);
 
     /**
      * Registers the given channel for further event processing.
-     * 
+     *
      * @param channel
      */
     public static void addChannel(SocketChannel channel)
@@ -82,9 +84,9 @@ class ConnectionWorker extends AbstractDaemon {
                     }
                 }
             } catch (InterruptedException ex) {
-                Log.get().info("ConnectionWorker interrupted: " + ex);
+                Log.get().log(Level.INFO, "ConnectionWorker interrupted: {0}", ex);
             } catch (Exception ex) {
-                Log.get().severe("Exception in ConnectionWorker: " + ex);
+                Log.get().log(Level.SEVERE, "Exception in ConnectionWorker: {0}", ex);
                 ex.printStackTrace();
             }
         } // end while(isRunning())

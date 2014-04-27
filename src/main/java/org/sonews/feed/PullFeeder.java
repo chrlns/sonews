@@ -21,6 +21,7 @@ package org.sonews.feed;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.net.SocketException;
@@ -51,6 +52,7 @@ class PullFeeder extends AbstractDaemon {
     private final Map<Subscription, Integer> highMarks = new HashMap<>();
     private BufferedReader in;
     private PrintWriter out;
+    private Socket socket;
     private final Set<Subscription> subscriptions = new HashSet<>();
 
     private void addSubscription(final Subscription sub) {
@@ -73,7 +75,7 @@ class PullFeeder extends AbstractDaemon {
         this.out.flush();
 
         String line = this.in.readLine();
-        if (line.startsWith("211 ")) {
+        if (line != null && line.startsWith("211 ")) {
             int highmark = Integer.parseInt(line.split(" ")[3]);
             return highmark;
         } else {
@@ -83,9 +85,9 @@ class PullFeeder extends AbstractDaemon {
 
     private void connectTo(final String host, final int port)
             throws IOException, UnknownHostException {
-        Socket socket = new Socket(host, port);
-        this.out = new PrintWriter(socket.getOutputStream());
-        this.in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+        this.socket = new Socket(host, port);
+        this.out = new PrintWriter(new OutputStreamWriter(socket.getOutputStream(), "UTF-8"));
+        this.in = new BufferedReader(new InputStreamReader(socket.getInputStream(), "UTF-8"));
 
         String line = in.readLine();
         if (!(line.charAt(0) == '2')) { // Could be 200 or 2xx if posting is not allowed
@@ -96,7 +98,7 @@ class PullFeeder extends AbstractDaemon {
         this.out.print("MODE READER\r\n");
         this.out.flush();
         line = this.in.readLine();
-        if (!(line.charAt(0) == '2')) {
+        if (line == null || !(line.charAt(0) == '2')) {
             throw new IOException(line);
         }
     }
@@ -109,6 +111,9 @@ class PullFeeder extends AbstractDaemon {
 
         this.out = null;
         this.in = null;
+
+        this.socket.close();
+        this.socket = null;
     }
 
     private void getAndRepostArticle(Subscription sub, String messageID) {
@@ -147,7 +152,7 @@ class PullFeeder extends AbstractDaemon {
         if (line.startsWith("224 ")) {
             List<String> messages = new ArrayList<>();
             line = this.in.readLine();
-            while (!".".equals(line)) {
+            while (line != null && !line.equals(".")) {
                 String mid = line.split("\t")[4]; // 5th should be the
                                                   // Message-ID
                 messages.add(mid);

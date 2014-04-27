@@ -66,11 +66,15 @@ public class CommandSelector {
     }
 
     public static void addCommandHandler(String className)
-            throws ClassNotFoundException, InstantiationException,
-            IllegalAccessException {
+            throws ClassNotFoundException, InstantiationException, IllegalAccessException {
         Class<?> clazz = Class.forName(className);
         Command cmd = (Command) clazz.newInstance();
         String[] cmdStrs = cmd.getSupportedCommandStrings();
+        if (cmdStrs == null) {
+            Log.get().log(Level.WARNING, "CommandHandler class does not support any command: {0}", className);
+            return;
+        }
+
         for (String cmdStr : cmdStrs) {
             commandClassesMapping.put(cmdStr, clazz);
         }

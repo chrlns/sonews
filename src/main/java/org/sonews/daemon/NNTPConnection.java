@@ -133,9 +133,8 @@ public final class NNTPConnection {
      * @return true if this connection comes from a local remote address.
      */
     public boolean isLocalConnection() {
-        return ((InetSocketAddress) this.channel.socket()
-                .getRemoteSocketAddress()).getHostName().equalsIgnoreCase(
-                "localhost");
+        return "localhost".equalsIgnoreCase(((InetSocketAddress) this.channel.socket()
+                .getRemoteSocketAddress()).getHostName());
     }
 
     void setWriteSelectionKey(SelectionKey selKey) {
@@ -262,7 +261,7 @@ public final class NNTPConnection {
             } catch (Exception ex0a) {
                 Log.get().log(Level.INFO, ex0a.getLocalizedMessage(), ex0a);
             }
-        } catch (IOException | StorageBackendException ex1) { 
+        } catch (IOException | StorageBackendException ex1) {
             // This will catch a second StorageBackendException
             try {
                 command = null;

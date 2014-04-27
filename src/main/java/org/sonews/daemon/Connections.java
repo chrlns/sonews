@@ -27,6 +27,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
+import java.util.logging.Level;
 
 import org.sonews.config.Config;
 import org.sonews.util.Log;
@@ -50,8 +51,8 @@ public final class Connections extends AbstractDaemon {
         return Connections.instance;
     }
 
-    private final List<NNTPConnection> connections = new ArrayList<NNTPConnection>();
-    private final Map<SocketChannel, NNTPConnection> connByChannel = new HashMap<SocketChannel, NNTPConnection>();
+    private final List<NNTPConnection> connections = new ArrayList<>();
+    private final Map<SocketChannel, NNTPConnection> connByChannel = new HashMap<>();
 
     private Connections() {
         setName("Connections");
@@ -79,28 +80,6 @@ public final class Connections extends AbstractDaemon {
         synchronized (this.connections) {
             return this.connByChannel.get(channel);
         }
-    }
-
-    int getConnectionCount(String remote) {
-        int cnt = 0;
-        synchronized (this.connections) {
-            for (NNTPConnection conn : this.connections) {
-                assert conn != null;
-                assert conn.getSocketChannel() != null;
-
-                Socket socket = conn.getSocketChannel().socket();
-                if (socket != null) {
-                    InetSocketAddress sockAddr = (InetSocketAddress) socket
-                            .getRemoteSocketAddress();
-                    if (sockAddr != null) {
-                        if (sockAddr.getHostName().equals(remote)) {
-                            cnt++;
-                        }
-                    }
-                } // if(socket != null)
-            }
-        }
-        return cnt;
     }
 
     /**
@@ -136,13 +115,12 @@ public final class Connections extends AbstractDaemon {
                             // Close the channel; implicitely cancels all
                             // selectionkeys
                             channel.close();
-                            Log.get().info(
-                                    "Disconnected: "
-                                            + channel.socket()
-                                                    .getRemoteSocketAddress()
-                                            + " (timeout)");
+                            Log.get().log(
+                                    Level.INFO,
+                                    "Disconnected: {0} (timeout)",
+                                    channel.socket().getRemoteSocketAddress());
                         } catch (IOException ex) {
-                            Log.get().warning("Connections.run(): " + ex);
+                            Log.get().log(Level.WARNING, "Connections.run(): {0}", ex);
                         }
 
                         // Recycle the used buffers
@@ -154,9 +132,7 @@ public final class Connections extends AbstractDaemon {
             try {
                 Thread.sleep(10000); // Sleep ten seconds
             } catch (InterruptedException ex) {
-                Log.get().warning(
-                        "Connections Thread was interrupted: "
-                                + ex.getMessage());
+                Log.get().log(Level.WARNING, "Connections Thread was interrupted: {0}", ex.getMessage());
             }
         }
     }
