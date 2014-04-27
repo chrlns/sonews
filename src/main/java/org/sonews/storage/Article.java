@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.mail.Header;
 import javax.mail.Message;
 import javax.mail.MessagingException;
@@ -80,11 +81,13 @@ public class Article extends ArticleHead {
 
             // Parse the header
             this.headers = new InternetHeaders(new ByteArrayInputStream(
-                    headers.getBytes()));
+                    headers.getBytes("UTF-8")));
 
             this.headerSrc = headers;
         } catch (MessagingException ex) {
             Log.get().log(Level.WARNING, ex.getLocalizedMessage(), ex);
+        } catch (UnsupportedEncodingException ex) {
+            Log.get().log(Level.SEVERE, null, ex);
         }
     }
 

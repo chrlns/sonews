@@ -102,11 +102,10 @@ public class Group {
     }
 
     public static Group get(String name) {
-        if(allGroups == null) {
-            getAll();
-        }
-
-        synchronized(allGroupNames) {
+        synchronized(allGroupsGate) {
+            if(allGroups == null) {
+                getAll();
+            }
             return allGroupNames.get(name);
         }
     }
