@@ -16,16 +16,16 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package test.command;
+package org.sonews.test.command;
 
-import test.AbstractTest;
+import org.sonews.test.AbstractTest;
 
 /**
- * Tests the POST command.
+ * Tests the ARTICLE command.
  * @author Christian Lins
  * @since sonews/0.5.0
  */
-public class PostTest extends AbstractTest
+public class ArticleTest extends AbstractTest
 {
   
   @Override
@@ -38,45 +38,53 @@ public class PostTest extends AbstractTest
       return 1;
     }
     
-    println("POST");
+    // Select a group (we assume that local.test is existing)
+    println("GROUP local.test");
     line = readln();
-    if(!line.startsWith("340 "))
+    if(!line.startsWith("211 "))
     {
-      return 1;
+      println("GROUP test");
+      line = readln();
+      if(!line.startsWith("211 "))
+      {
+        return 3;
+      }
     }
     
-    // Post a sample article
-    postArticle("local.test");
+    // Retrieve the first article
+    println("ARTICLE " + line.split(" ")[2]);
     line = readln();
-    if(line.startsWith("441 "))
+    if(!line.startsWith("220 "))
     {
-      println("POST");
-      line = readln();
-      if(!line.startsWith("340 "))
-      {
-        return 2;
-      }
-      
-      postArticle("test");
-      line = readln();
+      return 4;
     }
-
-    if(!line.startsWith("240 "))
+    
+    while(!line.equals("."))
     {
-      return 3;
+      line = readln(); 
     }
-
+    
+    // Retrieve currently selected article (without a parameter number!)
+    println("ARTICLE");
+    line = readln();
+    if(!line.startsWith("220 "))
+    {
+      return 5;
+    }
+    
+    while(!line.equals("."))
+    {
+      line = readln(); 
+    }
+    
+    println("QUIT");
+    line = readln();
+    if(!line.startsWith("205 "))
+    {
+      return 2;
+    }
+    
     return 0;
   }
   
-  private void postArticle(String toGroup)
-  {
-    println("Subject: A simple test mail");
-    println("From: NNTP TestBench <testbench@sonews.org>");
-    println("Newsgroups: " + toGroup);
-    println("");
-    println("Hello World!");
-    println(".");
-  }
-
 }

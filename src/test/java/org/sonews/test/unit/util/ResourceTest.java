@@ -16,7 +16,7 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package test.unit.util;
+package org.sonews.test.unit.util;
 
 import junit.framework.TestCase;
 import org.sonews.util.io.Resource;

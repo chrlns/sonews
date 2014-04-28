@@ -16,7 +16,7 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package test.unit.daemon;
+package org.sonews.test.unit.daemon;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;

@@ -16,16 +16,16 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package test.command;
+package org.sonews.test.command;
 
-import test.AbstractTest;
+import org.sonews.test.AbstractTest;
 
 /**
- * Test: connects to server, waits for initial hello and quits.
+ * Tests the CAPABILITIES command.
  * @author Christian Lins
  * @since sonews/0.5.0
  */
-public class HelloQuitTest extends AbstractTest
+public class CapabilitiesTest extends AbstractTest
 {
 
   @Override
@@ -34,12 +34,28 @@ public class HelloQuitTest extends AbstractTest
   {
     String line = readln();
     if(!line.startsWith("200 "))
+    {
       return 1;
+    }
+    
+    println("CAPABILITIES");
+    line = readln();
+    if(!line.startsWith("101"))
+    {
+      return 3;
+    }
+    
+    while(!line.equals("."))
+    {
+      line = readln();
+    }
     
     println("QUIT");
     line = readln();
     if(!line.startsWith("205 "))
+    {
       return 2;
+    }
     
     return 0;
   }

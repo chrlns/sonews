@@ -15,23 +15,35 @@
  *   You should have received a copy of the GNU General Public License
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package test.command;
 
-import test.AbstractTest;
+package org.sonews.test.command;
+
+import org.sonews.test.AbstractTest;
 
 /**
- * Tests the NEWGROUPS command.
+ * Blackbox Test testing the LIST command
  * @author Christian Lins
  * @since sonews/0.5.0
  */
-public class NewGroupsTest extends AbstractTest
+public class ListTest extends AbstractTest
 {
-
+  
   @Override
   public int runTest()
     throws Exception
   {
-    return 1;
+    println("LIST OVERVIEW.FMT");
+    String line = readln();
+    if(line.startsWith("215 "))
+    {
+      while(!line.equals("."))
+      {
+        line = readln();
+      }
+      return 0;
+    }
+    else
+      return 1;
   }
   
 }

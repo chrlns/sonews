@@ -41,6 +41,12 @@
       <artifactId>mysql-connector-java</artifactId>
       <version>5.1.30</version>
     </dependency>
+    <dependency>
+	  <groupId>junit</groupId>
+	  <artifactId>junit</artifactId>
+	  <version>4.4</version>
+	  <scope>test</scope>
+    </dependency>
   </dependencies>
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

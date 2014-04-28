@@ -16,48 +16,23 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package test.command;
+package org.sonews.test.command;
 
-import test.AbstractTest;
+import org.sonews.test.AbstractTest;
 
 /**
- * Tests the CAPABILITIES command.
+ * Tests the LISTGROUP command.
  * @author Christian Lins
  * @since sonews/0.5.0
  */
-public class CapabilitiesTest extends AbstractTest
+public class ListGroupTests extends AbstractTest
 {
 
   @Override
   public int runTest()
     throws Exception
   {
-    String line = readln();
-    if(!line.startsWith("200 "))
-    {
-      return 1;
-    }
-    
-    println("CAPABILITIES");
-    line = readln();
-    if(!line.startsWith("101"))
-    {
-      return 3;
-    }
-    
-    while(!line.equals("."))
-    {
-      line = readln();
-    }
-    
-    println("QUIT");
-    line = readln();
-    if(!line.startsWith("205 "))
-    {
-      return 2;
-    }
-    
-    return 0;
+    return 1;
   }
   
 }
