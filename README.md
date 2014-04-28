@@ -6,7 +6,7 @@ sonews
 ======
 
 **sonews** is an Usenet News Server written in Java. It can use various 
-backend types, currently supported are CouchDB (very experimental), MySQL and PostgreSQL.
+backend types, currently supported are MySQL and PostgreSQL (CouchDB in development).
 
 Requirements
 ------------
@@ -15,7 +15,7 @@ The requirements for building and running sonews are:
 
 * Apache Maven
 * Java 7 JDK (or newer)
-* CouchDB or MySQL/PostgreSQL installation
+* MySQL/PostgreSQL installation
 
 Build
 -----
@@ -30,19 +30,26 @@ To start sonews on port 9119:
 
     $ mvn exec:java -Dexec.mainClass="org.sonews.Main" -Dexec.args="-p 9119"
 
+You may want sonews to listen on the default NNTP port (119) without running as
+root user. This can be achieved by redirecting all TCP connections on port 119
+to a higher port where sonews can listen as unprivileged user:
+
+ 	# iptables -t nat -A PREROUTING -p tcp --dport 119 -j REDIRECT --to-port 9119
 
 Setup
 -----
 
-* Create a database in your DBMS, e.g. named like 'sonews'
-* (MySQL/PostgreSQL only) Create the necessary table structure using the 
-  helpers/*.sql file (you may use the experimental helper application:
-   java -cp sonews.jar:<jdbcdriver.jar> DatabaseSetup )
-* Customize the settings within the sonews.conf file.
-* Invoke 'helpers/sonews start' to start the daemon.
+* Create a database in your database system, e.g. named like 'sonews' and give it a
+  dedicated database user
+* Create the necessary table structure using the util/*.sql file
+* Customize the settings within the sonews.conf file (you'll find a template in util/
+  or let sonews create one on first startup)
+* Start sonews as described above
 
-Bugs and other Issues
-----------------------
+Contribution
+-------------
 
-Please mail them to mail(at)sonews.org or better issue them
-into the bugtracker at https://github.com/cli/sonews/ .
+sonews is Free Software licensed under the terms of the GPLv3.
+
+Please report any issues at https://github.com/cli/sonews/ or write a mail to
+mail(at)sonews.org. 
