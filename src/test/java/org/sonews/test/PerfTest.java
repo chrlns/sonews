@@ -16,7 +16,7 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package test;
+package org.sonews.test;
 
 /**
  * Opens a connection, waits for Hello and exits while leaving the connection

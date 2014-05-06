@@ -15,35 +15,23 @@
  *   You should have received a copy of the GNU General Public License
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+package org.sonews.test.command;
 
-package test.command;
-
-import test.AbstractTest;
+import org.sonews.test.AbstractTest;
 
 /**
- * Tests the GROUP command.
+ * Tests the NEWGROUPS command.
  * @author Christian Lins
  * @since sonews/0.5.0
  */
-public class GroupTest extends AbstractTest
+public class NewGroupsTest extends AbstractTest
 {
 
   @Override
   public int runTest()
     throws Exception
   {
-    String line = readln();
-    
-    println("GROUP misc.test");
-    line = readln();
-    if(line.startsWith("211 "))
-    {
-      return 0;
-    }
-    else
-    {
-      return 1;
-    }
+    return 1;
   }
   
 }

@@ -16,23 +16,34 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package test.command;
+package org.sonews.test.command;
 
-import test.AbstractTest;
+import org.sonews.test.AbstractTest;
 
 /**
- * Tests the NEXT command.
+ * Tests the GROUP command.
  * @author Christian Lins
  * @since sonews/0.5.0
  */
-public class NextTest extends AbstractTest
+public class GroupTest extends AbstractTest
 {
-  
+
   @Override
   public int runTest()
     throws Exception
   {
-    return 1;
+    String line = readln();
+    
+    println("GROUP misc.test");
+    line = readln();
+    if(line.startsWith("211 "))
+    {
+      return 0;
+    }
+    else
+    {
+      return 1;
+    }
   }
-
+  
 }

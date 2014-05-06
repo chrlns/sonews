@@ -16,32 +16,28 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package test.unit;
+package org.sonews.test;
 
-import junit.textui.TestRunner;
-import test.unit.util.ResourceTest;
-import test.unit.util.StringTemplateTest;
-import test.unit.util.TimeoutMapTest;
-
+import org.sonews.util.StringTemplate;
 
 /**
- * Tests classes of package org.sonews.util.
+ * Tests the StringTemplate class.
  * @author Christian Lins
  * @since sonews/0.5.0
+ * @see org.sonews.util.StringTemplate
  */
-public class UtilTests
+public class StringTemplateTest 
 {
-  
+
   public static void main(String[] args)
   {
-    System.out.println("StringTemplateTest");
-    TestRunner.run(StringTemplateTest.class);
+    StringTemplate templ 
+      = new StringTemplate("SELECT %row FROM %table WHERE %row = ich");
     
-    System.out.println("TimeoutMapTest");
-    TestRunner.run(TimeoutMapTest.class);
+    templ.set("row", "name");
+    templ.set("table", "UserTable");
     
-    System.out.println("ResourceTest");
-    TestRunner.run(ResourceTest.class);
+    System.out.println(templ.toString());
   }
-  
+
 }

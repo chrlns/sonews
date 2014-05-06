@@ -16,7 +16,7 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package test;
+package org.sonews.test;
 
 /**
  * TestBench that performs a - yes - performance test. The test runs until

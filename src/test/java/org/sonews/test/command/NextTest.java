@@ -16,34 +16,23 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package test.command;
+package org.sonews.test.command;
 
-import test.AbstractTest;
+import org.sonews.test.AbstractTest;
 
 /**
- * Blackbox Test testing the LIST command
+ * Tests the NEXT command.
  * @author Christian Lins
  * @since sonews/0.5.0
  */
-public class ListTest extends AbstractTest
+public class NextTest extends AbstractTest
 {
   
   @Override
   public int runTest()
     throws Exception
   {
-    println("LIST OVERVIEW.FMT");
-    String line = readln();
-    if(line.startsWith("215 "))
-    {
-      while(!line.equals("."))
-      {
-        line = readln();
-      }
-      return 0;
-    }
-    else
-      return 1;
+    return 1;
   }
-  
+
 }

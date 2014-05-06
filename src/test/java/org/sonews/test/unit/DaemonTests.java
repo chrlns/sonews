@@ -16,10 +16,10 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package test.unit;
+package org.sonews.test.unit;
 
 import junit.textui.TestRunner;
-import test.unit.daemon.NNTPConnectionTest;
+import org.sonews.test.unit.daemon.NNTPConnectionTest;
 
 /**
  * Tests the org.sonews.daemon package classes.

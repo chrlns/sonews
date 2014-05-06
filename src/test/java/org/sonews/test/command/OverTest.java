@@ -16,12 +16,12 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package test.command;
+package org.sonews.test.command;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
-import test.AbstractTest;
+import org.sonews.test.AbstractTest;
 
 /**
  * Tests the OVER/XOVER command.

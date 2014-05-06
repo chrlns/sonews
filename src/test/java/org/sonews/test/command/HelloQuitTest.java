@@ -16,28 +16,32 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package test;
+package org.sonews.test.command;
 
-import org.sonews.util.StringTemplate;
+import org.sonews.test.AbstractTest;
 
 /**
- * Tests the StringTemplate class.
+ * Test: connects to server, waits for initial hello and quits.
  * @author Christian Lins
  * @since sonews/0.5.0
- * @see org.sonews.util.StringTemplate
  */
-public class StringTemplateTest 
+public class HelloQuitTest extends AbstractTest
 {
 
-  public static void main(String[] args)
+  @Override
+  public int runTest()
+    throws Exception
   {
-    StringTemplate templ 
-      = new StringTemplate("SELECT %row FROM %table WHERE %row = ich");
+    String line = readln();
+    if(!line.startsWith("200 "))
+      return 1;
     
-    templ.set("row", "name");
-    templ.set("table", "UserTable");
+    println("QUIT");
+    line = readln();
+    if(!line.startsWith("205 "))
+      return 2;
     
-    System.out.println(templ.toString());
+    return 0;
   }
-
+  
 }

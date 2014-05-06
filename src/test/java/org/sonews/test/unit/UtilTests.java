@@ -16,23 +16,28 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package test.command;
+package org.sonews.test.unit;
 
-import test.AbstractTest;
+import junit.textui.TestRunner;
+import org.sonews.test.unit.util.ResourceTest;
+import org.sonews.test.unit.util.StringTemplateTest;
+
 
 /**
- * Tests the LISTGROUP command.
+ * Tests classes of package org.sonews.util.
  * @author Christian Lins
  * @since sonews/0.5.0
  */
-public class ListGroupTests extends AbstractTest
+public class UtilTests
 {
 
-  @Override
-  public int runTest()
-    throws Exception
+  public static void main(String[] args)
   {
-    return 1;
+    System.out.println("StringTemplateTest");
+    TestRunner.run(StringTemplateTest.class);
+
+    System.out.println("ResourceTest");
+    TestRunner.run(ResourceTest.class);
   }
-  
+
 }
