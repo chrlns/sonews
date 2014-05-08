@@ -39,6 +39,31 @@
     <sect1 label="2.1">
       <title>Download &amp; Installation</title>
       <sect2 label="2.1.1">
+        <title>Build from source</title>
+        <para>
+          See <ulink url="http://www.sonews.org/">sonews.org</ulink> for recent binary and source tarballs. 
+          You may also checkout a recent version from Git at <ulink url="https://github.com/cli/sonews.git">Github</ulink>
+        </para>
+        <para>
+          Use the archive and extract it in a directory of your choice. Or use the checked-out source of course.
+          Make sure your system provides the necessary prerequisites:</para>
+        <itemizedlist>
+          <listitem>
+            <para>Java 7 JDK (or higher)</para>
+          </listitem>
+          <listitem>
+            <para>Apache Maven 3 (or higher)</para>
+          </listitem>
+        </itemizedlist>
+        <para>
+          Maven will download all necessary dependencies from a repository automatically.
+          Use the following command to build and package sonews:
+        </para>
+        <screen>$ mvn clean compile package</screen>
+        <para>You'll find the resulting sonews.jar file in the target/ directory.</para>
+      </sect2>
+
+      <sect2 label="2.1.2">
         <title>Ubuntu and other Debian-based systems</title>
         <para>You can install sonews with 
         <ulink url="http://www.debian.org/doc/manuals/apt-howto/">APT</ulink>
@@ -60,29 +85,6 @@
         <para>This method should work for all recent Debian-based distributions
 (<ulink url="http://www.debian.org/">Debian</ulink>, <ulink url="http://www.ubuntu.com/">Ubuntu</ulink>, etc.).</para>
       </sect2>
-
-      <sect2 label="2.1.2">
-        <title>Build from source</title>
-        <para>
-          See <ulink url="http://www.sonews.org/">sonews.org</ulink> for recent binary and source tarballs. 
-          You may also checkout a recent version from Git at <ulink url="https://github.com/cli/sonews.git">Github</ulink>
-        </para>
-        <para>
-          Use the archive and extract it in a directory of your choice. Or use the checked-out source of course.
-          Make sure your system provides the necessary prerequisites:</para>
-        <itemizedlist>
-          <listitem>
-            <para>Java 7 JDK (or higher)</para>
-            <para>Apache Maven 3 (or higher)</para>
-          </listitem>
-        </itemizedlist>
-        <para>
-          Maven will download all necessary dependencies from a repository automatically.
-          Use the following command to build and package sonews:
-        </para>
-        <screen>$ mvn clean compile package</screen>
-        <para>You'll find the resulting jar file in the target/ directory.</para>
-      </sect2>
     </sect1>
 
     <sect1 label="2.2">
@@ -93,19 +95,15 @@ to work with PostgreSQL and MySQL.</para>
 called 'sonews'. Additionally, it is recommended to create a unique database user
 for sonews, e.g. 'sonewsuser'. Please do not use the root user for sonews!
 The sonews user needs rights for SELECT, INSERT and UPDATE statements.
-Refer to the database's manual for instructions.</para>
-      <para>You will find the SQL Schema definitions in the helpers subdirectory of
-the source and binary distributions. You can create the tables manually using
-this templates or you can use the setup helper:</para>
-      <screen>user@debian$ sonews setup</screen>
-      <para>or on other *nix systems:</para>
-      <screen>user@nix$ java -jar sonews.jar org.sonews.util.DatabaseSetup</screen>
-      <para>The tool will ask for some information about your database environment,
-connect to the database, create the tables and creates a default bootstrap
-config file called sonews.conf.</para>
+Refer to the database manual for instructions.</para>
+      <para>You will find the SQL Schema definitions (database_*.sql) in the util/ subdirectory of
+the source and binary distributions.
       <para>
-        If the automatic creation tools do not work, use a database tool to
-        create the schema manually with the given SQL files.
+        Use these templates and a database tool (e.g. phpMyAdmin, pgAdmin, etc.) to create
+        the necessary table structures.
+      </para>
+      <para>
+        Make sure you fill in the correct database settings in the sonews.conf file (see next chapter).
       </para>
     </sect1>
   </chapter>
