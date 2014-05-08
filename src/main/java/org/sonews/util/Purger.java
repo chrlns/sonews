@@ -117,6 +117,10 @@ public class Purger extends AbstractDaemon {
             }
 
             Article art = StorageManager.current().getArticle(mid);
+            if (art == null) {
+                Log.get().log(Level.WARNING, "Could not retrieve or delete article: {0}", mid);
+                return;
+            }
             long artDate = 0;
             String dateStr = art.getHeader(Headers.DATE)[0];
             try {
@@ -124,8 +128,9 @@ public class Purger extends AbstractDaemon {
                         DateFormat.LONG, Locale.US);
                 artDate = dateFormat.parse(dateStr).getTime() / 1000 / 3600 / 24;
             } catch (ParseException ex) {
-                Log.get().warning(
-                        "Could not parse date string: " + dateStr + " " + ex);
+                Log.get().log(
+                        Level.WARNING, "Could not parse date string: {0} {1}",
+                        new Object[]{dateStr, ex});
             }
 
             // Should we delete the message because of its age or because the
@@ -135,7 +140,6 @@ public class Purger extends AbstractDaemon {
                 System.out.println("Deleted: " + mid);
             } else {
                 Thread.sleep(1000 * 60); // Wait 60 seconds
-                return;
             }
         } else {
             Log.get().info("Lifetime purger is disabled");

@@ -117,7 +117,7 @@ public class ArticleTransmitter {
         dst.out.print("POST\r\n");
         dst.out.flush();
         line = dst.in.readLine();
-        if (!line.startsWith("340 ")) {
+        if (line == null || !line.startsWith("340 ")) {
             throw new IOException("Unexpected reply to POST");
         }
 
