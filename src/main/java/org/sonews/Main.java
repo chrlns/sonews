@@ -37,7 +37,7 @@ import org.sonews.util.io.Resource;
 
 /**
  * Startup class of the daemon.
- * 
+ *
  * @author Christian Lins
  * @since sonews/0.5.0
  */
@@ -51,7 +51,7 @@ public final class Main {
 
     /**
      * The main entrypoint.
-     * 
+     *
      * @param args
      * @throws Exception
      */
@@ -108,7 +108,7 @@ public final class Main {
                         strBuf.append(args[n]);
                         Log.get().warning(strBuf.toString());
                         Log.get().log(Level.INFO, "Main.java", ex);
-                    }   
+                    }
                     break;
                 }
                 case "-purger": {
@@ -123,9 +123,15 @@ public final class Main {
         }
 
         // Load the storage backend
+        String database = Config.inst().get(Config.STORAGE_DATABASE, null);
+        if (database == null) {
+            Log.get().log(Level.SEVERE, "No storage backend configured (sonews.storage.database)");
+            return;
+        }
+
         String provName = Config.inst().get(Config.LEVEL_FILE,
                     Config.STORAGE_PROVIDER,
-                    "org.sonews.storage.impl.CouchDBStorageProvider");
+                    "org.sonews.storage.impl.JDBCStorageProvider");
         StorageProvider sprov = StorageManager.loadProvider(provName);
         StorageManager.enableProvider(sprov);
 

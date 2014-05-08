@@ -94,8 +94,8 @@ public class JDBCDatabase implements Storage {
     protected void arise() throws SQLException {
         try {
             // Load database driver
-            Class.forName(Config.inst().get(Config.LEVEL_FILE,
-                    Config.STORAGE_DBMSDRIVER, "java.lang.Object"));
+            //Class.forName(Config.inst().get(Config.LEVEL_FILE,
+            //        Config.STORAGE_DBMSDRIVER, "java.lang.Object"));
 
             // Establish database connection
             this.conn = DriverManager.getConnection(
@@ -214,7 +214,7 @@ public class JDBCDatabase implements Storage {
                     .prepareStatement("DELETE FROM peer_subscriptions WHERE group_id = ?");
             this.pstmtPurgeGroup1 = conn
                     .prepareStatement("DELETE FROM groups WHERE group_id = ?");
-        } catch (ClassNotFoundException ex) {
+        } catch (Exception ex) {
             throw new Error("JDBC Driver not found!", ex);
         }
     }
