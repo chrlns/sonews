@@ -26,14 +26,14 @@ import org.sonews.util.Log;
  * Base class of all sonews threads. Instances of this class will be
  * automatically registered at the ShutdownHook to be cleanly exited when the
  * server is forced to exit.
- * 
+ *
  * @author Christian Lins
  * @since sonews/0.5.0
  */
 public abstract class AbstractDaemon extends Thread {
 
     /** This variable is write synchronized through setRunning */
-    private boolean isRunning = false;
+    private volatile boolean isRunning = false;
 
     /**
      * Protected constructor. Will be called by derived classes.
@@ -52,10 +52,16 @@ public abstract class AbstractDaemon extends Thread {
         }
     }
 
+    protected void setRunning(boolean running) {
+        synchronized(this) {
+            this.isRunning = running;
+        }
+    }
+
     /**
      * Marks this thread to exit soon. Closes the associated JDBCDatabase
      * connection if available.
-     * 
+     *
      * @throws java.sql.SQLException
      */
     public void shutdownNow() throws SQLException {

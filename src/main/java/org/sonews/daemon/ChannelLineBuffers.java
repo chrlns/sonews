@@ -72,12 +72,14 @@ public class ChannelLineBuffers {
      * @throws java.nio.channels.ClosedChannelException
      *             If the client channel was already closed.
      */
-    public synchronized void addOutputBuffer(ByteBuffer buffer)
+    public void addOutputBuffer(ByteBuffer buffer)
             throws ClosedChannelException {
-        if (outputBuffersClosed) {
-            throw new ClosedChannelException();
+        synchronized(outputBuffers) {
+            if (outputBuffersClosed) {
+                throw new ClosedChannelException();
+            }
+            outputBuffers.add(buffer);
         }
-        outputBuffers.add(buffer);
     }
 
     /**

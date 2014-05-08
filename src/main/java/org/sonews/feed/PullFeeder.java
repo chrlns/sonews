@@ -36,6 +36,7 @@ import java.util.logging.Level;
 
 import org.sonews.config.Config;
 import org.sonews.daemon.AbstractDaemon;
+import org.sonews.storage.Storage;
 import org.sonews.storage.StorageBackendException;
 import org.sonews.storage.StorageManager;
 import org.sonews.util.Log;
@@ -90,7 +91,8 @@ class PullFeeder extends AbstractDaemon {
         this.in = new BufferedReader(new InputStreamReader(socket.getInputStream(), "UTF-8"));
 
         String line = in.readLine();
-        if (!(line.charAt(0) == '2')) { // Could be 200 or 2xx if posting is not allowed
+        if (line == null || !(line.charAt(0) == '2')) {
+            // Could be 200 or 2xx if posting is not allowed
             throw new IOException(line);
         }
 
@@ -141,6 +143,10 @@ class PullFeeder extends AbstractDaemon {
         this.out.flush();
 
         String line = this.in.readLine();
+        if (line == null) {
+            throw new IOException("Unexpected empty reply from remote host");
+        }
+
         if (line.startsWith("500 ")) // OVER not supported
         {
             this.out.print("XOVER " + start + "-" + end + "\r\n");
@@ -196,12 +202,17 @@ class PullFeeder extends AbstractDaemon {
 
                         int oldMark = this.highMarks.get(sub);
                         int newMark = changeGroup(sub.getGroup());
+                        Storage storage = StorageManager.current();
+                        if (storage == null) {
+                            Log.get().log(Level.SEVERE, "No storage available -> disable PullFeeder");
+                            return;
+                        }
 
                         if (oldMark != newMark) {
                             List<String> messageIDs = over(oldMark, newMark);
 
                             for (String messageID : messageIDs) {
-                                if (!StorageManager.current().isArticleExisting(messageID)) {
+                                if (!storage.isArticleExisting(messageID)) {
                                     getAndRepostArticle(sub, messageID);
                                 }
                             } // for(;;)

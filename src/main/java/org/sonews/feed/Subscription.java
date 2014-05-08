@@ -43,7 +43,7 @@ public class Subscription {
             String peersStr = Resource.getAsString("peers.conf", true);
             if(peersStr == null) {
                 Log.get().log(Level.WARNING, "Could not read peers.conf");
-                return null;
+                return new ArrayList<>(); // return empty list
             }
 
             String[] peersLines = peersStr.split("\n");

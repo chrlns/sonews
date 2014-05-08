@@ -29,6 +29,7 @@ import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.sonews.config.Config;
 import org.sonews.Main;
@@ -56,6 +57,7 @@ public final class NNTPDaemon extends AbstractDaemon {
     }
 
     private final int port;
+    private ServerSocket serverSocket = null;
 
     private NNTPDaemon(final int port) {
         Log.get().log(Level.INFO, "Server listening on port {0}", port);
@@ -89,7 +91,7 @@ public final class NNTPDaemon extends AbstractDaemon {
             serverSocketChannel.configureBlocking(true); // Set to blocking mode
 
             // Configure ServerSocket; bind to socket...
-            final ServerSocket serverSocket = serverSocketChannel.socket();
+            serverSocket = serverSocketChannel.socket();
             serverSocket.bind(new InetSocketAddress(this.port));
 
             while (isRunning()) {
@@ -153,14 +155,24 @@ public final class NNTPDaemon extends AbstractDaemon {
                 }
             }
         } catch (BindException ex) {
-            // Could not bind to socket; this is a fatal problem; so perform
-            // shutdown
-            ex.printStackTrace();
-            System.exit(1);
+            // Could not bind to socket; this is a fatal, so perform a shutdown
+            Log.get().log(Level.SEVERE, ex.getLocalizedMessage() + " -> shutdown sonews", ex);
+            setRunning(false);
         } catch (IOException ex) {
             ex.printStackTrace();
         } catch (Exception ex) {
             ex.printStackTrace();
+        }
+    }
+
+    @Override
+    public void shutdownNow() {
+        if (this.serverSocket != null) {
+            try {
+                this.serverSocket.close();
+            } catch (IOException ex) {
+                Log.get().log(Level.WARNING, ex.getLocalizedMessage(), ex);
+            }
         }
     }
 
