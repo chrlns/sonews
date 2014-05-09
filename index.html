@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="sonews-logo.png">
+    <link href='http://fonts.googleapis.com/css?family=Ubuntu' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <title>sonews - NNTP Usenet Server</title>
+    <script type="text/javascript">
+    /* <![CDATA[ */
+        (function() {
+            var s = document.createElement('script'), t = document.getElementsByTagName('script')[0];
+            s.type = 'text/javascript';
+            s.async = true;
+            s.src = 'http://api.flattr.com/js/0.6/load.js?mode=auto';
+            t.parentNode.insertBefore(s, t);
+        })();
+    /* ]]> */
+    </script>
+</head>
+
+<body>
+<div id="header">
+    <img src="sonews-logo.png" style="float: left" alt="sonews Logo"/>
+    <div style="margin-left: 100px">
+        <h2>sonews</h2>
+        <p>NNTP Usenet Server</p>
+    </div>
+</div>
+
+<a href="https://github.com/cli/sonews"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_gray_6d6d6d.png" alt="Fork me on GitHub"></a>
+
+<div id="main">
+<h2>What is sonews?</h2>
+<p>
+    sonews is a RCF 3977 compliant NNTP Usenet Server. 
+    It is written in Java and uses a database management system 
+    as backend (currently <a href="http://www.postgresql.org/">PostgreSQL</a> and <a href="http://www.mysql.com/">MySQL</a>). 
+    sonews is highly multithreaded and uses Java NIO asynchronous sockets 
+    to handle thousands of concurrent connections.
+</p>
+
+<h2>Some features</h2>
+<ul> 
+    <li>NNTP (RFC 3977) Usenet news server</li>
+    <li>Plugable backend (PostgreSQL, MySQL, <a href="http://couchdb.apache.org/">CouchDB</a> (in development), ...)</li>
+    <li>New commands or backends can be integrated through plugins</li>
+    <li>Tested with up to 30 000 concurrent connections on one machine</li>
+    <li>Supports push and pull peering</li>
+    <li>Plugins (3rd party Drupal frontend, Mailinglist gateway, ...)</li>
+</ul>
+
+<h2>Demo</h2>
+<p>
+This project hosts a small newsserver on its own, of course running
+with the most descent version of sonews. Use your Newsreader to connect to
+</p>
+    <pre>
+    Host:     news.sonews.org
+    Protocol: NNTP (default)
+    Port:     119 (default)
+    </pre>
+<p>
+    Contact us if you want more groups or peering to another server.
+</p>
+
+
+<h2>Development</h2>
+<p>
+sonews is <em>Free Software</em> licensed under the terms of the
+<a href="http://www.gnu.org/licenses/gpl.html">GNU GPL v3</a>.
+
+The sources of sonews can be found at 
+<a href="http://github.com/cli/sonews">Github</a>.
+</p>
+<p>
+Feel free to dig through the sources, report or fix bugs (if any...) or
+submit issues. Every help is welcome.
+</p>
+
+<h2>Download</h2>
+<p>You will find <a href="files/">binary and source releases</a> here. 
+Ubuntu users may be interested in the <a href="https://launchpad.net/~cli/+archive/sonews">sonews PPA on Launchpad</a> with packaged releases 
+(warning: experimental).
+</p>
+
+</div> <!-- end main -->
+
+<div class="sidebar-container">
+    <div class="sidebar" style="padding-bottom: 0px">
+        <h3>Updates</h3>
+        <iframe src="http://widgetsplus.com:8080/34881.htm" width="200" height="370" style="padding:0; margin:0; overflow:hidden;" frameborder="0"></iframe>
+    </div>
+
+    <div class="sidebar"><h3>Links</h3>
+        <ul style="list-style-type: square; margin-left:-25px;
+            line-height: 23px;">
+            <li><a href="http://news.sonews.org/doc/">Documentation</a></li>
+            <li><a href="http://news.sonews.org/apidoc/">Java API doc for developers</a></li>
+            <li><a href="https://plus.google.com/101790867506897514912" rel="publisher">sonews on Google+</a></li>
+        </ul>
+        <script type="text/javascript" src="http://www.ohloh.net/p/309148/widgets/project_thin_badge.js"></script>
+    </div>
+
+    <div class="sidebar">
+        <h3>Coffee Jar</h3>
+        <a class="FlattrButton" style="display:none;" href="http://www.sonews.org/"></a>
+    </div>
+
+    <div class="sidebar" style="line-height: 20px"><h3>Contact</h3>
+        Christian Lins<br/>
+        <a href="mailto:mail@sonews.org">mail@sonews.org</a>
+    </div>
+</div>
+
+<br style="clear: both;" />
+
+<div id="footer">
+    © 2009-2014 Christian Lins
+    <p>
+        sonews is licensed under the terms of the 
+        <a href="http://www.gnu.org/licenses/gpl.html">GNU GPL v3</a>.
+    </p>
+</div>
+</body>
+</html>
