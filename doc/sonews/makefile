@@ -1,5 +1,5 @@
 all:
-	xmlto --skip-validation -o output html -m config.xsl sonews.xml
+	xmlto --skip-validation html-nochunks -m config.xsl sonews.xml
 
 clean:
-	rm -r output
+	rm -r sonews.html 
