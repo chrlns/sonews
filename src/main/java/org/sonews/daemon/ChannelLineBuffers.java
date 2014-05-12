@@ -64,6 +64,9 @@ public class ChannelLineBuffers {
     private final List<ByteBuffer> outputBuffers = new ArrayList<>();
     private boolean outputBuffersClosed = false;
 
+    public ChannelLineBuffers() {
+    }
+
     /**
      * Add the given ByteBuffer to the list of buffers to be send to the client.
      * This method is Thread-safe.
@@ -135,7 +138,7 @@ public class ChannelLineBuffers {
      * @param channel
      * @return A ByteBuffer wrapping the line.
      */
-    synchronized ByteBuffer nextInputLine() {
+    public synchronized ByteBuffer nextInputLine() {
         if (inputBuffer == null) {
             return null;
         }

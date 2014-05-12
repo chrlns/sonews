@@ -16,9 +16,8 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.sonews.daemon;
+package org.sonews.daemon.sync;
 
-import org.sonews.util.Log;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.CancelledKeyException;
@@ -27,6 +26,11 @@ import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 import java.util.Iterator;
 import java.util.logging.Level;
+import org.sonews.daemon.AbstractDaemon;
+import org.sonews.daemon.Connections;
+import org.sonews.daemon.NNTPConnection;
+import org.sonews.daemon.SocketChannelWrapperFactory;
+import org.sonews.util.Log;
 
 /**
  * A Thread task that processes OP_WRITE events for SocketChannels.
@@ -93,7 +97,8 @@ class ChannelWriter extends AbstractDaemon {
                     // later processing.
                     selKey = it.next();
                     socketChannel = (SocketChannel) selKey.channel();
-                    connection = Connections.getInstance().get(socketChannel);
+                    connection = Connections.getInstance().get(
+                            new SocketChannelWrapperFactory(socketChannel).create());
 
                     it.remove();
                     if (connection != null) {
@@ -117,14 +122,13 @@ class ChannelWriter extends AbstractDaemon {
                         // Cancel write events for this channel
                         selKey.cancel();
                         if (connection != null) {
-                            connection.shutdownInput();
-                            connection.shutdownOutput();
+                            connection.close();
                         }
                     }
                 }
 
                 // Eventually wait for a register operation
-                synchronized (NNTPDaemon.RegisterGate) { /* do nothing */
+                synchronized (SynchronousNNTPDaemon.RegisterGate) { /* do nothing */
                 }
             } catch (CancelledKeyException ex) {
                 Log.get().log(Level.INFO, "ChannelWriter.run(): {0}", ex);
@@ -168,9 +172,8 @@ class ChannelWriter extends AbstractDaemon {
                     // block
                     if (socketChannel.write(buf) <= 0) {
                         // Perhaps there is data to be written, but the
-                        // SocketChannel's
-                        // buffer is full, so we stop writing to until the next
-                        // event.
+                        // SocketChannel's buffer is full, so we stop writing
+                        // to until the next event.
                         break;
                     } else {
                         // Retrieve next buffer if available; method may return
@@ -184,8 +187,7 @@ class ChannelWriter extends AbstractDaemon {
             Log.get().log(Level.WARNING, "Invalid OP_WRITE key: {0}", selKey);
 
             if (socketChannel.socket().isClosed()) {
-                connection.shutdownInput();
-                connection.shutdownOutput();
+                connection.close();
                 socketChannel.close();
                 Log.get().info("Connection closed.");
             }

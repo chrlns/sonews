@@ -30,11 +30,11 @@ import org.sonews.util.Pair;
 /**
  * <pre>
  *   XPAT header range|<message-id> pat [pat...]
- * 
+ *
  *   The XPAT command is used to retrieve specific headers from
  *   specific articles, based on pattern matching on the contents of
  *   the header. This command was first available in INN.
- * 
+ *
  *   The required header parameter is the name of a header line (e.g.
  *   "subject") in a news group article. See RFC-1036 for a list
  *   of valid header lines. The required range argument may be
@@ -44,7 +44,7 @@ import org.sonews.util.Pair;
  *                  all following
  *               an article number followed by a dash followed by
  *                  another article number
- * 
+ *
  *   The required message-id argument indicates a specific
  *   article. The range and message-id arguments are mutually
  *   exclusive. At least one pattern in wildmat must be specified
@@ -58,21 +58,21 @@ import org.sonews.util.Pair;
  *   message-id and no such article exists, the 430 error response
  *   is returned. A 502 response will be returned if the client only
  *   has permission to transfer articles.
- * 
+ *
  *   Responses
- * 
+ *
  *       221 Header follows
  *       430 no such article
  *       502 no permission
- * 
+ *
  *   Response Data:
- * 
+ *
  *       art_nr fitting_header_value
- * 
+ *
  * </pre>
- * 
+ *
  * [Source:"draft-ietf-nntp-imp-02.txt"] [Copyright: 1998 S. Barber]
- * 
+ *
  * @author Christian Lins
  * @since sonews/0.5.0
  */
@@ -101,7 +101,7 @@ public class XPatCommand implements Command {
     @Override
     public void processLine(NNTPConnection conn, final String line, byte[] raw)
             throws IOException, StorageBackendException {
-        if (conn.getCurrentChannel() == null) {
+        if (conn.getCurrentGroup() == null) {
             conn.println("430 no group selected");
             return;
         }
@@ -130,7 +130,7 @@ public class XPatCommand implements Command {
 
             try {
                 List<Pair<Long, String>> heads = StorageManager.current()
-                        .getArticleHeaders(conn.getCurrentChannel(), start,
+                        .getArticleHeaders(conn.getCurrentGroup(), start,
                                 end, header, pattern);
 
                 conn.println("221 header follows");

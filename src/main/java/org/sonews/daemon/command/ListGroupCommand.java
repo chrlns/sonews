@@ -19,8 +19,8 @@ package org.sonews.daemon.command;
 
 import java.io.IOException;
 import java.util.List;
-
 import org.sonews.daemon.NNTPConnection;
+
 import org.sonews.storage.Group;
 import org.sonews.storage.StorageBackendException;
 
@@ -62,7 +62,7 @@ public class ListGroupCommand implements Command {
         if (command.length >= 2) {
             group = Group.get(command[1]);
         } else {
-            group = conn.getCurrentChannel();
+            group = conn.getCurrentGroup();
         }
 
         if (group == null) {

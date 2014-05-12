@@ -24,7 +24,7 @@ import org.sonews.storage.StorageBackendException;
 
 /**
  * Implementation of the QUIT command; client wants to shutdown the connection.
- * 
+ *
  * @author Christian Lins
  * @since sonews/0.5.0
  */
@@ -54,8 +54,6 @@ public class QuitCommand implements Command {
     public void processLine(NNTPConnection conn, final String line, byte[] raw)
             throws IOException, StorageBackendException {
         conn.println("205 cya");
-
-        conn.shutdownInput();
-        conn.shutdownOutput();
+        conn.close();
     }
 }

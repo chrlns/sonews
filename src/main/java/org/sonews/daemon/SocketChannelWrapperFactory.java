@@ -16,35 +16,35 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.sonews.daemon.command;
+package org.sonews.daemon;
 
-import java.io.IOException;
-import org.sonews.daemon.NNTPConnection;
-import org.sonews.storage.StorageBackendException;
+import java.nio.channels.AsynchronousChannel;
+import java.nio.channels.AsynchronousSocketChannel;
+import java.nio.channels.SocketChannel;
 
 /**
- * Interface for pluggable NNTP commands handling classes.
+ * Factory that creates specific ChannelWrapper instances for the given
+ * channel object.
  *
  * @author Christian Lins
- * @since sonews/0.6.0
  */
-public interface Command {
+public class SocketChannelWrapperFactory {
 
-    /**
-     * @return true if this instance can be reused.
-     */
-    boolean hasFinished();
+    protected Object wrapier;
 
-    /**
-     * Returns capability string that is implied by this command class. MAY
-     * return null if the command is required by the NNTP standard.
-     */
-    String impliedCapability();
+    public SocketChannelWrapperFactory(Object obj) {
+        this.wrapier = obj;
+    }
 
-    boolean isStateful();
+    public SocketChannelWrapper create() {
+        if(wrapier instanceof AsynchronousChannel) {
+            return new AsyncSocketChannelWrapper((AsynchronousSocketChannel)wrapier);
+        }
 
-    String[] getSupportedCommandStrings();
+        if(wrapier instanceof SocketChannel) {
+            return new SyncSocketChannelWrapper((SocketChannel)wrapier);
+        }
 
-    void processLine(NNTPConnection conn, String line, byte[] rawLine)
-            throws IOException, StorageBackendException;
+        return null;
+    }
 }

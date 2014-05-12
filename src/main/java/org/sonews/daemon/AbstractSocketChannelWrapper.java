@@ -16,35 +16,32 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.sonews.daemon.command;
-
-import java.io.IOException;
-import org.sonews.daemon.NNTPConnection;
-import org.sonews.storage.StorageBackendException;
+package org.sonews.daemon;
 
 /**
- * Interface for pluggable NNTP commands handling classes.
+ * Abstract base class for SocketChannelWrappers. This class implements
+ * passes calls to equals() and hashCode() to the wrapped objects' methods.
  *
  * @author Christian Lins
- * @since sonews/0.6.0
  */
-public interface Command {
+abstract class AbstractSocketChannelWrapper implements SocketChannelWrapper {
 
-    /**
-     * @return true if this instance can be reused.
-     */
-    boolean hasFinished();
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
 
-    /**
-     * Returns capability string that is implied by this command class. MAY
-     * return null if the command is required by the NNTP standard.
-     */
-    String impliedCapability();
+        if (obj instanceof SocketChannelWrapper) {
+            SocketChannelWrapper wrapper = (SocketChannelWrapper)obj;
+            return getWrapier().equals(wrapper.getWrapier());
+        } else {
+            return false;
+        }
+    }
 
-    boolean isStateful();
-
-    String[] getSupportedCommandStrings();
-
-    void processLine(NNTPConnection conn, String line, byte[] rawLine)
-            throws IOException, StorageBackendException;
+    @Override
+    public int hashCode() {
+        return getWrapier().hashCode();
+    }
 }

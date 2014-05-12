@@ -24,10 +24,12 @@ import java.util.Enumeration;
 import java.util.logging.Level;
 
 import org.sonews.config.Config;
+import org.sonews.daemon.AbstractDaemon;
 import org.sonews.daemon.ChannelLineBuffers;
 import org.sonews.daemon.CommandSelector;
 import org.sonews.daemon.Connections;
-import org.sonews.daemon.NNTPDaemon;
+import org.sonews.daemon.sync.SynchronousNNTPDaemon;
+import org.sonews.daemon.async.AsynchronousNNTPDaemon;
 import org.sonews.feed.FeedManager;
 import org.sonews.storage.StorageManager;
 import org.sonews.storage.StorageProvider;
@@ -44,7 +46,7 @@ import org.sonews.util.io.Resource;
 public final class Main {
 
     /** Version information of the sonews daemon */
-    public static final String VERSION = "sonews/2.0.0";
+    public static final String VERSION = "sonews/2.1.0";
 
     /** The server's startup date */
     public static final Date STARTDATE = new Date();
@@ -60,12 +62,17 @@ public final class Main {
         Thread.currentThread().setName("Mainthread");
 
         // Command line arguments
+        boolean async = false;
         boolean feed = false; // Enable feeding?
         boolean purger = false; // Enable message purging?
         int port = -1;
 
         for (int n = 0; n < args.length; n++) {
             switch (args[n]) {
+                case "-async": {
+                    async = true;
+                    break;
+                }
                 case "-c":
                 case "-config": {
                     Config.inst().set(Config.LEVEL_CLI, Config.CONFIGFILE,
@@ -144,7 +151,14 @@ public final class Main {
         if (port <= 0) {
             port = Config.inst().get(Config.PORT, 119);
         }
-        final NNTPDaemon daemon = NNTPDaemon.createInstance(port);
+
+        AbstractDaemon daemon;
+        // FIXME Use a factory here
+        if(async) {
+            daemon = new AsynchronousNNTPDaemon(port);
+        } else {
+            daemon = SynchronousNNTPDaemon.createInstance(port);
+        }
         daemon.start();
 
         // Start Connections purger thread...

@@ -21,9 +21,8 @@ package org.sonews.test.unit.daemon;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.nio.channels.SocketChannel;
 import junit.framework.TestCase;
-import org.sonews.daemon.NNTPConnection;
+import org.sonews.daemon.sync.SynchronousNNTPConnection;
 import org.sonews.daemon.command.ArticleCommand;
 import org.sonews.daemon.command.CapabilitiesCommand;
 import org.sonews.daemon.command.GroupCommand;
@@ -40,37 +39,37 @@ public class NNTPConnectionTest extends TestCase
   public void testLineReceived()
     throws NoSuchMethodException, IllegalAccessException, InvocationTargetException
   {
-    NNTPConnection conn = null;
-    
+    SynchronousNNTPConnection conn = null;
+
     try
     {
       try
       {
-        conn = new NNTPConnection(null);
+        conn = new SynchronousNNTPConnection(null);
         fail("Should have raised an IllegalArgumentException");
       }
       catch(IOException ex) {ex.printStackTrace();}
     }
     catch(IllegalArgumentException ex){}
-    
+    /*
     try
     {
-      conn = new NNTPConnection(SocketChannel.open());
+      conn = new SynchronousNNTPConnection(SocketChannel.open());
     }
     catch(IOException ex)
     {
       ex.printStackTrace();
     }
-    
-    assertNotNull(conn);
-    
+
+    assertNotNull(conn);*/
+
     // Make interesting methods accessible
     Class  clazz           = conn.getClass();
     Method methTryReadLock = clazz.getDeclaredMethod("tryReadLock", null);
     methTryReadLock.setAccessible(true);
     Method methLineReceived = clazz.getDeclaredMethod("lineReceived", new byte[0].getClass());
     methLineReceived.setAccessible(true);
-    
+
     try
     {
       // conn.lineReceived(null);
@@ -78,7 +77,7 @@ public class NNTPConnectionTest extends TestCase
       fail("Should have raised an IllegalArgumentException");
     }
     catch(IllegalArgumentException ex){}
-    
+
     try
     {
       // conn.lineReceived(new byte[0]);
@@ -86,37 +85,37 @@ public class NNTPConnectionTest extends TestCase
       fail("Should have raised IllegalStateException");
     }
     catch(InvocationTargetException ex){}
-    
+
     boolean tryReadLock = (Boolean)methTryReadLock.invoke(conn, null);
     assertTrue(tryReadLock);
-    
+
     // conn.lineReceived("MODE READER".getBytes());
     methLineReceived.invoke(conn, "MODE READER".getBytes());
-    
+
     // conn.lineReceived("sdkfsdjnfksjfdng ksdf gksjdfngk nskfng ksndfg ".getBytes());
     methLineReceived.invoke(conn, "sdkfsdjnfksjfdng ksdf ksndfg ".getBytes());
-    
+
     // conn.lineReceived(new byte[1024]); // Too long
     methLineReceived.invoke(conn, new byte[1024]);
-    
+
     Method mpcmdl = conn.getClass().getDeclaredMethod("parseCommandLine", String.class);
     mpcmdl.setAccessible(true);
 
     Object result = mpcmdl.invoke(conn, "");
     assertNotNull(result);
     assertTrue(result instanceof UnsupportedCommand);
-    
+
     result = mpcmdl.invoke(conn, "aRtiCle");
     assertNotNull(result);
     assertTrue(result instanceof ArticleCommand);
-    
+
     result = mpcmdl.invoke(conn, "capAbilItIEs");
     assertNotNull(result);
     assertTrue(result instanceof CapabilitiesCommand);
-    
+
     result = mpcmdl.invoke(conn, "grOUp");
     assertNotNull(result);
     assertTrue(result instanceof GroupCommand);
   }
-  
+
 }

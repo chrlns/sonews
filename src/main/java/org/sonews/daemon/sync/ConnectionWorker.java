@@ -16,13 +16,17 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.sonews.daemon;
+package org.sonews.daemon.sync;
 
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.logging.Level;
-
+import org.sonews.daemon.AbstractDaemon;
+import org.sonews.daemon.ChannelLineBuffers;
+import org.sonews.daemon.Connections;
+import org.sonews.daemon.NNTPConnection;
+import org.sonews.daemon.SocketChannelWrapperFactory;
 import org.sonews.util.Log;
 
 /**
@@ -59,11 +63,17 @@ class ConnectionWorker extends AbstractDaemon {
 
                 if (channel != null) {
                     // Connections.getInstance().get() MAY return null
-                    NNTPConnection conn = Connections.getInstance()
-                            .get(channel);
+                    NNTPConnection conn = Connections.getInstance().get(
+                            new SocketChannelWrapperFactory(channel).create());
+
+                    if (conn == null) {
+                        Log.get().log(Level.FINEST, "conn is null");
+                        addChannel(channel);
+                        continue;
+                    }
 
                     // Try to lock the connection object
-                    if (conn != null && conn.tryReadLock()) {
+                    if (conn.tryReadLock()) {
                         ByteBuffer buf = conn.getBuffers().nextInputLine();
                         while (buf != null) // Complete line was received
                         {

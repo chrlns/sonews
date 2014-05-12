@@ -16,7 +16,7 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.sonews.daemon;
+package org.sonews.daemon.sync;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -27,7 +27,10 @@ import java.nio.channels.SocketChannel;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.logging.Level;
-
+import org.sonews.daemon.AbstractDaemon;
+import org.sonews.daemon.Connections;
+import org.sonews.daemon.NNTPConnection;
+import org.sonews.daemon.SocketChannelWrapperFactory;
 import org.sonews.util.Log;
 
 /**
@@ -91,7 +94,8 @@ class ChannelReader extends AbstractDaemon {
                     while (it.hasNext()) {
                         selKey = it.next();
                         channel = (SocketChannel) selKey.channel();
-                        conn = Connections.getInstance().get(channel);
+                        conn = Connections.getInstance().get(
+                                new SocketChannelWrapperFactory(channel).create());
 
                         // Because we cannot lock the selKey as that would cause
                         // a deadlock
@@ -130,7 +134,7 @@ class ChannelReader extends AbstractDaemon {
             }
 
             // Eventually wait for a register operation
-            synchronized (NNTPDaemon.RegisterGate) {
+            synchronized (SynchronousNNTPDaemon.RegisterGate) {
                 // Do nothing; FindBugs may warn about an empty synchronized
                 // statement, but we cannot use a wait()/notify() mechanism
                 // here.

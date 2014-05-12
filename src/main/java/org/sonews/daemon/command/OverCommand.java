@@ -20,8 +20,8 @@ package org.sonews.daemon.command;
 
 import java.io.IOException;
 import java.util.List;
-import org.sonews.util.Log;
 import org.sonews.daemon.NNTPConnection;
+import org.sonews.util.Log;
 import org.sonews.storage.Article;
 import org.sonews.storage.ArticleHead;
 import org.sonews.storage.Headers;
@@ -30,9 +30,9 @@ import org.sonews.util.Pair;
 
 /**
  * Class handling the OVER/XOVER command.
- * 
+ *
  * Description of the XOVER command:
- * 
+ *
  * <pre>
  * XOVER [range]
  *
@@ -75,7 +75,7 @@ import org.sonews.util.Pair;
  * The LIST OVERVIEW.FMT command should be implemented if XOVER
  * is implemented. A client can use LIST OVERVIEW.FMT to determine
  * what optional fields  and in which order all fields will be
- * supplied by the XOVER command. 
+ * supplied by the XOVER command.
  *
  * Note that any tab and end-of-line characters in any header
  * data that is returned will be converted to a space character.
@@ -104,7 +104,7 @@ import org.sonews.util.Pair;
  *    420    Current article number is invalid
  *
  * </pre>
- * 
+ *
  * @author Christian Lins
  * @since sonews/0.5.0
  */
@@ -135,7 +135,7 @@ public class OverCommand implements Command {
     @Override
     public void processLine(NNTPConnection conn, final String line, byte[] raw)
             throws IOException, StorageBackendException {
-        if (conn.getCurrentChannel() == null) {
+        if (conn.getCurrentGroup() == null) {
             conn.println("412 no newsgroup selected");
         } else {
             String[] command = line.split(" ");
@@ -153,7 +153,7 @@ public class OverCommand implements Command {
             } // otherwise print information about the specified range
             else {
                 long artStart;
-                long artEnd = conn.getCurrentChannel().getLastArticleNumber();
+                long artEnd = conn.getCurrentGroup().getLastArticleNumber();
                 String[] nums = command[1].split("-");
                 if (nums.length >= 1) {
                     try {
@@ -163,7 +163,7 @@ public class OverCommand implements Command {
                         artStart = Integer.parseInt(command[1]);
                     }
                 } else {
-                    artStart = conn.getCurrentChannel().getFirstArticleNumber();
+                    artStart = conn.getCurrentGroup().getFirstArticleNumber();
                 }
 
                 if (nums.length >= 2) {
@@ -186,7 +186,7 @@ public class OverCommand implements Command {
                         long nEnd = Math.min(n + MAX_LINES_PER_DBREQUEST - 1,
                                 artEnd);
                         List<Pair<Long, ArticleHead>> articleHeads = conn
-                                .getCurrentChannel().getArticleHeads(n, nEnd);
+                                .getCurrentGroup().getArticleHeads(n, nEnd);
                         if (articleHeads.isEmpty() && n == artStart
                                 && command[0].equalsIgnoreCase("OVER")) {
                             // This reply is only valid for OVER, not for XOVER

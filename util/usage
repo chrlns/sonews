@@ -1,5 +1,6 @@
 java -jar sonews.jar [arguments]
         where arguments:
+   -async                      Use Asynchronous NIO (Java 7)
    -c|-config <config file>    If custom config file preferred
    -dumpjdbcdriver             Prints out a list of available JDBC drivers
    -feed                       Enables feed daemon for pulling/pushing news

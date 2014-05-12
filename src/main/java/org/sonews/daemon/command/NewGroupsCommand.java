@@ -24,7 +24,7 @@ import org.sonews.storage.StorageBackendException;
 
 /**
  * Class handling the NEWGROUPS command.
- * 
+ *
  * @author Christian Lins
  * @author Dennis Schwerdel
  * @since n3tpd/0.1

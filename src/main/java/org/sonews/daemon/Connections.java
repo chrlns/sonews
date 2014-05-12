@@ -19,16 +19,12 @@
 package org.sonews.daemon;
 
 import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.net.Socket;
-import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 import java.util.logging.Level;
-
 import org.sonews.config.Config;
 import org.sonews.util.Log;
 
@@ -52,7 +48,8 @@ public final class Connections extends AbstractDaemon {
     }
 
     private final List<NNTPConnection> connections = new ArrayList<>();
-    private final Map<SocketChannel, NNTPConnection> connByChannel = new HashMap<>();
+    private final Map<SocketChannelWrapper, NNTPConnection> connByChannel
+            = new HashMap<>();
 
     private Connections() {
         setName("Connections");
@@ -62,7 +59,7 @@ public final class Connections extends AbstractDaemon {
      * Adds the given NNTPConnection to the Connections management.
      *
      * @param conn
-     * @see org.sonews.daemon.NNTPConnection
+     * @see org.sonews.daemon.SynchronousNNTPConnection
      */
     public void add(final NNTPConnection conn) {
         synchronized (this.connections) {
@@ -76,7 +73,7 @@ public final class Connections extends AbstractDaemon {
      * @return NNTPConnection instance that is associated with the given
      *         SocketChannel.
      */
-    public NNTPConnection get(final SocketChannel channel) {
+    public NNTPConnection get(final SocketChannelWrapper channel) {
         synchronized (this.connections) {
             return this.connByChannel.get(channel);
         }
@@ -105,12 +102,11 @@ public final class Connections extends AbstractDaemon {
                         iter.remove();
 
                         // Close and remove the channel
-                        SocketChannel channel = conn.getSocketChannel();
+                        SocketChannelWrapper channel = conn.getSocketChannel();
                         connByChannel.remove(channel);
 
                         try {
                             assert channel != null;
-                            assert channel.socket() != null;
 
                             // Close the channel; implicitely cancels all
                             // selectionkeys
@@ -118,7 +114,7 @@ public final class Connections extends AbstractDaemon {
                             Log.get().log(
                                     Level.INFO,
                                     "Disconnected: {0} (timeout)",
-                                    channel.socket().getRemoteSocketAddress());
+                                    channel.getRemoteAddress());
                         } catch (IOException ex) {
                             Log.get().log(Level.WARNING, "Connections.run(): {0}", ex);
                         }

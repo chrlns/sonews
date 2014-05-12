@@ -20,7 +20,6 @@ package org.sonews.daemon.command;
 
 import java.io.IOException;
 import java.util.Set;
-
 import org.sonews.daemon.CommandSelector;
 import org.sonews.daemon.NNTPConnection;
 import org.sonews.util.Log;

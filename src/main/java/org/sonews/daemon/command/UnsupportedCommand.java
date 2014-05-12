@@ -19,13 +19,13 @@
 package org.sonews.daemon.command;
 
 import java.io.IOException;
-
 import org.sonews.daemon.NNTPConnection;
+
 
 /**
  * A default "Unsupported Command". Simply returns error code 500 and a
  * "command not supported" message.
- * 
+ *
  * @author Christian Lins
  * @since sonews/0.5.0
  */

@@ -29,7 +29,7 @@ import org.sonews.util.Log;
 
 /**
  * Class handling the LIST command.
- * 
+ *
  * @author Christian Lins
  * @author Dennis Schwerdel
  * @since n3tpd/0.1

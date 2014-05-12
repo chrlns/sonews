@@ -25,7 +25,7 @@ import org.sonews.storage.StorageBackendException;
 /**
  * Class handling the MODE READER command. This command actually does nothing
  * but returning a success status code.
- * 
+ *
  * @author Christian Lins
  * @since sonews/0.5.0
  */

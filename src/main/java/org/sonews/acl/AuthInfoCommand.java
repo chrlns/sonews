@@ -23,8 +23,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
 import org.sonews.daemon.NNTPConnection;
+
 import org.sonews.daemon.command.Command;
 import org.sonews.storage.StorageBackendException;
 import org.sonews.storage.StorageManager;

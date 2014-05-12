@@ -25,7 +25,7 @@ import org.sonews.storage.StorageBackendException;
 
 /**
  * Class handling the NEXT and LAST command.
- * 
+ *
  * @author Christian Lins
  * @author Dennis Schwerdel
  * @since n3tpd/0.1
@@ -56,7 +56,7 @@ public class NextPrevCommand implements Command {
     public void processLine(NNTPConnection conn, final String line, byte[] raw)
             throws IOException, StorageBackendException {
         final Article currA = conn.getCurrentArticle();
-        final Group currG = conn.getCurrentChannel();
+        final Group currG = conn.getCurrentGroup();
 
         if (currA == null) {
             conn.println("420 no current article has been selected");
@@ -90,7 +90,7 @@ public class NextPrevCommand implements Command {
             conn.println("421 no next article in this group");
         } else {
             conn.setCurrentArticle(article);
-            conn.println("223 " + conn.getCurrentChannel().getIndexOf(article)
+            conn.println("223 " + conn.getCurrentGroup().getIndexOf(article)
                     + " " + article.getMessageID()
                     + " article retrieved - request text separately");
         }

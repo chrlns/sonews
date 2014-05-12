@@ -16,35 +16,20 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.sonews.daemon.command;
+package org.sonews.daemon;
 
 import java.io.IOException;
-import org.sonews.daemon.NNTPConnection;
-import org.sonews.storage.StorageBackendException;
+import java.net.SocketAddress;
 
 /**
- * Interface for pluggable NNTP commands handling classes.
  *
  * @author Christian Lins
- * @since sonews/0.6.0
  */
-public interface Command {
+public interface SocketChannelWrapper {
 
-    /**
-     * @return true if this instance can be reused.
-     */
-    boolean hasFinished();
+    public void close() throws IOException;
 
-    /**
-     * Returns capability string that is implied by this command class. MAY
-     * return null if the command is required by the NNTP standard.
-     */
-    String impliedCapability();
+    public SocketAddress getRemoteAddress() throws IOException;
 
-    boolean isStateful();
-
-    String[] getSupportedCommandStrings();
-
-    void processLine(NNTPConnection conn, String line, byte[] rawLine)
-            throws IOException, StorageBackendException;
+    public Object getWrapier();
 }

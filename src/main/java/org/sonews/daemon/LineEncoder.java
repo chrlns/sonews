@@ -27,18 +27,18 @@ import java.nio.charset.CoderResult;
 
 /**
  * Encodes a line to buffers using the correct charset.
- * 
+ *
  * @author Christian Lins
  * @since sonews/0.5.0
  */
-class LineEncoder {
+public class LineEncoder {
 
     private final CharBuffer characters;
     private final Charset charset;
 
     /**
      * Constructs new LineEncoder.
-     * 
+     *
      * @param characters
      * @param charset
      */
@@ -50,7 +50,7 @@ class LineEncoder {
     /**
      * Encodes the characters of this instance to the given ChannelLineBuffers
      * using the Charset of this instance.
-     * 
+     *
      * @param buffer
      * @throws java.nio.channels.ClosedChannelException
      */

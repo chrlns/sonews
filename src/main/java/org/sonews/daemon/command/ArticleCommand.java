@@ -18,14 +18,15 @@
 package org.sonews.daemon.command;
 
 import java.io.IOException;
-import org.sonews.storage.Article;
 import org.sonews.daemon.NNTPConnection;
+import org.sonews.daemon.sync.SynchronousNNTPConnection;
+import org.sonews.storage.Article;
 import org.sonews.storage.Group;
 import org.sonews.storage.StorageBackendException;
 
 /**
  * Class handling the ARTICLE, BODY and HEAD commands.
- * 
+ *
  * @author Christian Lins
  * @author Dennis Schwerdel
  * @since n3tpd/0.1
@@ -66,7 +67,7 @@ public class ArticleCommand implements Command {
                 conn.println("420 no current article has been selected");
                 return;
             }
-        } else if (command[1].matches(NNTPConnection.MESSAGE_ID_PATTERN)) {
+        } else if (command[1].matches(SynchronousNNTPConnection.MESSAGE_ID_PATTERN)) {
             // Message-ID
             article = Article.getByMessageID(command[1]);
             if (article == null) {
@@ -76,7 +77,7 @@ public class ArticleCommand implements Command {
         } else {
             // Message Number
             try {
-                Group currentGroup = conn.getCurrentChannel();
+                Group currentGroup = conn.getCurrentGroup();
                 if (currentGroup == null) {
                     conn.println("400 no group selected");
                     return;
@@ -111,22 +112,22 @@ public class ArticleCommand implements Command {
             conn.println(".");
         } /*
            * HEAD: This command is mandatory.
-           * 
+           *
            * Syntax HEAD message-id HEAD number HEAD
-           * 
+           *
            * Responses
-           * 
+           *
            * First form (message-id specified) 221 0|n message-id Headers follow
            * (multi-line) 430 No article with that message-id
-           * 
+           *
            * Second form (article number specified) 221 n message-id Headers
            * follow (multi-line) 412 No newsgroup selected 423 No article with
            * that number
-           * 
+           *
            * Third form (current article number used) 221 n message-id Headers
            * follow (multi-line) 412 No newsgroup selected 420 Current article
            * number is invalid
-           * 
+           *
            * Parameters number Requested article number n Returned article
            * number message-id Article message-id
            */else if (command[0].equalsIgnoreCase("HEAD")) {

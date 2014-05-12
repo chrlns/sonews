@@ -18,13 +18,14 @@
 package org.sonews.daemon.command;
 
 import java.io.IOException;
-import org.sonews.storage.Article;
 import org.sonews.daemon.NNTPConnection;
+import org.sonews.daemon.sync.SynchronousNNTPConnection;
+import org.sonews.storage.Article;
 import org.sonews.storage.StorageBackendException;
 
 /**
  * Implementation of the STAT command.
- * 
+ *
  * @author Christian Lins
  * @since sonews/0.5.0
  */
@@ -63,7 +64,7 @@ public class StatCommand implements Command {
                 conn.println("420 no current article has been selected");
                 return;
             }
-        } else if (command[1].matches(NNTPConnection.MESSAGE_ID_PATTERN)) {
+        } else if (command[1].matches(SynchronousNNTPConnection.MESSAGE_ID_PATTERN)) {
             // Message-ID
             article = Article.getByMessageID(command[1]);
             if (article == null) {
@@ -74,7 +75,7 @@ public class StatCommand implements Command {
             // Message Number
             try {
                 long aid = Long.parseLong(command[1]);
-                article = conn.getCurrentChannel().getArticle(aid);
+                article = conn.getCurrentGroup().getArticle(aid);
             } catch (NumberFormatException ex) {
                 ex.printStackTrace();
             } catch (StorageBackendException ex) {
@@ -87,7 +88,7 @@ public class StatCommand implements Command {
             conn.setCurrentArticle(article);
         }
 
-        conn.println("223 " + conn.getCurrentChannel().getIndexOf(article)
+        conn.println("223 " + conn.getCurrentGroup().getIndexOf(article)
                 + " " + article.getMessageID()
                 + " article retrieved - request text separately");
     }

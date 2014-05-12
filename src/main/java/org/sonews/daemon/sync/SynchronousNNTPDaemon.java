@@ -16,7 +16,7 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.sonews.daemon;
+package org.sonews.daemon.sync;
 
 import java.io.IOException;
 import java.net.BindException;
@@ -29,10 +29,12 @@ import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.sonews.config.Config;
 import org.sonews.Main;
+import org.sonews.daemon.AbstractDaemon;
+import org.sonews.daemon.Connections;
+import org.sonews.daemon.SocketChannelWrapperFactory;
 import org.sonews.util.Log;
 
 /**
@@ -41,14 +43,14 @@ import org.sonews.util.Log;
  * @author Christian Lins
  * @since sonews/0.5.0
  */
-public final class NNTPDaemon extends AbstractDaemon {
+public final class SynchronousNNTPDaemon extends AbstractDaemon {
 
     public static final Object RegisterGate = new Object();
-    private static NNTPDaemon instance = null;
+    private static SynchronousNNTPDaemon instance = null;
 
-    public static synchronized NNTPDaemon createInstance(int port) {
+    public static synchronized SynchronousNNTPDaemon createInstance(int port) {
         if (instance == null) {
-            instance = new NNTPDaemon(port);
+            instance = new SynchronousNNTPDaemon(port);
             return instance;
         } else {
             throw new RuntimeException(
@@ -59,7 +61,7 @@ public final class NNTPDaemon extends AbstractDaemon {
     private final int port;
     private ServerSocket serverSocket = null;
 
-    private NNTPDaemon(final int port) {
+    private SynchronousNNTPDaemon(final int port) {
         Log.get().log(Level.INFO, "Server listening on port {0}", port);
         this.port = port;
     }
@@ -118,9 +120,11 @@ public final class NNTPDaemon extends AbstractDaemon {
                     continue;
                 }
 
-                final NNTPConnection conn;
+                final SynchronousNNTPConnection conn;
                 try {
-                    conn = new NNTPConnection(socketChannel);
+                    SocketChannelWrapperFactory wrapperFactory
+                            = new SocketChannelWrapperFactory(socketChannel);
+                    conn = new SynchronousNNTPConnection(wrapperFactory.create());
                     Connections.getInstance().add(conn);
                 } catch (IOException ex) {
                     Log.get().warning(ex.toString());

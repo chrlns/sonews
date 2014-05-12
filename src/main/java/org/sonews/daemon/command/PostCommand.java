@@ -22,12 +22,11 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.logging.Level;
-
 import javax.mail.MessagingException;
 import javax.mail.internet.InternetHeaders;
-
 import org.sonews.config.Config;
 import org.sonews.daemon.NNTPConnection;
+import org.sonews.daemon.sync.SynchronousNNTPConnection;
 import org.sonews.feed.FeedManager;
 import org.sonews.storage.Article;
 import org.sonews.storage.Group;
@@ -101,7 +100,7 @@ public class PostCommand implements Command {
         }
         case ReadingHeaders: {
             strHead.append(line);
-            strHead.append(NNTPConnection.NEWLINE);
+            strHead.append(SynchronousNNTPConnection.NEWLINE);
 
             if ("".equals(line) || ".".equals(line)) {
                 // we finally met the blank line
@@ -159,7 +158,7 @@ public class PostCommand implements Command {
 
                 // Add line to body buffer
                 bufBody.write(raw, 0, raw.length);
-                bufBody.write(NNTPConnection.NEWLINE.getBytes("UTF-8"));
+                bufBody.write(SynchronousNNTPConnection.NEWLINE.getBytes("UTF-8"));
 
                 if (bodySize > maxBodySize) {
                     conn.println("500 article is too long");
@@ -243,7 +242,7 @@ public class PostCommand implements Command {
                 for (String groupname : groupnames) {
                     Group group = Group.get(groupname);
                     if (group != null && !group.isDeleted()) {
-                        if (group.isMailingList() && !conn.isLocalConnection()) {
+                        if (group.isMailingList() /*&& !conn.isLocalConnection()*/) {
                             // Send to mailing list; the Dispatcher writes
                             // statistics to database
                             // FIXME success = Dispatcher.toList(article,
