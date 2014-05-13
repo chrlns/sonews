@@ -52,6 +52,10 @@ public abstract class AbstractDaemon extends Thread {
         }
     }
 
+    /**
+     * Set the running state of this daemon.
+     * @param running
+     */
     protected void setRunning(boolean running) {
         synchronized(this) {
             this.isRunning = running;

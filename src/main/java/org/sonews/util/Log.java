@@ -43,13 +43,13 @@ public class Log extends Logger {
         StreamHandler sHandler = new StreamHandler(System.out,
                 new SimpleFormatter());
         addHandler(sHandler);
-        
+
         Level level = Level.parse(Config.inst().get(Config.LOGLEVEL, "INFO"));
         setLevel(level);
         for (Handler handler : getHandlers()) {
             handler.setLevel(level);
         }
-        
+
         LogManager.getLogManager().addLogger(this);
     }
 
