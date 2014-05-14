@@ -20,6 +20,11 @@ The requirements for building and running sonews are:
 Build
 -----
 
+Checkout the sources of the latest stable release using Git:
+
+    $ git clone https://github.com/cli/sonews.git
+    $ git checkout tags/sonews-2.0.0
+
 sonews uses Apache Maven for building and dependency managing.
 Use the following command to build and package sonews:
 
