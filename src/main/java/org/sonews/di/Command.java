@@ -16,27 +16,12 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.sonews.plugin;
+package org.sonews.di;
 
 /**
- * A generic Plugin for sonews. Implementing classes do not really add new
- * functionality to sonews but can use this interface as convenient procedure
- * for installing functionality plugins, e.g. Command-Plugins or
- * Storage-Plugins.
- * 
+ *
  * @author Christian Lins
- * @since sonews/1.1
  */
-public interface Plugin {
-
-    /**
-     * Called when the Plugin is loaded by sonews. This method can be used by
-     * implementing classes to install additional or required plugins.
-     */
-    void load();
-
-    /**
-     * Called when the Plugin is unloaded by sonews.
-     */
-    void unload();
+public @interface Command {
+    
 }
