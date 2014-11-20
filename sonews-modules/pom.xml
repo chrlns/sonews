@@ -5,14 +5,13 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>org.sonews</groupId>
-  <artifactId>sonews</artifactId>
+  <artifactId>sonews-modules</artifactId>
   <version>2.1-SNAPSHOT</version>
-  <name>sonews NNTP Usenet Server</name>
+  <name>sonews Modules</name>
   <packaging>pom</packaging>
 
   <modules>
-    <module>sonews</module>
-    <module>sonews-modules</module>
+    <module>commands-rfc3977</module>
   </modules>
 
 </project>
