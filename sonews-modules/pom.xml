@@ -12,6 +12,7 @@
 
   <modules>
     <module>commands-rfc3977</module>
+    <module>mlgw</module>
   </modules>
 
 </project>
