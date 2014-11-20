@@ -18,10 +18,14 @@
 
 package org.sonews.di;
 
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+
 /**
  *
  * @author Christian Lins
  */
+@Retention(RetentionPolicy.RUNTIME)
 public @interface Command {
     
 }
