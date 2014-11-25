@@ -36,7 +36,6 @@ import org.sonews.storage.Headers;
 import org.sonews.storage.StorageBackendException;
 import org.sonews.storage.StorageManager;
 import org.sonews.util.Log;
-import org.sonews.util.Stats;
 
 /**
  * Dispatches messages from mailing list to newsserver or vice versa.
@@ -187,8 +186,6 @@ public class Dispatcher {
 					Log.get().info("Gatewaying " + article.getMessageID() + " to "
 							+ article.getHeader(Headers.NEWSGROUPS)[0]);
 					StorageManager.current().addArticle(article);
-					Stats.getInstance().mailGatewayed(
-							article.getHeader(Headers.NEWSGROUPS)[0]);
 				}
 				posted = true;
 			} else {
@@ -254,7 +251,6 @@ public class Dispatcher {
 			smtpTransport.send(article, smtpFrom, rcptAddress);
 			smtpTransport.close();
 
-			Stats.getInstance().mailGatewayed(group);
 			Log.get().info("MLGateway: Mail " + article.getHeader("Subject")[0]
 					+ " was delivered to " + rcptAddress + ".");
 		}
