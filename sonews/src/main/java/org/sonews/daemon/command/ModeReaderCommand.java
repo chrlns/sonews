@@ -21,6 +21,7 @@ package org.sonews.daemon.command;
 import java.io.IOException;
 import org.sonews.daemon.NNTPConnection;
 import org.sonews.storage.StorageBackendException;
+import org.springframework.stereotype.Component;
 
 /**
  * Class handling the MODE READER command. This command actually does nothing
@@ -29,6 +30,7 @@ import org.sonews.storage.StorageBackendException;
  * @author Christian Lins
  * @since sonews/0.5.0
  */
+@Component
 public class ModeReaderCommand implements Command {
 
     @Override

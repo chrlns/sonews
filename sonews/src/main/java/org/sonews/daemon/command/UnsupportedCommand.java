@@ -20,6 +20,7 @@ package org.sonews.daemon.command;
 
 import java.io.IOException;
 import org.sonews.daemon.NNTPConnection;
+import org.springframework.stereotype.Component;
 
 
 /**
@@ -29,6 +30,7 @@ import org.sonews.daemon.NNTPConnection;
  * @author Christian Lins
  * @since sonews/0.5.0
  */
+@Component
 public class UnsupportedCommand implements Command {
 
     /**
@@ -36,7 +38,7 @@ public class UnsupportedCommand implements Command {
      */
     @Override
     public String[] getSupportedCommandStrings() {
-        return null;
+        return new String[]{"*"};
     }
 
     @Override

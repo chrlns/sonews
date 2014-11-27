@@ -24,6 +24,7 @@ import org.sonews.daemon.CommandSelector;
 import org.sonews.daemon.NNTPConnection;
 import org.sonews.util.Log;
 import org.sonews.util.io.Resource;
+import org.springframework.stereotype.Component;
 
 /**
  * This command provides a short summary of the commands that are understood by
@@ -33,6 +34,7 @@ import org.sonews.util.io.Resource;
  * @author Christian Lins
  * @since sonews/0.5.0
  */
+@Component
 public class HelpCommand implements Command {
 
     @Override
@@ -74,10 +76,11 @@ public class HelpCommand implements Command {
                 conn.println(hstr);
             }
 
-            Set<String> commandNames = CommandSelector.getCommandNames();
+            // FIXME
+            /*Set<String> commandNames = CommandSelector.getCommandNames();
             for (String cmdName : commandNames) {
                 conn.println(cmdName);
-            }
+            }*/
         } else {
             Command cmd = CommandSelector.getInstance().get(command[1]);
             if (cmd instanceof HelpfulCommand) {

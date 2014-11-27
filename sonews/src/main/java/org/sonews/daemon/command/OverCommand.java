@@ -27,6 +27,7 @@ import org.sonews.storage.ArticleHead;
 import org.sonews.storage.Headers;
 import org.sonews.storage.StorageBackendException;
 import org.sonews.util.Pair;
+import org.springframework.stereotype.Component;
 
 /**
  * Class handling the OVER/XOVER command.
@@ -108,6 +109,7 @@ import org.sonews.util.Pair;
  * @author Christian Lins
  * @since sonews/0.5.0
  */
+@Component
 public class OverCommand implements Command {
 
     public static final int MAX_LINES_PER_DBREQUEST = 200;

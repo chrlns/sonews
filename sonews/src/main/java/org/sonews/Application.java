@@ -24,18 +24,20 @@ import java.util.Enumeration;
 import java.util.logging.Level;
 
 import org.sonews.config.Config;
-import org.sonews.daemon.AbstractDaemon;
 import org.sonews.daemon.ChannelLineBuffers;
 import org.sonews.daemon.CommandSelector;
 import org.sonews.daemon.Connections;
-import org.sonews.daemon.sync.SynchronousNNTPDaemon;
-import org.sonews.daemon.async.AsynchronousNNTPDaemon;
+import org.sonews.daemon.NNTPDaemon;
 import org.sonews.feed.FeedManager;
 import org.sonews.storage.StorageManager;
 import org.sonews.storage.StorageProvider;
 import org.sonews.util.Log;
 import org.sonews.util.Purger;
 import org.sonews.util.io.Resource;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Configuration;
 
 /**
  * Startup class of the daemon.
@@ -43,7 +45,9 @@ import org.sonews.util.io.Resource;
  * @author Christian Lins
  * @since sonews/0.5.0
  */
-public final class Main {
+@Configuration
+@ComponentScan
+public class Application {
 
     /** Version information of the sonews daemon */
     public static final String VERSION = "sonews/2.1.0";
@@ -106,18 +110,6 @@ public final class Main {
                             .println("Warning: -plugin-storage is not implemented!");
                     break;
                 }
-                case "-plugin-command": {
-                    try {
-                        CommandSelector.addCommandHandler(args[++n]);
-                    } catch (ClassNotFoundException | InstantiationException | IllegalAccessException ex) {
-                        StringBuilder strBuf = new StringBuilder();
-                        strBuf.append("Could not load command plugin: ");
-                        strBuf.append(args[n]);
-                        Log.get().warning(strBuf.toString());
-                        Log.get().log(Level.INFO, "Main.java", ex);
-                    }
-                    break;
-                }
                 case "-purger": {
                     purger = true;
                     break;
@@ -128,6 +120,8 @@ public final class Main {
                     return;
             }
         }
+        
+        ApplicationContext context = new AnnotationConfigApplicationContext(Application.class);
 
         // Load the storage backend
         String database = Config.inst().get(Config.STORAGE_DATABASE, null);
@@ -151,14 +145,9 @@ public final class Main {
         if (port <= 0) {
             port = Config.inst().get(Config.PORT, 119);
         }
-
-        AbstractDaemon daemon;
-        // FIXME Use a factory here
-        if(async) {
-            daemon = new AsynchronousNNTPDaemon(port);
-        } else {
-            daemon = SynchronousNNTPDaemon.createInstance(port);
-        }
+        
+        NNTPDaemon daemon = context.getBean(NNTPDaemon.class);
+        daemon.setPort(port);
         daemon.start();
 
         // Start Connections purger thread...
@@ -183,6 +172,6 @@ public final class Main {
         System.out.println(usage);
     }
 
-    private Main() {
+    public Application() {
     }
 }

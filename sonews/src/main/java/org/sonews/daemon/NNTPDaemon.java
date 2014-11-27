@@ -16,16 +16,18 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.sonews.di;
-
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
+package org.sonews.daemon;
 
 /**
  *
  * @author Christian Lins
  */
-@Retention(RetentionPolicy.RUNTIME)
-public @interface Command {
+public interface NNTPDaemon {
     
+    void join() throws InterruptedException;
+    
+    void setPort(int port);
+    
+    /** Daemon starts listening on configured port */
+    void start();
 }

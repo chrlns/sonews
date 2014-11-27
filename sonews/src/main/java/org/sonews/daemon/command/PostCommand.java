@@ -34,6 +34,7 @@ import org.sonews.storage.Headers;
 import org.sonews.storage.StorageBackendException;
 import org.sonews.storage.StorageManager;
 import org.sonews.util.Log;
+import org.springframework.stereotype.Component;
 
 /**
  * Implementation of the POST command. This command requires multiple lines from
@@ -43,6 +44,7 @@ import org.sonews.util.Log;
  * @author Christian Lins
  * @since sonews/0.5.0
  */
+@Component
 public class PostCommand implements Command {
 
     private final Article article = new Article();

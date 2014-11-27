@@ -20,6 +20,7 @@ package org.sonews.daemon.command;
 
 import java.io.IOException;
 import org.sonews.daemon.NNTPConnection;
+import org.springframework.stereotype.Component;
 
 /**
  * <pre>
@@ -40,6 +41,7 @@ import org.sonews.daemon.NNTPConnection;
  * @author Christian Lins
  * @since sonews/0.5.0
  */
+@Component
 public class CapabilitiesCommand implements Command {
 
     static final String[] CAPABILITIES = new String[] { "VERSION 2", // MUST be

@@ -34,7 +34,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.sonews.daemon.AbstractDaemon;
+import org.sonews.daemon.NNTPDaemon;
 import org.sonews.util.Log;
+import org.springframework.stereotype.Component;
 
 /**
  * Daemon listening for incoming connections using Java 7 Asynchronous
@@ -42,13 +44,18 @@ import org.sonews.util.Log;
  *
  * @author Christian Lins
  */
-public class AsynchronousNNTPDaemon extends AbstractDaemon {
+@Component
+public class AsynchronousNNTPDaemon extends AbstractDaemon implements NNTPDaemon {
 
-    private final int port;
+    private int port;
     private AsynchronousServerSocketChannel serverSocketChannel;
     private AsynchronousChannelGroup channelGroup;
 
-    public AsynchronousNNTPDaemon(final int port) {
+    public AsynchronousNNTPDaemon() {
+    }
+    
+    @Override
+    public void setPort(int port) {
         this.port = port;
     }
 

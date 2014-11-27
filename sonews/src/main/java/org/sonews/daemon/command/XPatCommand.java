@@ -26,6 +26,7 @@ import org.sonews.daemon.NNTPConnection;
 import org.sonews.storage.StorageBackendException;
 import org.sonews.storage.StorageManager;
 import org.sonews.util.Pair;
+import org.springframework.stereotype.Component;
 
 /**
  * <pre>
@@ -76,6 +77,7 @@ import org.sonews.util.Pair;
  * @author Christian Lins
  * @since sonews/0.5.0
  */
+@Component
 public class XPatCommand implements Command {
 
     @Override

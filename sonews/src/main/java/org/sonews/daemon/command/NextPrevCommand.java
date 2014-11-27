@@ -22,6 +22,7 @@ import org.sonews.daemon.NNTPConnection;
 import org.sonews.storage.Article;
 import org.sonews.storage.Group;
 import org.sonews.storage.StorageBackendException;
+import org.springframework.stereotype.Component;
 
 /**
  * Class handling the NEXT and LAST command.
@@ -30,6 +31,7 @@ import org.sonews.storage.StorageBackendException;
  * @author Dennis Schwerdel
  * @since n3tpd/0.1
  */
+@Component
 public class NextPrevCommand implements Command {
 
     @Override

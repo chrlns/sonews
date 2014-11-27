@@ -30,12 +30,15 @@ import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.logging.Level;
 
+import org.sonews.Application;
 import org.sonews.config.Config;
-import org.sonews.Main;
 import org.sonews.daemon.AbstractDaemon;
 import org.sonews.daemon.Connections;
+import org.sonews.daemon.NNTPDaemon;
 import org.sonews.daemon.SocketChannelWrapperFactory;
 import org.sonews.util.Log;
+import org.springframework.context.annotation.Primary;
+import org.springframework.stereotype.Component;
 
 /**
  * NNTP daemon using SelectableChannels.
@@ -43,32 +46,28 @@ import org.sonews.util.Log;
  * @author Christian Lins
  * @since sonews/0.5.0
  */
-public final class SynchronousNNTPDaemon extends AbstractDaemon {
+@Component
+@Primary
+public class SynchronousNNTPDaemon extends AbstractDaemon implements NNTPDaemon {
 
     public static final Object RegisterGate = new Object();
-    private static SynchronousNNTPDaemon instance = null;
 
-    public static synchronized SynchronousNNTPDaemon createInstance(int port) {
-        if (instance == null) {
-            instance = new SynchronousNNTPDaemon(port);
-            return instance;
-        } else {
-            throw new RuntimeException(
-                    "NNTPDaemon.createInstance() called twice");
-        }
-    }
-
-    private final int port;
+    private int port;
     private ServerSocket serverSocket = null;
 
-    private SynchronousNNTPDaemon(final int port) {
-        Log.get().log(Level.INFO, "Server listening on port {0}", port);
+    public SynchronousNNTPDaemon() {
+    }
+    
+    @Override
+    public void setPort(int port) {
         this.port = port;
     }
 
     @Override
     public void run() {
         try {
+            Log.get().log(Level.INFO, "Server listening on port {0}", port);
+            
             // Create a Selector that handles the SocketChannel multiplexing
             final Selector readSelector = Selector.open();
             final Selector writeSelector = Selector.open();
@@ -146,7 +145,7 @@ public final class SynchronousNNTPDaemon extends AbstractDaemon {
                     conn.setWriteSelectionKey(selKeyWrite);
                     conn.println("200 "
                             + Config.inst().get(Config.HOSTNAME, "localhost")
-                            + " " + Main.VERSION
+                            + " " + Application.VERSION
                             + " news server ready - (posting ok).");
                 } catch (CancelledKeyException cke) {
                     Log.get().log(

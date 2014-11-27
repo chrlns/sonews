@@ -20,14 +20,14 @@ package org.sonews.daemon;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.logging.Level;
+import org.sonews.Application;
 
 import org.sonews.daemon.command.Command;
 import org.sonews.daemon.command.UnsupportedCommand;
 import org.sonews.util.Log;
-import org.sonews.util.io.Resource;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
 /**
  * Selects the correct command processing class.
@@ -38,51 +38,6 @@ import org.sonews.util.io.Resource;
 public class CommandSelector {
 
     private static Map<Thread, CommandSelector> instances = new ConcurrentHashMap<>();
-    private static Map<String, Class<?>> commandClassesMapping = new ConcurrentHashMap<>();
-
-    static {
-        String classesRes = Resource.getAsString("commands.list", true);
-        if (classesRes == null) {
-            Log.get().log(Level.SEVERE, "Could not load command classes list");
-        } else {
-            String[] classes = classesRes.split("\n");
-            for (String className : classes) {
-                if (className.charAt(0) == '#') {
-                    // Skip comments
-                    continue;
-                }
-
-                try {
-                    addCommandHandler(className);
-                } catch (ClassNotFoundException ex) {
-                    Log.get().log(Level.WARNING, "Could not load command class: {0}", ex);
-                } catch (InstantiationException ex) {
-                    Log.get().log(Level.SEVERE, "Could not instantiate command class: {0}", ex);
-                } catch (IllegalAccessException ex) {
-                    Log.get().log(Level.SEVERE, "Could not access command class: {0}", ex);
-                }
-            }
-        }
-    }
-
-    public static void addCommandHandler(String className)
-            throws ClassNotFoundException, InstantiationException, IllegalAccessException {
-        Class<?> clazz = Class.forName(className);
-        Command cmd = (Command) clazz.newInstance();
-        String[] cmdStrs = cmd.getSupportedCommandStrings();
-        if (cmdStrs == null) {
-            Log.get().log(Level.WARNING, "CommandHandler class does not support any command: {0}", className);
-            return;
-        }
-
-        for (String cmdStr : cmdStrs) {
-            commandClassesMapping.put(cmdStr, clazz);
-        }
-    }
-
-    public static Set<String> getCommandNames() {
-        return commandClassesMapping.keySet();
-    }
 
     public static CommandSelector getInstance() {
         CommandSelector csel = instances.get(Thread.currentThread());
@@ -94,33 +49,25 @@ public class CommandSelector {
     }
 
     private final Map<String, Command> commandMapping = new HashMap<>();
-    private final Command unsupportedCmd = new UnsupportedCommand();
 
-    private CommandSelector() {
+    public CommandSelector() {
+        ApplicationContext context = new AnnotationConfigApplicationContext(Application.class);
+        Map<String, Command> commands = context.getBeansOfType(Command.class);
+        
+        for(Command command : commands.values()) {
+            String[] cmdStrings = command.getSupportedCommandStrings();
+            for(String cmdString : cmdStrings) {
+                Log.get().info("Command " + cmdString + " processed with " + command.getClass());
+                commandMapping.put(cmdString, command);
+            }
+        }
     }
 
     public Command get(String commandName) {
-        try {
-            commandName = commandName.toUpperCase();
-            Command cmd = this.commandMapping.get(commandName);
-
-            if (cmd == null) {
-                Class<?> clazz = commandClassesMapping.get(commandName);
-                if (clazz == null) {
-                    Log.get().log(Level.INFO, "No class found for command: {0}", commandName);
-                    cmd = this.unsupportedCmd;
-                } else {
-                    cmd = (Command) clazz.newInstance();
-                    this.commandMapping.put(commandName, cmd);
-                }
-            } else if (cmd.isStateful()) {
-                cmd = cmd.getClass().newInstance();
-            }
-
-            return cmd;
-        } catch (InstantiationException | IllegalAccessException ex) {
-            Log.get().log(Level.SEVERE,"Could not load command handling class", ex);
-            return this.unsupportedCmd;
+        Command cmd = commandMapping.get(commandName);
+        if (cmd == null) {
+            cmd = commandMapping.get("*");
         }
+        return cmd;
     }
 }

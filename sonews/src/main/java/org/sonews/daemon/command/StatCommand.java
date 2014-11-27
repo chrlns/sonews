@@ -22,6 +22,7 @@ import org.sonews.daemon.NNTPConnection;
 import org.sonews.daemon.sync.SynchronousNNTPConnection;
 import org.sonews.storage.Article;
 import org.sonews.storage.StorageBackendException;
+import org.springframework.stereotype.Component;
 
 /**
  * Implementation of the STAT command.
@@ -29,6 +30,7 @@ import org.sonews.storage.StorageBackendException;
  * @author Christian Lins
  * @since sonews/0.5.0
  */
+@Component
 public class StatCommand implements Command {
 
     @Override

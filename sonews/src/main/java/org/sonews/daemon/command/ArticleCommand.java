@@ -23,6 +23,7 @@ import org.sonews.daemon.sync.SynchronousNNTPConnection;
 import org.sonews.storage.Article;
 import org.sonews.storage.Group;
 import org.sonews.storage.StorageBackendException;
+import org.springframework.stereotype.Component;
 
 /**
  * Class handling the ARTICLE, BODY and HEAD commands.
@@ -31,6 +32,7 @@ import org.sonews.storage.StorageBackendException;
  * @author Dennis Schwerdel
  * @since n3tpd/0.1
  */
+@Component
 public class ArticleCommand implements Command {
 
     @Override

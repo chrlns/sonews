@@ -11,6 +11,11 @@
   <url>http://www.sonews.org/</url>
   <dependencies>
     <dependency>
+        <groupId>org.springframework</groupId>
+        <artifactId>spring-context</artifactId>
+        <version>4.1.2.RELEASE</version>
+    </dependency>
+    <dependency>
       <groupId>commons-codec</groupId>
       <artifactId>commons-codec</artifactId>
       <version>1.8</version>

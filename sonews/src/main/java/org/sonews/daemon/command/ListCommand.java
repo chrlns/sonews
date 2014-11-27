@@ -26,6 +26,7 @@ import org.sonews.daemon.NNTPConnection;
 import org.sonews.storage.Group;
 import org.sonews.storage.StorageBackendException;
 import org.sonews.util.Log;
+import org.springframework.stereotype.Component;
 
 /**
  * Class handling the LIST command.
@@ -34,6 +35,7 @@ import org.sonews.util.Log;
  * @author Dennis Schwerdel
  * @since n3tpd/0.1
  */
+@Component
 public class ListCommand implements Command {
 
     @Override

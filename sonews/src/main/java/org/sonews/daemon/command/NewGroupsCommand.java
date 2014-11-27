@@ -21,6 +21,7 @@ package org.sonews.daemon.command;
 import java.io.IOException;
 import org.sonews.daemon.NNTPConnection;
 import org.sonews.storage.StorageBackendException;
+import org.springframework.stereotype.Component;
 
 /**
  * Class handling the NEWGROUPS command.
@@ -29,6 +30,7 @@ import org.sonews.storage.StorageBackendException;
  * @author Dennis Schwerdel
  * @since n3tpd/0.1
  */
+@Component
 public class NewGroupsCommand implements Command {
 
     @Override
