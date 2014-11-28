@@ -21,6 +21,7 @@ package org.sonews.daemon;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Level;
 import org.sonews.Application;
 
 import org.sonews.daemon.command.Command;
@@ -37,7 +38,7 @@ import org.springframework.context.annotation.AnnotationConfigApplicationContext
  */
 public class CommandSelector {
 
-    private static Map<Thread, CommandSelector> instances = new ConcurrentHashMap<>();
+    private static final Map<Thread, CommandSelector> instances = new ConcurrentHashMap<>();
 
     public static CommandSelector getInstance() {
         CommandSelector csel = instances.get(Thread.currentThread());
@@ -57,7 +58,7 @@ public class CommandSelector {
         for(Command command : commands.values()) {
             String[] cmdStrings = command.getSupportedCommandStrings();
             for(String cmdString : cmdStrings) {
-                Log.get().info("Command " + cmdString + " processed with " + command.getClass());
+                Log.get().log(Level.INFO, "Command {0} processed with {1}", new Object[]{cmdString, command.getClass()});
                 commandMapping.put(cmdString, command);
             }
         }

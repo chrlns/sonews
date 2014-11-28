@@ -45,7 +45,6 @@ public class CouchDBDatabase implements Storage {
     private final CouchDBClient client;
 
     public CouchDBDatabase() {
-        final String db = Config.inst().get(Config.STORAGE_DATABASE, "sonews");
         final String host = Config.inst().get(Config.STORAGE_HOST, "localhost");
         final String port = Config.inst().get(Config.STORAGE_PORT, "5984");
 
@@ -56,7 +55,7 @@ public class CouchDBDatabase implements Storage {
             password = null;
         }
 
-        this.client = new CouchDBClient(db, host, Integer.parseInt(port), user, password);
+        this.client = new CouchDBClient(host, Integer.parseInt(port), user, password);
     }
 
     @Override
@@ -128,7 +127,12 @@ public class CouchDBDatabase implements Storage {
 
     @Override
     public int getLastArticleNumber(final Group group) throws StorageBackendException {
-        throw new NotImplementedException();
+        try {
+            String body = this.client.get(group.getName(), "_design/access/_view/max_article_index");
+            return 0;
+        } catch(IOException ex) {
+            throw new StorageBackendException(ex);
+        }
     }
 
     @Override

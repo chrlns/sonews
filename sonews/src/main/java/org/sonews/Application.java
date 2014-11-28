@@ -25,7 +25,6 @@ import java.util.logging.Level;
 
 import org.sonews.config.Config;
 import org.sonews.daemon.ChannelLineBuffers;
-import org.sonews.daemon.CommandSelector;
 import org.sonews.daemon.Connections;
 import org.sonews.daemon.NNTPDaemon;
 import org.sonews.feed.FeedManager;
@@ -34,6 +33,7 @@ import org.sonews.storage.StorageProvider;
 import org.sonews.util.Log;
 import org.sonews.util.Purger;
 import org.sonews.util.io.Resource;
+
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.ComponentScan;
@@ -132,7 +132,7 @@ public class Application {
 
         String provName = Config.inst().get(Config.LEVEL_FILE,
                     Config.STORAGE_PROVIDER,
-                    "org.sonews.storage.impl.JDBCStorageProvider");
+                    "org.sonews.storage.impl.CouchDBStorageProvider");
         StorageProvider sprov = StorageManager.loadProvider(provName);
         StorageManager.enableProvider(sprov);
 

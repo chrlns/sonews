@@ -26,6 +26,7 @@ import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
 
 /**
  *
@@ -33,35 +34,35 @@ import org.apache.http.impl.client.HttpClients;
  */
 public class CouchDBClient {
     
-    private String db;
+    private static final String GROUP_DB_SEPARATOR = "$";
+    
     private String host;
     private int port;
     private String user;
     private String password;
     private String baseURL;
     
-    public CouchDBClient(String db, String host, int port, String user, String password) {
-        this.db = db;
+    public CouchDBClient(String host, int port, String user, String password) {
         this.host = host;
         this.port = port;
         this.user = user;
         this.password = password;
         
-        this.baseURL = "http://" + host + ":" + port + "/" + db + "/";
+        this.baseURL = "http://" + host + ":" + port + "/";
     }
     
     /**
-     * Retrieves the document with the given ID.
-     * @param id
+     * Retrieves the document with the given doc ID.
+     * @param doc
      * @throws IOException
      */
-    public void get(final String id) throws IOException {
-        String uri = baseURL + id;
+    public String get(final String group, final String doc) throws IOException {
+        String uri = baseURL + group.replace(".", GROUP_DB_SEPARATOR) + "/" + doc;
         
         try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
             HttpGet get = new HttpGet(uri);
             CloseableHttpResponse resp = httpClient.execute(get);
-            
+            return EntityUtils.toString(resp.getEntity());
         }
     }
     
