@@ -32,7 +32,6 @@ import javax.mail.Store;
 import org.sonews.config.Config;
 import org.sonews.daemon.AbstractDaemon;
 import org.sonews.util.Log;
-import org.sonews.util.Stats;
 
 /**
  * Daemon polling for new mails in a POP3 account to be delivered to newsgroups.
@@ -74,8 +73,6 @@ public class MailPoller extends AbstractDaemon
 				final String password =
 					Config.inst().get(Config.MLPOLL_PASSWORD, "mysecret");
 
-				Stats.getInstance().mlgwRunStart();
-
 				// Create empty properties
 				Properties props = System.getProperties();
 				props.put("mail.pop3.host", host);
@@ -108,8 +105,6 @@ public class MailPoller extends AbstractDaemon
 				folder.close(true); // true to expunge deleted messages
 				store.close();
 				errors = 0;
-
-				Stats.getInstance().mlgwRunEnd();
 			} catch (NoSuchProviderException ex) {
 				Log.get().severe(ex.toString());
 				shutdown();

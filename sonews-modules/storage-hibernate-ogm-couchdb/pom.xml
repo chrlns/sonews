@@ -7,7 +7,7 @@
   <artifactId>storage-hibernate-ogm-couchdb</artifactId>
   <packaging>jar</packaging>
   <version>2.1-SNAPSHOT</version>
-  <name>sonews Module for Hibernate OGM CouchDB Storage Backend</name>
+  <name>sonews Module for Hibernate OGM CouchDB Storage</name>
   <url>http://www.sonews.org/</url>
   <dependencies>
     <dependency>

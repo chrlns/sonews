@@ -99,7 +99,8 @@ public class Dispatcher {
 			// listPost[0] is of form "<mailto:dev@openoffice.org>"
 			listPost[0] = chunkListPost(listPost[0]);
 			listPostAddr = new InternetAddress(listPost[0], false);
-			groups = StorageManager.current().getGroupsForList(listPostAddr.getAddress());
+                        //FIXME
+			//groups = StorageManager.current().getGroupsForList(listPostAddr.getAddress());
 		} else if (fallback) {
 			StringBuilder strBuf = new StringBuilder();
 			strBuf.append("Using fallback recipient discovery for: ");
@@ -110,9 +111,10 @@ public class Dispatcher {
 			Address[] to = msg.getAllRecipients();
 			for (Address toa : to) // Address can have '<' '>' around
 			{
+                            //FIXME
 				if (toa instanceof InternetAddress) {
-					List<String> g = StorageManager.current().getGroupsForList(((InternetAddress) toa).getAddress());
-					groups.addAll(g);
+				//	List<String> g = StorageManager.current().getGroupsForList(((InternetAddress) toa).getAddress());
+				//	groups.addAll(g);
 				}
 			}
 		}
@@ -213,7 +215,8 @@ public class Dispatcher {
 	public static boolean toList(Article article, String group)
 			throws IOException, MessagingException, StorageBackendException {
 		// Get mailing lists for the group of this article
-		List<String> rcptAddresses = StorageManager.current().getListsForGroup(group);
+            //FIXME
+		List<String> rcptAddresses = null; //StorageManager.current().getListsForGroup(group);
 
 		if (rcptAddresses == null || rcptAddresses.isEmpty()) {
 			StringBuilder strBuf = new StringBuilder();
