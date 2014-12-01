@@ -13,6 +13,7 @@
   <modules>
     <module>commands-rfc3977</module>
     <module>mlgw</module>
+    <module>storage-hibernate-ogm-couchdb</module>
   </modules>
 
 </project>
