@@ -6,9 +6,12 @@ language: java
 #  - oraclejdk7
 #  - openjdk7
 
-before_install:
- - sudo apt-get update -qq
- - sudo apt-get install couchdb
+#before_install:
+# - sudo apt-get update -qq
+# - sudo apt-get install couchdb
+
+services:
+  - couchdb
 
 env:
   global:
