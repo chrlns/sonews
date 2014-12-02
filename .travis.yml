@@ -1,5 +1,15 @@
 language: java
 
+# To test agains multiple JDKs
+#jdk:
+#  - oraclejdk8
+#  - oraclejdk7
+#  - openjdk7
+
+before_install:
+ - sudo apt-get update -qq
+ - sudo apt-get install -qq couchdb
+
 env:
   global:
    # The next declaration is the encrypted COVERITY_SCAN_TOKEN, created
