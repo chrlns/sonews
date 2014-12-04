@@ -30,7 +30,6 @@ import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.logging.Level;
 
-import org.sonews.Application;
 import org.sonews.config.Config;
 import org.sonews.daemon.AbstractDaemon;
 import org.sonews.daemon.Connections;
@@ -145,7 +144,7 @@ public class SynchronousNNTPDaemon extends AbstractDaemon implements NNTPDaemon 
                     conn.setWriteSelectionKey(selKeyWrite);
                     conn.println("200 "
                             + Config.inst().get(Config.HOSTNAME, "localhost")
-                            + " " + Application.VERSION
+                            + " <unknown version>" // + Application.VERSION
                             + " news server ready - (posting ok).");
                 } catch (CancelledKeyException cke) {
                     Log.get().log(

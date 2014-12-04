@@ -15,20 +15,20 @@
  *   You should have received a copy of the GNU General Public License
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 package org.sonews.daemon;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
-import org.sonews.Application;
+import javax.annotation.PostConstruct;
 
 import org.sonews.daemon.command.Command;
-import org.sonews.daemon.command.UnsupportedCommand;
 import org.sonews.util.Log;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
-import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.stereotype.Component;
 
 /**
  * Selects the correct command processing class.
@@ -36,6 +36,7 @@ import org.springframework.context.annotation.AnnotationConfigApplicationContext
  * @author Christian Lins
  * @since sonews/1.0
  */
+@Component
 public class CommandSelector {
 
     private static final Map<Thread, CommandSelector> instances = new ConcurrentHashMap<>();
@@ -51,13 +52,19 @@ public class CommandSelector {
 
     private final Map<String, Command> commandMapping = new HashMap<>();
 
+    @Autowired
+    private ApplicationContext context;
+
     public CommandSelector() {
-        ApplicationContext context = new AnnotationConfigApplicationContext(Application.class);
+    }
+
+    @PostConstruct
+    protected void init() {
         Map<String, Command> commands = context.getBeansOfType(Command.class);
-        
-        for(Command command : commands.values()) {
+
+        for (Command command : commands.values()) {
             String[] cmdStrings = command.getSupportedCommandStrings();
-            for(String cmdString : cmdStrings) {
+            for (String cmdString : cmdStrings) {
                 Log.get().log(Level.INFO, "Command {0} processed with {1}", new Object[]{cmdString, command.getClass()});
                 commandMapping.put(cmdString, command);
             }

@@ -41,7 +41,7 @@ public class ResourceTest extends TestCase
     assertNull(url);
     
     // This file should exist
-    url = Resource.getAsURL("org/sonews/Application.class");
+    url = Resource.getAsURL("org/sonews/daemon/NNTPDaemon.class");
     assertNotNull(url);
   }
   
@@ -55,7 +55,7 @@ public class ResourceTest extends TestCase
     stream = Resource.getAsStream("this is bullshit");
     assertNull(stream);
     
-    stream = Resource.getAsStream("org/sonews/Application.class");
+    stream = Resource.getAsStream("org/sonews/daemon/NNTPDaemon.class");
     assertNotNull(stream);
   }
   
@@ -69,10 +69,10 @@ public class ResourceTest extends TestCase
     str = Resource.getAsString("this is bullshit", true);
     assertNull(str);
     
-    str = Resource.getAsString("org/sonews/Application.class", true);
+    str = Resource.getAsString("org/sonews/daemon/NNTPDaemon.class", true);
     assertNotNull(str);
     
-    str = Resource.getAsString("org/sonews/Application.class", false);
+    str = Resource.getAsString("org/sonews/daemon/NNTPDaemon.class", false);
     assertNotNull(str);
     assertEquals(str.indexOf("\n"), -1);
   }
