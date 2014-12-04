@@ -22,11 +22,13 @@ import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
 import org.sonews.storage.Storage;
 import org.sonews.storage.StorageBackendException;
+import org.springframework.stereotype.Component;
 
 /**
  *
  * @author Christian Lins
  */
+@Component
 public class CouchDBStorageProvider implements org.sonews.storage.StorageProvider {
     
     private EntityManagerFactory emf;

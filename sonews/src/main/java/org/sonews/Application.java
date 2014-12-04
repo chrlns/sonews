@@ -38,6 +38,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.support.FileSystemXmlApplicationContext;
 
 /**
  * Startup class of the daemon.
@@ -84,6 +85,12 @@ public class Application {
                     System.out.println("Using config file " + args[n]);
                     break;
                 }
+                case "-C":
+                case "-context": {
+                    // FIXME: Additional context files
+                    n++;
+                    break;
+                }
                 case "-dumpjdbcdriver": {
                     System.out.println("Available JDBC drivers:");
                     Enumeration<Driver> drvs = DriverManager.getDrivers();
@@ -121,19 +128,13 @@ public class Application {
             }
         }
         
-        ApplicationContext context = new AnnotationConfigApplicationContext(Application.class);
+        ApplicationContext context = 
+                new AnnotationConfigApplicationContext(Application.class);
+        context = new FileSystemXmlApplicationContext(
+                new String[]{"sonews.xml"}, context);
 
-        // Load the storage backend
-        String database = Config.inst().get(Config.STORAGE_DATABASE, null);
-        if (database == null) {
-            Log.get().log(Level.SEVERE, "No storage backend configured (sonews.storage.database)");
-            return;
-        }
-
-        String provName = Config.inst().get(Config.LEVEL_FILE,
-                    Config.STORAGE_PROVIDER,
-                    "org.sonews.storage.impl.CouchDBStorageProvider");
-        StorageProvider sprov = StorageManager.loadProvider(provName);
+        // Enable storage backend
+        StorageProvider sprov = context.getBean("storageProvider", StorageProvider.class);
         StorageManager.enableProvider(sprov);
 
         ChannelLineBuffers.allocateDirect();
