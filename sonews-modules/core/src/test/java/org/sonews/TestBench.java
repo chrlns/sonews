@@ -16,20 +16,20 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.sonews.test;
+package org.sonews;
 
-import org.sonews.test.command.HelloQuitTest;
-import org.sonews.test.command.ArticleTest;
+import org.sonews.daemon.command.HelloQuitTest;
+import org.sonews.daemon.command.ArticleTest;
 import java.util.LinkedList;
 import java.util.List;
-import org.sonews.test.command.CapabilitiesTest;
-import org.sonews.test.command.GroupTest;
-import org.sonews.test.command.ListGroupTests;
-import org.sonews.test.command.ListTest;
-import org.sonews.test.command.NewGroupsTest;
-import org.sonews.test.command.NextTest;
-import org.sonews.test.command.OverTest;
-import org.sonews.test.command.PostTest;
+import org.sonews.daemon.command.CapabilitiesTest;
+import org.sonews.daemon.command.GroupTest;
+import org.sonews.daemon.command.ListGroupTests;
+import org.sonews.daemon.command.ListTest;
+import org.sonews.daemon.command.NewGroupsTest;
+import org.sonews.daemon.command.NextTest;
+import org.sonews.daemon.command.OverTest;
+import org.sonews.daemon.command.PostTest;
 
 /**
  * Run this class to perform a full test.

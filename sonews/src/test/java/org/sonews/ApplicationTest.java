@@ -1,5 +1,5 @@
 /*
- *   StarOffice News Server
+ *   SONEWS News Server
  *   see AUTHORS for the list of contributors
  *
  *   This program is free software: you can redistribute it and/or modify
@@ -16,48 +16,51 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.sonews.test.command;
+package org.sonews;
 
-import org.sonews.test.AbstractTest;
+import org.junit.After;
+import org.junit.AfterClass;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
 /**
- * Tests the CAPABILITIES command.
- * @author Christian Lins
- * @since sonews/0.5.0
+ *
+ * @author clins
  */
-public class CapabilitiesTest extends AbstractTest
-{
+public class ApplicationTest {
+    
+    public ApplicationTest() {
+    }
+    
+    @BeforeClass
+    public static void setUpClass() {
+    }
+    
+    @AfterClass
+    public static void tearDownClass() {
+    }
+    
+    @Before
+    public void setUp() {
+    }
+    
+    @After
+    public void tearDown() {
+    }
 
-  @Override
-  public int runTest()
-    throws Exception
-  {
-    String line = readln();
-    if(!line.startsWith("200 "))
-    {
-      return 1;
+    /**
+     * Test of main method, of class Application.
+     */
+    @Test
+    public void testMain() throws Exception {
+        System.out.println("main");
+        String[] args = null;
+        try {
+            Application.main(args);
+        } catch(Exception ex) {
+          
+        }
     }
     
-    println("CAPABILITIES");
-    line = readln();
-    if(!line.startsWith("101"))
-    {
-      return 3;
-    }
-    
-    while(!line.equals("."))
-    {
-      line = readln();
-    }
-    
-    println("QUIT");
-    line = readln();
-    if(!line.startsWith("205 "))
-    {
-      return 2;
-    }
-    
-    return 0;
-  }
-  
 }

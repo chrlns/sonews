@@ -15,23 +15,33 @@
  *   You should have received a copy of the GNU General Public License
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.sonews.test.command;
 
-import org.sonews.test.AbstractTest;
+package org.sonews.daemon.command;
+
+import org.sonews.AbstractTest;
 
 /**
- * Tests the NEWGROUPS command.
+ * Test: connects to server, waits for initial hello and quits.
  * @author Christian Lins
  * @since sonews/0.5.0
  */
-public class NewGroupsTest extends AbstractTest
+public class HelloQuitTest extends AbstractTest
 {
 
   @Override
   public int runTest()
     throws Exception
   {
-    return 1;
+    String line = readln();
+    if(!line.startsWith("200 "))
+      return 1;
+    
+    println("QUIT");
+    line = readln();
+    if(!line.startsWith("205 "))
+      return 2;
+    
+    return 0;
   }
   
 }

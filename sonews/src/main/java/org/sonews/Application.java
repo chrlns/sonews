@@ -15,13 +15,13 @@
  *   You should have received a copy of the GNU General Public License
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 package org.sonews;
 
 import java.sql.Driver;
 import java.sql.DriverManager;
 import java.util.Date;
 import java.util.Enumeration;
-import java.util.logging.Level;
 
 import org.sonews.config.Config;
 import org.sonews.daemon.ChannelLineBuffers;
@@ -30,7 +30,6 @@ import org.sonews.daemon.NNTPDaemon;
 import org.sonews.feed.FeedManager;
 import org.sonews.storage.StorageManager;
 import org.sonews.storage.StorageProvider;
-import org.sonews.util.Log;
 import org.sonews.util.Purger;
 import org.sonews.util.io.Resource;
 

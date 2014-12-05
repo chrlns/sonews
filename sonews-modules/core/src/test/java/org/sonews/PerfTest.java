@@ -16,23 +16,29 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.sonews.test.command;
-
-import org.sonews.test.AbstractTest;
+package org.sonews;
 
 /**
- * Tests the NEXT command.
+ * Opens a connection, waits for Hello and exits while leaving the connection
+ * open until SoTimeout.
  * @author Christian Lins
  * @since sonews/0.5.0
  */
-public class NextTest extends AbstractTest
+public class PerfTest extends AbstractTest
 {
-  
+
   @Override
-  public int runTest()
-    throws Exception
+  public int runTest() throws Exception
   {
-    return 1;
+    String line = readln();
+    if(!line.startsWith("200 "))
+    {
+      return 1;
+    }
+    
+    socket.setSoTimeout(0);
+    
+    return 0;
   }
 
 }

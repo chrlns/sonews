@@ -16,32 +16,67 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.sonews.test.command;
+package org.sonews.daemon.command;
 
-import org.sonews.test.AbstractTest;
+import org.sonews.AbstractTest;
 
 /**
- * Test: connects to server, waits for initial hello and quits.
+ * Tests the POST command.
  * @author Christian Lins
  * @since sonews/0.5.0
  */
-public class HelloQuitTest extends AbstractTest
+public class PostTest extends AbstractTest
 {
-
+  
   @Override
   public int runTest()
     throws Exception
   {
     String line = readln();
     if(!line.startsWith("200 "))
+    {
       return 1;
+    }
     
-    println("QUIT");
+    println("POST");
     line = readln();
-    if(!line.startsWith("205 "))
-      return 2;
+    if(!line.startsWith("340 "))
+    {
+      return 1;
+    }
     
+    // Post a sample article
+    postArticle("local.test");
+    line = readln();
+    if(line.startsWith("441 "))
+    {
+      println("POST");
+      line = readln();
+      if(!line.startsWith("340 "))
+      {
+        return 2;
+      }
+      
+      postArticle("test");
+      line = readln();
+    }
+
+    if(!line.startsWith("240 "))
+    {
+      return 3;
+    }
+
     return 0;
   }
   
+  private void postArticle(String toGroup)
+  {
+    println("Subject: A simple test mail");
+    println("From: NNTP TestBench <testbench@sonews.org>");
+    println("Newsgroups: " + toGroup);
+    println("");
+    println("Hello World!");
+    println(".");
+  }
+
 }

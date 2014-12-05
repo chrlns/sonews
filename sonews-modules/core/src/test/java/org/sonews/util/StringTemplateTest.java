@@ -16,7 +16,7 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.sonews.test.unit.util;
+package org.sonews.util;
 
 import junit.framework.TestCase;
 import org.sonews.util.StringTemplate;

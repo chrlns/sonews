@@ -15,6 +15,7 @@
  *   You should have received a copy of the GNU General Public License
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 package org.sonews;
 
 import java.sql.SQLException;
@@ -37,8 +38,8 @@ class ShutdownHook extends Thread {
     public void run() {
         System.out.println("sonews: Trying to shutdown all threads...");
 
-        Map<Thread, StackTraceElement[]> threadsMap = Thread
-                .getAllStackTraces();
+        Map<Thread, StackTraceElement[]> threadsMap = Thread.getAllStackTraces();
+        
         for (Thread thread : threadsMap.keySet()) {
             // Interrupt the thread if it's a AbstractDaemon
             AbstractDaemon daemon;

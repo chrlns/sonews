@@ -15,30 +15,23 @@
  *   You should have received a copy of the GNU General Public License
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+package org.sonews.daemon.command;
 
-package org.sonews.test;
+import org.sonews.AbstractTest;
 
 /**
- * Opens a connection, waits for Hello and exits while leaving the connection
- * open until SoTimeout.
+ * Tests the NEWGROUPS command.
  * @author Christian Lins
  * @since sonews/0.5.0
  */
-public class PerfTest extends AbstractTest
+public class NewGroupsTest extends AbstractTest
 {
 
   @Override
-  public int runTest() throws Exception
+  public int runTest()
+    throws Exception
   {
-    String line = readln();
-    if(!line.startsWith("200 "))
-    {
-      return 1;
-    }
-    
-    socket.setSoTimeout(0);
-    
-    return 0;
+    return 1;
   }
-
+  
 }

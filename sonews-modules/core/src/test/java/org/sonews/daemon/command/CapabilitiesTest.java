@@ -16,28 +16,48 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.sonews.test.unit;
+package org.sonews.daemon.command;
 
-import junit.textui.TestRunner;
-import org.sonews.test.unit.util.ResourceTest;
-import org.sonews.test.unit.util.StringTemplateTest;
-
+import org.sonews.AbstractTest;
 
 /**
- * Tests classes of package org.sonews.util.
+ * Tests the CAPABILITIES command.
  * @author Christian Lins
  * @since sonews/0.5.0
  */
-public class UtilTests
+public class CapabilitiesTest extends AbstractTest
 {
 
-  public static void main(String[] args)
+  @Override
+  public int runTest()
+    throws Exception
   {
-    System.out.println("StringTemplateTest");
-    TestRunner.run(StringTemplateTest.class);
-
-    System.out.println("ResourceTest");
-    TestRunner.run(ResourceTest.class);
+    String line = readln();
+    if(!line.startsWith("200 "))
+    {
+      return 1;
+    }
+    
+    println("CAPABILITIES");
+    line = readln();
+    if(!line.startsWith("101"))
+    {
+      return 3;
+    }
+    
+    while(!line.equals("."))
+    {
+      line = readln();
+    }
+    
+    println("QUIT");
+    line = readln();
+    if(!line.startsWith("205 "))
+    {
+      return 2;
+    }
+    
+    return 0;
   }
-
+  
 }

@@ -16,9 +16,9 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.sonews.test.command;
+package org.sonews.daemon.command;
 
-import org.sonews.test.AbstractTest;
+import org.sonews.AbstractTest;
 
 /**
  * Tests the LISTGROUP command.
