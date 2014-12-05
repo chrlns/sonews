@@ -71,6 +71,7 @@ public class CouchDBArticle implements Serializable {
         this.headers = new ArrayList<>();
         this.headers.add(new Header("From", "nobody@nobody.nobody"));
         this.headers.add(new Header("Subject", "Random message for testing purposes #" + rnd.nextInt()));
+        this.headers.add(new Header("Newsgroups", "local.test, local.debug"));
         this.bodyEncoding = "base64";
         this.body = "This is a test message. Thank you!".getBytes();
     }
