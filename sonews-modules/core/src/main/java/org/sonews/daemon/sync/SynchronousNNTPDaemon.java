@@ -33,9 +33,12 @@ import java.util.logging.Level;
 import org.sonews.config.Config;
 import org.sonews.daemon.AbstractDaemon;
 import org.sonews.daemon.Connections;
+import org.sonews.daemon.NNTPConnection;
 import org.sonews.daemon.NNTPDaemon;
 import org.sonews.daemon.SocketChannelWrapperFactory;
 import org.sonews.util.Log;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
@@ -51,6 +54,8 @@ public class SynchronousNNTPDaemon extends AbstractDaemon implements NNTPDaemon 
 
     public static final Object RegisterGate = new Object();
 
+    @Autowired
+    private ApplicationContext context;
     private int port;
     private ServerSocket serverSocket = null;
 
@@ -117,18 +122,12 @@ public class SynchronousNNTPDaemon extends AbstractDaemon implements NNTPDaemon 
                     Thread.sleep(5000); // 5 seconds
                     continue;
                 }
-
-                final SynchronousNNTPConnection conn;
-                try {
-                    SocketChannelWrapperFactory wrapperFactory
-                            = new SocketChannelWrapperFactory(socketChannel);
-                    conn = new SynchronousNNTPConnection(wrapperFactory.create());
-                    Connections.getInstance().add(conn);
-                } catch (IOException ex) {
-                    Log.get().warning(ex.toString());
-                    socketChannel.close();
-                    continue;
-                }
+                
+                //FIXME conn should be NNTPConnection
+                final SynchronousNNTPConnection conn = (SynchronousNNTPConnection)
+                        context.getBean("syncNNTPConnection", NNTPConnection.class);
+                conn.setChannelWrapper(new SocketChannelWrapperFactory(socketChannel).create());
+                Connections.getInstance().add(conn);
 
                 try {
                     SelectionKey selKeyWrite = registerSelector(writeSelector,

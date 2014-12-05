@@ -11,5 +11,8 @@
 
     <bean id="storageProvider" class="org.sonews.storage.impl.hibernate.couchdb.CouchDBStorageProvider">
     </bean>
+    
+    <bean id="syncNNTPConnection" class="org.sonews.daemon.sync.SynchronousNNTPConnection">
+    </bean>
 
 </beans>

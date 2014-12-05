@@ -26,10 +26,10 @@ import java.nio.channels.SocketChannel;
  * Wrapper for a SocketChannel.
  * @author Christian Lins
  */
-class SyncSocketChannelWrapper
+public class SyncSocketChannelWrapper
     extends AbstractSocketChannelWrapper implements SocketChannelWrapper
 {
-    private final SocketChannel channel;
+    private SocketChannel channel;
 
     public SyncSocketChannelWrapper(SocketChannel socketChannel) {
         this.channel = socketChannel;

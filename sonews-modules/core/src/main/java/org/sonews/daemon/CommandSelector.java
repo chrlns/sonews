@@ -41,17 +41,6 @@ import org.springframework.stereotype.Component;
 @Component
 public class CommandSelector {
 
-    private static final Map<Thread, CommandSelector> instances = new ConcurrentHashMap<>();
-
-    public static CommandSelector getInstance() {
-        CommandSelector csel = instances.get(Thread.currentThread());
-        if (csel == null) {
-            csel = new CommandSelector();
-            instances.put(Thread.currentThread(), csel);
-        }
-        return csel;
-    }
-
     private final Map<String, Command> commandMapping = new HashMap<>();
 
     @Autowired

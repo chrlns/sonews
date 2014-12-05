@@ -19,11 +19,14 @@
 package org.sonews.daemon.command;
 
 import java.io.IOException;
-import java.util.Set;
+
 import org.sonews.daemon.CommandSelector;
 import org.sonews.daemon.NNTPConnection;
 import org.sonews.util.Log;
 import org.sonews.util.io.Resource;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
 /**
@@ -36,7 +39,10 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class HelpCommand implements Command {
-
+    
+    @Autowired
+    private ApplicationContext context;
+    
     @Override
     public boolean hasFinished() {
         return true;
@@ -82,7 +88,8 @@ public class HelpCommand implements Command {
                 conn.println(cmdName);
             }*/
         } else {
-            Command cmd = CommandSelector.getInstance().get(command[1]);
+            CommandSelector csel = context.getBean(CommandSelector.class);
+            Command cmd = csel.get(command[1]);
             if (cmd instanceof HelpfulCommand) {
                 conn.println(((HelpfulCommand) cmd).getHelpString());
             } else {

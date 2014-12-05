@@ -15,6 +15,7 @@
  *   You should have received a copy of the GNU General Public License
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 package org.sonews.daemon.sync;
 
 import java.io.IOException;
@@ -30,17 +31,23 @@ import java.util.Arrays;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.logging.Level;
+
 import org.sonews.acl.User;
 import org.sonews.daemon.ChannelLineBuffers;
 import org.sonews.daemon.CommandSelector;
 import org.sonews.daemon.LineEncoder;
 import org.sonews.daemon.NNTPConnection;
 import org.sonews.daemon.SocketChannelWrapper;
+import org.sonews.daemon.SyncSocketChannelWrapper;
 import org.sonews.daemon.command.Command;
 import org.sonews.storage.Article;
 import org.sonews.storage.Group;
 import org.sonews.storage.StorageBackendException;
 import org.sonews.util.Log;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
+import org.springframework.stereotype.Component;
 
 /**
  * For every SocketChannel (so TCP/IP connection) there is an instance of this
@@ -49,6 +56,7 @@ import org.sonews.util.Log;
  * @author Christian Lins
  * @since sonews/0.5.0
  */
+@Component
 public class SynchronousNNTPConnection implements NNTPConnection {
 
     public static final String NEWLINE = "\r\n"; // RFC defines this as newline
@@ -58,9 +66,14 @@ public class SynchronousNNTPConnection implements NNTPConnection {
                                                               // daemon
     /** SocketChannel is generally thread-safe */
     private SocketChannel channel;
+    
     private SocketChannelWrapper channelWrapper;
     private Charset charset = Charset.forName("UTF-8");
     private Command command = null;
+    
+    @Autowired
+    private ApplicationContext context;
+    
     private Article currentArticle = null;
     private Group currentGroup = null;
     private volatile long lastActivity = System.currentTimeMillis();
@@ -70,7 +83,10 @@ public class SynchronousNNTPConnection implements NNTPConnection {
     private SelectionKey writeSelKey = null;
     private User user;
 
-    public SynchronousNNTPConnection(final SocketChannelWrapper channelWrapper)
+    public SynchronousNNTPConnection() {
+    }
+    
+    public void setChannelWrapper(SocketChannelWrapper channelWrapper)
             throws IOException
     {
         if (channelWrapper == null) {
@@ -87,8 +103,9 @@ public class SynchronousNNTPConnection implements NNTPConnection {
 
     /**
      * Tries to get the read lock for this NNTPConnection. This method is
-     * Thread- safe and returns true of the read lock was successfully set. If
+     * Thread-safe and returns true of the read lock was successfully set. If
      * the lock is still hold by another Thread the method returns false.
+     * @return true if lock could be aquired
      */
     @Override
     public boolean tryReadLock() {
@@ -124,6 +141,7 @@ public class SynchronousNNTPConnection implements NNTPConnection {
     /**
      * @return Current input buffer of this NNTPConnection instance.
      */
+    @Override
     public ByteBuffer getInputBuffer() {
         return this.lineBuffers.getInputBuffer();
     }
@@ -132,6 +150,7 @@ public class SynchronousNNTPConnection implements NNTPConnection {
      * @return Output buffer of this NNTPConnection which has at least one byte
      *         free storage.
      */
+    @Override
     public ByteBuffer getOutputBuffer() {
         return this.lineBuffers.getOutputBuffer();
     }
@@ -139,6 +158,7 @@ public class SynchronousNNTPConnection implements NNTPConnection {
     /**
      * @return ChannelLineBuffers instance associated with this NNTPConnection.
      */
+    @Override
     public ChannelLineBuffers getBuffers() {
         return this.lineBuffers;
     }
@@ -191,10 +211,12 @@ public class SynchronousNNTPConnection implements NNTPConnection {
         return this.channelWrapper;
     }
 
+    @Override
     public Article getCurrentArticle() {
         return this.currentArticle;
     }
 
+    @Override
     public Charset getCurrentCharset() {
         return this.charset;
     }
@@ -207,14 +229,17 @@ public class SynchronousNNTPConnection implements NNTPConnection {
         return this.currentGroup;
     }
 
+    @Override
     public void setCurrentArticle(final Article article) {
         this.currentArticle = article;
     }
 
+    @Override
     public void setCurrentGroup(final Group group) {
         this.currentGroup = group;
     }
 
+    @Override
     public long getLastActivity() {
         return this.lastActivity;
     }
@@ -308,7 +333,8 @@ public class SynchronousNNTPConnection implements NNTPConnection {
      */
     private Command parseCommandLine(String line) {
         String cmdStr = line.trim().split("\\s+")[0];
-        return CommandSelector.getInstance().get(cmdStr);
+        CommandSelector csel = context.getBean(CommandSelector.class);
+        return csel.get(cmdStr);
     }
 
     /**
