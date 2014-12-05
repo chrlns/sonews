@@ -1,4 +1,5 @@
 [![Build Status](https://travis-ci.org/cli/sonews.svg?branch=master)](https://travis-ci.org/cli/sonews)
+[![Build Status](http://anhalter.lins.me:26405/buildStatus/icon?job=sonews)](http://anhalter.lins.me:26405/job/sonews/)
 [![Coverty Scan](https://scan.coverity.com/projects/2030/badge.svg)](https://scan.coverity.com/projects/2030)
 [![Gitter chat](https://badges.gitter.im/cli/sonews.png)](https://gitter.im/cli/sonews)
 
