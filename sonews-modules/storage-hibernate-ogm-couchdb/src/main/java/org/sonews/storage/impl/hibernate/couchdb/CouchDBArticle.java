@@ -20,14 +20,19 @@ package org.sonews.storage.impl.hibernate.couchdb;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
+import java.util.Set;
+import java.util.TreeSet;
 import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.Embeddable;
 import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.OneToMany;
 import javax.persistence.Version;
 
 import org.hibernate.ogm.datastore.document.options.AssociationStorage;
@@ -57,6 +62,9 @@ public class CouchDBArticle implements Serializable {
     @ElementCollection
     private List<Header> headers;
     
+    @ElementCollection
+    private Map<String, Long> indices;
+    
     private String bodyEncoding;
     
     private byte[] body;
@@ -72,6 +80,9 @@ public class CouchDBArticle implements Serializable {
         this.headers.add(new Header("From", "nobody@nobody.nobody"));
         this.headers.add(new Header("Subject", "Random message for testing purposes #" + rnd.nextInt()));
         this.headers.add(new Header("Newsgroups", "local.test, local.debug"));
+        this.indices = new HashMap<>();
+        this.indices.put("local.test", (long)rnd.nextInt(300));
+        this.indices.put("local.debug", (long)rnd.nextInt(300));
         this.bodyEncoding = "base64";
         this.body = "This is a test message. Thank you!".getBytes();
     }
@@ -82,7 +93,6 @@ class Header implements Serializable {
     private String key, value;
     
     public Header() {
-    
     }
     
     public Header(String key, String value) {

@@ -1,0 +1,11 @@
+{
+   "_id": "_design/access",
+   "version" : 1,
+   "language": "javascript",
+   "views": {
+       "article_index": {
+           "map": "function (doc) {\n     for(var n = 0; n < doc.indices.length; n++) {\n         emit(doc.indices[n].indices_KEY, parseInt(doc.indices[n].indices, 10)); \n     }\n}",
+           "reduce": "function (key, values, rereduce) {\n    var max = -1;\n    values.forEach(function(value) {\n        if (max < value) {\n            max = value;\n        }\n    });\n    return max;\n}"
+       }
+   }
+}
