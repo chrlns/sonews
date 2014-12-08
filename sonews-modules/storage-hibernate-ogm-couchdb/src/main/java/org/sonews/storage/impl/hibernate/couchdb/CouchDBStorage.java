@@ -19,8 +19,10 @@
 package org.sonews.storage.impl.hibernate.couchdb;
 
 import java.util.List;
+
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
+
 import org.sonews.storage.Article;
 import org.sonews.storage.ArticleHead;
 import org.sonews.storage.Group;
