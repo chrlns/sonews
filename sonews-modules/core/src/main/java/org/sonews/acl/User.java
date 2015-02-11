@@ -1,6 +1,7 @@
 /*
  *   SONEWS News Server
- *   see AUTHORS for the list of contributors
+ *   Copyright (C) 2009-2015  Christian Lins <christian@lins.me>
+ *   Copyright (C) 2011  František Kučera <informace@frantovo.cz>
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -25,7 +26,7 @@ package org.sonews.acl;
  * 
  * When User object is created, default authentication status is false.
  * 
- * @author František Kučera (frantovo.cz)
+ * @author František Kučera
  */
 public class User {
 

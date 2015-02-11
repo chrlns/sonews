@@ -1,6 +1,6 @@
 /*
  *   SONEWS News Server
- *   see AUTHORS for the list of contributors
+ *   Copyright (C) 2009-2015  Christian Lins <christian@lins.me>
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by

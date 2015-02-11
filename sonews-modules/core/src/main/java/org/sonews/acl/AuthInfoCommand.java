@@ -1,6 +1,7 @@
 /*
  *   SONEWS News Server
- *   see AUTHORS for the list of contributors
+ *   Copyright (C) 2009-2015  Christian Lins <christian@lins.me>
+ *   Copyright (C) 2011  František Kučera <informace@frantovo.cz>
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -31,7 +32,7 @@ import org.sonews.storage.StorageManager;
 
 /**
  *
- * @author František Kučera (frantovo.cz)
+ * @author František Kučera
  */
 public class AuthInfoCommand implements Command {
 
