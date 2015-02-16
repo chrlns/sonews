@@ -3,7 +3,7 @@ language: java
 # To test agains multiple JDKs
 jdk:
   - oraclejdk8
-  - openjdk8
+#  - openjdk8
 
 #before_install:
 # - sudo apt-get update -qq
