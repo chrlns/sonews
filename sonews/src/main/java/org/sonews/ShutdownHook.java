@@ -40,7 +40,7 @@ class ShutdownHook extends Thread {
 
         Map<Thread, StackTraceElement[]> threadsMap = Thread.getAllStackTraces();
         
-        for (Thread thread : threadsMap.keySet()) {
+        threadsMap.keySet().stream().forEach((thread) -> {
             // Interrupt the thread if it's a AbstractDaemon
             AbstractDaemon daemon;
             if (thread instanceof AbstractDaemon && thread.isAlive()) {
@@ -51,21 +51,20 @@ class ShutdownHook extends Thread {
                     System.out.println("sonews: " + ex);
                 }
             }
-        }
+        });
 
-        for (Thread thread : threadsMap.keySet()) {
+        threadsMap.keySet().stream().forEach((thread) -> {
             AbstractDaemon daemon;
             if (thread instanceof AbstractDaemon && thread.isAlive()) {
                 daemon = (AbstractDaemon) thread;
-                System.out.println("sonews: Waiting for " + daemon
-                        + " to exit...");
+                System.out.println("sonews: Waiting for " + daemon + " to exit...");
                 try {
                     daemon.join(500);
                 } catch (InterruptedException ex) {
                     System.out.println(ex.getLocalizedMessage());
                 }
             }
-        }
+        });
 
         // We have notified all not-sleeping AbstractDaemons of the shutdown;
         // all other threads can be simply purged on VM shutdown
