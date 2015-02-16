@@ -58,7 +58,7 @@ public class Purger extends AbstractDaemon {
         } catch (StorageBackendException ex) {
             ex.printStackTrace();
         } catch (InterruptedException ex) {
-            Log.get().warning("Purger interrupted: " + ex);
+            Log.get().log(Level.WARNING, "Purger interrupted: {0}", ex);
         }
     }
 

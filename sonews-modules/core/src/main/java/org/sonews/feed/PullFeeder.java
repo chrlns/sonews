@@ -170,6 +170,50 @@ class PullFeeder extends AbstractDaemon {
         }
     }
 
+    protected void pull(Subscription sub) {
+        String host = sub.getHost();
+        int port = sub.getPort();
+
+        try {
+            Log.get().log(
+                    Level.INFO, "Feeding {0} from {1}", new Object[]{sub.getGroup(), sub.getHost()});
+            try {
+                connectTo(host, port);
+            } catch (SocketException ex) {
+                Log.get().log(
+                        Level.INFO, "Skipping {0}: {1}", new Object[]{sub.getHost(), ex});
+            }
+
+            int oldMark = this.highMarks.get(sub);
+            int newMark = changeGroup(sub.getGroup());
+            Storage storage = StorageManager.current();
+            if (storage == null) {
+                Log.get().log(Level.SEVERE, "No storage available -> disable PullFeeder");
+                setRunning(false);
+                return;
+            }
+
+            if (oldMark != newMark) {
+                List<String> messageIDs = over(oldMark, newMark);
+
+                for (String messageID : messageIDs) {
+                    if (!storage.isArticleExisting(messageID)) {
+                        getAndRepostArticle(sub, messageID);
+                    }
+                } // for(;;)
+                this.highMarks.put(sub, newMark);
+            }
+
+            disconnect();
+        } catch (StorageBackendException ex) {
+            ex.printStackTrace();
+        } catch (IOException ex) {
+            ex.printStackTrace();
+            Log.get().severe(
+                    "PullFeeder run stopped due to exception.");
+        }
+    }
+    
     @Override
     public void run() {
         while (isRunning()) {
@@ -178,59 +222,13 @@ class PullFeeder extends AbstractDaemon {
 
             Log.get().info("Start PullFeeder run...");
             this.subscriptions.clear();
-            for (Subscription sub : Subscription.getAll()) {
-                if (sub.getFeedtype() == FeedManager.TYPE_PULL) {
-                    addSubscription(sub);
-                }
-            }
+            Subscription.getAll().stream()
+                    .filter((sub) -> (sub.getFeedtype() == FeedManager.TYPE_PULL))
+                    .forEach(this::addSubscription);
 
             try {
-                for (Subscription sub : this.subscriptions) {
-                    String host = sub.getHost();
-                    int port = sub.getPort();
-
-                    try {
-                        Log.get().log(
-                                Level.INFO, "Feeding {0} from {1}", new Object[]{sub.getGroup(), sub.getHost()});
-                        try {
-                            connectTo(host, port);
-                        } catch (SocketException ex) {
-                            Log.get().log(
-                                    Level.INFO, "Skipping {0}: {1}", new Object[]{sub.getHost(), ex});
-                            continue;
-                        }
-
-                        int oldMark = this.highMarks.get(sub);
-                        int newMark = changeGroup(sub.getGroup());
-                        Storage storage = StorageManager.current();
-                        if (storage == null) {
-                            Log.get().log(Level.SEVERE, "No storage available -> disable PullFeeder");
-                            return;
-                        }
-
-                        if (oldMark != newMark) {
-                            List<String> messageIDs = over(oldMark, newMark);
-
-                            for (String messageID : messageIDs) {
-                                if (!storage.isArticleExisting(messageID)) {
-                                    getAndRepostArticle(sub, messageID);
-                                }
-                            } // for(;;)
-                            this.highMarks.put(sub, newMark);
-                        }
-
-                        disconnect();
-                    } catch (StorageBackendException ex) {
-                        ex.printStackTrace();
-                    } catch (IOException ex) {
-                        ex.printStackTrace();
-                        Log.get().severe(
-                                "PullFeeder run stopped due to exception.");
-                    }
-                } // for(Subscription sub : subscriptions)
-
-                Log.get().log(
-                        Level.INFO, "PullFeeder run ended. Waiting {0}s", pullInterval / 1000);
+                this.subscriptions.forEach(this::pull);
+                Log.get().log(Level.INFO, "PullFeeder run ended. Waiting {0}ms", pullInterval);
                 Thread.sleep(pullInterval);
             } catch (InterruptedException ex) {
                 Log.get().warning(ex.getMessage());

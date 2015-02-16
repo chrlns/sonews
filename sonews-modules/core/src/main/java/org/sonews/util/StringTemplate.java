@@ -31,7 +31,7 @@ public class StringTemplate {
 
     private String str = null;
     private String templateDelimiter = "%";
-    private Map<String, String> templateValues = new HashMap<String, String>();
+    private Map<String, String> templateValues = new HashMap<>();
 
     public StringTemplate(String str, final String templateDelimiter) {
         if (str == null || templateDelimiter == null) {

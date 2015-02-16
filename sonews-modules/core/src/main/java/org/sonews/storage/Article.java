@@ -28,11 +28,11 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.mail.Header;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.internet.InternetHeaders;
+
 import org.sonews.acl.User;
 import org.sonews.config.Config;
 import org.sonews.util.Log;
@@ -174,6 +174,7 @@ public class Article extends ArticleHead {
 
     /**
      * Returns the body string.
+     * @return 
      */
     public byte[] getBody() {
         return body;
@@ -184,7 +185,7 @@ public class Article extends ArticleHead {
      */
     public List<Group> getGroups() {
         String[] groupnames = getHeader(Headers.NEWSGROUPS)[0].split(",");
-        List<Group> groups = new ArrayList<Group>(groupnames.length);
+        List<Group> groups = new ArrayList<>(groupnames.length);
 
         for (String newsgroup : groupnames) {
             newsgroup = newsgroup.trim();

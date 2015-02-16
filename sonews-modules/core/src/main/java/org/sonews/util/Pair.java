@@ -22,12 +22,14 @@ package org.sonews.util;
  * A pair of two objects.
  * 
  * @author Christian Lins
+ * @param <T1>
+ * @param <T2>
  * @since sonews/0.5.0
  */
 public class Pair<T1, T2> {
 
-    private T1 a;
-    private T2 b;
+    private final T1 a;
+    private final T2 b;
 
     public Pair(T1 a, T2 b) {
         this.a = a;

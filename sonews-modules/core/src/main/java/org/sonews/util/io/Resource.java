@@ -40,6 +40,7 @@ public final class Resource {
      * classloader is used to load the resource, not the System's ClassLoader so
      * it may be safe to use this method in a sandboxed environment.
      *
+     * @param name
      * @return
      */
     public static URL getAsURL(final String name) {
@@ -81,8 +82,10 @@ public final class Resource {
     /**
      * Loads a plain text resource.
      *
+     * @param name
      * @param withNewline
      *            If false all newlines are removed from the return String
+     * @return 
      */
     public static String getAsString(String name, boolean withNewline) {
         if (name == null) {
@@ -98,7 +101,7 @@ public final class Resource {
 
             in = new BufferedReader(new InputStreamReader(ins,
                     Charset.forName("UTF-8")));
-            StringBuffer buf = new StringBuffer();
+            StringBuilder buf = new StringBuilder();
 
             for (;;) {
                 String line = in.readLine();

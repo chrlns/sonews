@@ -22,7 +22,7 @@ import java.io.ByteArrayInputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.Enumeration;
 import java.util.logging.Level;
-import java.util.logging.Logger;
+
 import javax.mail.Header;
 import javax.mail.MessagingException;
 import javax.mail.internet.InternetHeaders;
@@ -102,7 +102,7 @@ public class ArticleHead {
             return this.headerSrc;
         }
 
-        StringBuffer buf = new StringBuffer();
+        StringBuilder buf = new StringBuilder();
 
         for (Enumeration<?> en = this.headers.getAllHeaders(); en
                 .hasMoreElements();) {
@@ -138,15 +138,13 @@ public class ArticleHead {
      * Checks some headers for their validity and generates an appropriate
      * Path-header for this host if not yet existing. This method is called by
      * some Article constructors and the method setHeaders().
-     *
-     * @return true if something on the headers was changed.
      */
     protected void validateHeaders() {
         // Check for valid Path-header
         final String path = getHeader(Headers.PATH)[0];
         final String host = Config.inst().get(Config.HOSTNAME, "localhost");
         if (!path.startsWith(host)) {
-            StringBuffer pathBuf = new StringBuffer();
+            StringBuilder pathBuf = new StringBuilder();
             pathBuf.append(host);
             pathBuf.append('!');
             pathBuf.append(path);
