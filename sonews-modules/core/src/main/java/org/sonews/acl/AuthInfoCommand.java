@@ -16,6 +16,7 @@
  *   You should have received a copy of the GNU General Public License
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 package org.sonews.acl;
 
 import java.io.IOException;
@@ -24,8 +25,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import org.sonews.daemon.NNTPConnection;
 
+import org.sonews.daemon.NNTPConnection;
 import org.sonews.daemon.command.Command;
 import org.sonews.storage.StorageBackendException;
 import org.sonews.storage.StorageManager;

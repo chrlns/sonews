@@ -15,6 +15,7 @@
  *   You should have received a copy of the GNU General Public License
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 package org.sonews.storage;
 
 /**
@@ -45,6 +46,7 @@ public final class StorageManager {
         } catch (ClassNotFoundException | InstantiationException | IllegalAccessException ex) {
             // Do not use logging here as the Log class requires a working
             // backend which is in most cases not available at this point
+            // FIXME
             System.out.println("Could not instantiate StorageProvider: " + ex);
             return null;
         }

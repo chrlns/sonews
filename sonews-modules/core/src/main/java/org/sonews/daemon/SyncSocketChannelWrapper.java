@@ -29,7 +29,7 @@ import java.nio.channels.SocketChannel;
 public class SyncSocketChannelWrapper
     extends AbstractSocketChannelWrapper implements SocketChannelWrapper
 {
-    private SocketChannel channel;
+    private final SocketChannel channel;
 
     public SyncSocketChannelWrapper(SocketChannel socketChannel) {
         this.channel = socketChannel;

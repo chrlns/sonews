@@ -19,6 +19,7 @@
 package org.sonews.daemon;
 
 import java.sql.SQLException;
+
 import org.sonews.storage.StorageManager;
 import org.sonews.util.Log;
 

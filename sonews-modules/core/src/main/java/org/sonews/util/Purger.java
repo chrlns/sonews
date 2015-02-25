@@ -15,6 +15,7 @@
  *   You should have received a copy of the GNU General Public License
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 package org.sonews.util;
 
 import java.text.DateFormat;
@@ -123,6 +124,8 @@ public class Purger extends AbstractDaemon {
             }
             long artDate = 0;
             String dateStr = art.getHeader(Headers.DATE)[0];
+            
+            // FIXME Refactor using java.time classes
             try {
                 DateFormat dateFormat = DateFormat.getDateInstance(
                         DateFormat.LONG, Locale.US);

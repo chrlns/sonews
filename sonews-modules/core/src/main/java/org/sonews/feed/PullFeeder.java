@@ -118,13 +118,22 @@ class PullFeeder extends AbstractDaemon {
         this.socket = null;
     }
 
-    private void getAndRepostArticle(Subscription sub, String messageID) {
+    private static void getAndRepostArticle(
+            Storage storage, Subscription sub, String messageID) {
         try {
-            ArticleTransmitter at = new ArticleTransmitter(sub.getGroup(), messageID);
-            at.transfer(sub.getHost(), sub.getPort(), "localhost", Config.inst().get(Config.PORT, 119));
-        } catch (IOException ex) {
+            if(storage.isArticleExisting(messageID)) {
+                return;
+            }
+            
+            ArticleTransmitter at = new ArticleTransmitter(
+                    sub.getGroup(), messageID);
+            at.transfer(sub.getHost(), 
+                        sub.getPort(), 
+                        "localhost", 
+                        Config.inst().get(Config.PORT, 119));
+        } catch (IOException | StorageBackendException ex) {
             // There may be a temporary network failure
-            Log.get().log(Level.WARNING,
+            Log.get().log(Level.WARNING, 
                     "Skipping message {0} due to exception: {1}",
                     new Object[]{messageID, ex});
         }
@@ -195,12 +204,8 @@ class PullFeeder extends AbstractDaemon {
 
             if (oldMark != newMark) {
                 List<String> messageIDs = over(oldMark, newMark);
-
-                for (String messageID : messageIDs) {
-                    if (!storage.isArticleExisting(messageID)) {
-                        getAndRepostArticle(sub, messageID);
-                    }
-                } // for(;;)
+                messageIDs.forEach(
+                        (msgID) -> getAndRepostArticle(storage, sub, msgID));
                 this.highMarks.put(sub, newMark);
             }
 
@@ -223,7 +228,7 @@ class PullFeeder extends AbstractDaemon {
             Log.get().info("Start PullFeeder run...");
             this.subscriptions.clear();
             Subscription.getAll().stream()
-                    .filter((sub) -> (sub.getFeedtype() == FeedManager.TYPE_PULL))
+                    .filter((sub) -> (sub.getFeedtype() == FeedManager.PULL))
                     .forEach(this::addSubscription);
 
             try {

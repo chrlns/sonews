@@ -19,6 +19,7 @@
 package org.sonews.mlgw;
 
 import java.util.Properties;
+
 import javax.mail.AuthenticationFailedException;
 import javax.mail.Authenticator;
 import javax.mail.Flags.Flag;
@@ -29,6 +30,7 @@ import javax.mail.NoSuchProviderException;
 import javax.mail.PasswordAuthentication;
 import javax.mail.Session;
 import javax.mail.Store;
+
 import org.sonews.config.Config;
 import org.sonews.daemon.AbstractDaemon;
 import org.sonews.util.Log;

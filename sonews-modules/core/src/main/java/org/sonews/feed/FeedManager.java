@@ -28,8 +28,8 @@ import org.sonews.storage.Article;
  */
 public final class FeedManager {
 
-    public static final int TYPE_PULL = 0;
-    public static final int TYPE_PUSH = 1;
+    public static final int PULL = 0;
+    public static final int PUSH = 1;
     
     private static final PullFeeder pullFeeder = new PullFeeder();
     private static final PushFeeder pushFeeder = new PushFeeder();

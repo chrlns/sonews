@@ -21,6 +21,7 @@ package org.sonews.feed;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
+
 import org.sonews.util.Log;
 import org.sonews.util.io.Resource;
 
@@ -58,9 +59,9 @@ public class Subscription {
                 if(subLineChunks.length != 3) {
                     Log.get().log(Level.WARNING, "Malformed peers.conf line: {0}", subLine);
                 } else {
-                    int feedtype = FeedManager.TYPE_PULL;
+                    int feedtype = FeedManager.PULL;
                     if (subLineChunks[0].contains("PUSH")) {
-                        feedtype = FeedManager.TYPE_PUSH;
+                        feedtype = FeedManager.PUSH;
                     }
                     Log.get().log(Level.INFO, "Found peer subscription {0}", feedtype);
                     Subscription sub = new Subscription(subLineChunks[2], 119, feedtype, subLineChunks[1]);

@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousSocketChannel;
 import java.nio.charset.Charset;
+
 import org.sonews.acl.User;
 import org.sonews.daemon.ChannelLineBuffers;
 import org.sonews.daemon.NNTPConnection;
@@ -35,7 +36,7 @@ import org.sonews.storage.Group;
  */
 public class AsynchronousNNTPConnection implements NNTPConnection {
 
-    private AsynchronousSocketChannel channel;
+    private final AsynchronousSocketChannel channel;
     private final ChannelLineBuffers lineBuffers = new ChannelLineBuffers();
 
     public AsynchronousNNTPConnection(AsynchronousSocketChannel channel) {

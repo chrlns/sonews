@@ -23,7 +23,6 @@ import java.nio.channels.AsynchronousSocketChannel;
 import java.nio.channels.CompletionHandler;
 import java.util.logging.Level;
 
-import org.sonews.daemon.ChannelLineBuffers;
 import org.sonews.daemon.Connections;
 import org.sonews.util.Log;
 
@@ -34,7 +33,7 @@ import org.sonews.util.Log;
 class AcceptCompletionHandler
     implements CompletionHandler<AsynchronousSocketChannel,Void> {
 
-    private AsynchronousServerSocketChannel serverChannel;
+    private final AsynchronousServerSocketChannel serverChannel;
 
     public AcceptCompletionHandler(AsynchronousServerSocketChannel serverChannel) {
         this.serverChannel = serverChannel;

@@ -20,7 +20,7 @@ package org.sonews;
 
 import java.sql.Driver;
 import java.sql.DriverManager;
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.Enumeration;
 
 import org.sonews.config.Config;
@@ -53,7 +53,7 @@ public class Application {
     public static final String VERSION = "sonews/2.1.0";
 
     /** The server's startup date */
-    public static final Date STARTDATE = new Date();
+    public static final LocalDateTime STARTDATE = LocalDateTime.now();
 
     /**
      * The main entrypoint.

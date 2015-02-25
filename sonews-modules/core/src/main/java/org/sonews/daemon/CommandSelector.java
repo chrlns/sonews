@@ -20,7 +20,7 @@ package org.sonews.daemon;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
 import java.util.logging.Level;
 
 import javax.annotation.PostConstruct;
@@ -49,24 +49,25 @@ public class CommandSelector {
     public CommandSelector() {
     }
 
-    @PostConstruct
-    protected void init() {
-        Map<String, Command> commands = context.getBeansOfType(Command.class);
-
-        for (Command command : commands.values()) {
-            String[] cmdStrings = command.getSupportedCommandStrings();
-            for (String cmdString : cmdStrings) {
-                Log.get().log(Level.INFO, "Command {0} processed with {1}", new Object[]{cmdString, command.getClass()});
-                commandMapping.put(cmdString, command);
-            }
-        }
-    }
-
     public Command get(String commandName) {
         Command cmd = commandMapping.get(commandName);
         if (cmd == null) {
             cmd = commandMapping.get("*");
         }
         return cmd;
+    }
+    
+    @PostConstruct
+    protected void init() {
+        Map<String, Command> commands = context.getBeansOfType(Command.class);
+        commands.values().stream().forEach(this::mapCommandStringsToInstance);
+    }
+
+    private void mapCommandStringsToInstance(Command command) {
+        String[] cmdStrings = command.getSupportedCommandStrings();
+        for (String cmdString : cmdStrings) {
+            Log.get().log(Level.INFO, "Command {0} processed with {1}", new Object[]{cmdString, command.getClass()});
+            commandMapping.put(cmdString, command);
+        }
     }
 }

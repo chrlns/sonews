@@ -21,7 +21,6 @@ package org.sonews.feed;
 import java.io.IOException;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.sonews.daemon.AbstractDaemon;
 import org.sonews.storage.Article;
@@ -57,43 +56,45 @@ class PushFeeder extends AbstractDaemon {
                 String[] groups = newsgroupsHeader[0].split(",");
 
                 Log.get().log(Level.INFO, "PushFeed: {0}", article.getMessageID());
-                for (Subscription sub : Subscription.getAll()) {
-                    if (sub.getFeedtype() != FeedManager.TYPE_PUSH) {
-                        continue;
-                    }
-
-                    // Circle check
-                    if (article.getHeader(Headers.PATH)[0].contains(sub.getHost())) {
-                        Log.get().log(
-                                Level.INFO, "{0} skipped for host {1}",
-                                new Object[]{article.getMessageID(), sub.getHost()});
-                        continue;
-                    }
-
-                    try {
-                        for (String group : groups) {
-                            if (sub.getGroup().equals(group)) {
-                                // Delete headers that may cause problems
-                                article.removeHeader(Headers.NNTP_POSTING_DATE);
-                                article.removeHeader(Headers.NNTP_POSTING_HOST);
-                                article.removeHeader(Headers.X_COMPLAINTS_TO);
-                                article.removeHeader(Headers.X_TRACE);
-                                article.removeHeader(Headers.XREF);
-
-                                // POST the message to remote server
-                                ArticleWriter awriter = new ArticleWriter(
-                                        sub.getHost(), sub.getPort());
-                                awriter.writeArticle(article);
-                                break;
-                            }
-                        }
-                    } catch (IOException ex) {
-                        Log.get().warning(ex.toString());
-                    }
-                }
+                
+                Subscription.getAll().stream()
+                        .filter(sub -> (sub.getFeedtype() == FeedManager.PUSH))
+                        .forEach(sub -> push(article, groups, sub));
+                
             } catch (InterruptedException ex) {
                 Log.get().log(Level.WARNING, "PushFeeder interrupted: {0}", ex);
             }
+        }
+    }
+    
+    protected void push(Article article, String[] groups, Subscription sub) {
+        // Circle check
+        if (article.getHeader(Headers.PATH)[0].contains(sub.getHost())) {
+            Log.get().log(
+                    Level.INFO, "{0} skipped for host {1}",
+                    new Object[]{article.getMessageID(), sub.getHost()});
+            return;
+        }
+
+        try {
+            for (String group : groups) {
+                if (sub.getGroup().equals(group)) {
+                    // Delete headers that may cause problems
+                    article.removeHeader(Headers.NNTP_POSTING_DATE);
+                    article.removeHeader(Headers.NNTP_POSTING_HOST);
+                    article.removeHeader(Headers.X_COMPLAINTS_TO);
+                    article.removeHeader(Headers.X_TRACE);
+                    article.removeHeader(Headers.XREF);
+
+                    // POST the message to remote server
+                    ArticleWriter awriter = new ArticleWriter(
+                            sub.getHost(), sub.getPort());
+                    awriter.writeArticle(article);
+                    break;
+                }
+            }
+        } catch (IOException ex) {
+            Log.get().warning(ex.toString());
         }
     }
 

@@ -38,7 +38,6 @@ import org.sonews.daemon.CommandSelector;
 import org.sonews.daemon.LineEncoder;
 import org.sonews.daemon.NNTPConnection;
 import org.sonews.daemon.SocketChannelWrapper;
-import org.sonews.daemon.SyncSocketChannelWrapper;
 import org.sonews.daemon.command.Command;
 import org.sonews.storage.Article;
 import org.sonews.storage.Group;

@@ -130,12 +130,11 @@ public class ChannelLineBuffers {
     }
 
     /**
-     * Goes through the input buffer of the given channel and searches for next
-     * line terminator. If a '\n' is found, the bytes up to the line terminator
+     * Goes through the input buffer and searches for next line terminator. 
+     * If a '\n' is found, the bytes up to the line terminator
      * are returned as array of bytes (the line terminator is omitted). If none
      * is found the method returns null.
      *
-     * @param channel
      * @return A ByteBuffer wrapping the line.
      */
     public synchronized ByteBuffer nextInputLine() {
@@ -246,9 +245,7 @@ public class ChannelLineBuffers {
         }
 
         synchronized (outputBuffers) {
-            for (ByteBuffer buf : outputBuffers) {
-                recycleBuffer(buf);
-            }
+            outputBuffers.forEach(ChannelLineBuffers::recycleBuffer);
             outputBuffers.clear();
             outputBuffersClosed = true;
         }

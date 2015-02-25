@@ -15,6 +15,7 @@
  *   You should have received a copy of the GNU General Public License
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 package org.sonews.daemon.command;
 
 import java.io.ByteArrayInputStream;
@@ -22,8 +23,10 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.logging.Level;
+
 import javax.mail.MessagingException;
 import javax.mail.internet.InternetHeaders;
+
 import org.sonews.config.Config;
 import org.sonews.daemon.NNTPConnection;
 import org.sonews.daemon.sync.SynchronousNNTPConnection;
@@ -34,6 +37,7 @@ import org.sonews.storage.Headers;
 import org.sonews.storage.StorageBackendException;
 import org.sonews.storage.StorageManager;
 import org.sonews.util.Log;
+
 import org.springframework.stereotype.Component;
 
 /**
