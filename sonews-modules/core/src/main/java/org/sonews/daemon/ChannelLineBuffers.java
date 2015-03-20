@@ -57,9 +57,7 @@ public class ChannelLineBuffers {
     }
 
     // Both input and output buffers should be final as we synchronize on them,
-    // but the buffers are set somewhere to another object or null. We should
-    // investigate if this is an issue
-    // FIXME
+    // but the buffers are set somewhere to another object or null. 
     private ByteBuffer inputBuffer = newLineBuffer();
     private final List<ByteBuffer> outputBuffers = new ArrayList<>();
     private boolean outputBuffersClosed = false;
@@ -137,56 +135,59 @@ public class ChannelLineBuffers {
      *
      * @return A ByteBuffer wrapping the line.
      */
-    public synchronized ByteBuffer nextInputLine() {
+    public ByteBuffer nextInputLine() {
         if (inputBuffer == null) {
             return null;
         }
+        
+        // Synchronization on non-final field inputBuffer is probably okay
+        synchronized(inputBuffer) {
+            ByteBuffer buffer = inputBuffer;
 
-        ByteBuffer buffer = inputBuffer;
+            // Mark the current write position
+            int mark = buffer.position();
 
-        // Mark the current write position
-        int mark = buffer.position();
-
-        // Set position to 0 and limit to current position
-        buffer.flip();
-
-        ByteBuffer lineBuffer = newLineBuffer();
-
-        while (buffer.position() < buffer.limit()) {
-            byte b = buffer.get();
-            if (b == 10) // '\n'
-            {
-                // The bytes between the buffer's current position and its
-                // limit, if any, are copied to the beginning of the buffer.
-                // That is, the byte at index p = position() is copied to
-                // index zero, the byte at index p + 1 is copied to index
-                // one, and so forth until the byte at index limit() - 1
-                // is copied to index n = limit() - 1 - p.
-                // The buffer's position is then set to n+1 and its limit is
-                // set to its capacity.
-                buffer.compact();
-
-                lineBuffer.flip(); // limit to position, position to 0
-                return lineBuffer;
-            } else {
-                lineBuffer.put(b);
-            }
-        }
-
-        buffer.limit(BUFFER_SIZE);
-        buffer.position(mark);
-
-        if (buffer.hasRemaining()) {
-            return null;
-        } else {
-            // In the first 512 was no newline found, so the input is not
-            // standard compliant. We return the current buffer as new line
-            // and add a space to the beginning of the next line which
-            // corrects some overlong header lines.
-            inputBuffer = newLineBuffer();
-            inputBuffer.put((byte) ' ');
+            // Set position to 0 and limit to current position
             buffer.flip();
-            return buffer;
+
+            ByteBuffer lineBuffer = newLineBuffer();
+
+            while (buffer.position() < buffer.limit()) {
+                byte b = buffer.get();
+                if (b == 10) // '\n'
+                {
+                // The bytes between the buffer's current position and its
+                    // limit, if any, are copied to the beginning of the buffer.
+                    // That is, the byte at index p = position() is copied to
+                    // index zero, the byte at index p + 1 is copied to index
+                    // one, and so forth until the byte at index limit() - 1
+                    // is copied to index n = limit() - 1 - p.
+                    // The buffer's position is then set to n+1 and its limit is
+                    // set to its capacity.
+                    buffer.compact();
+
+                    lineBuffer.flip(); // limit to position, position to 0
+                    return lineBuffer;
+                } else {
+                    lineBuffer.put(b);
+                }
+            }
+
+            buffer.limit(BUFFER_SIZE);
+            buffer.position(mark);
+
+            if (buffer.hasRemaining()) {
+                return null;
+            } else {
+            // In the first 512 was no newline found, so the input is not
+                // standard compliant. We return the current buffer as new line
+                // and add a space to the beginning of the next line which
+                // corrects some overlong header lines.
+                inputBuffer = newLineBuffer();
+                inputBuffer.put((byte) ' ');
+                buffer.flip();
+                return buffer;
+            }
         }
     }
 

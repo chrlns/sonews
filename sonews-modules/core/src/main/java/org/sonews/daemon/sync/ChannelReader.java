@@ -173,11 +173,9 @@ class ChannelReader extends AbstractDaemon {
                             "ChannelReader.processSelectionKey(): {0}", ex);
                 }
 
-                if (read == -1) // End of stream
-                {
+                if (read == -1) { // End of stream
                     selKey.cancel();
-                } else if (read > 0) // If some data was read
-                {
+                } else if (read > 0) { // If some data was read
                     ConnectionWorker.addChannel(socketChannel);
                 }
             }

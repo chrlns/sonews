@@ -56,7 +56,12 @@
     <dependency>
       <groupId>org.hibernate.ogm</groupId>
       <artifactId>hibernate-ogm-couchdb</artifactId>
-      <version>4.1.0.Beta8</version>
+      <version>4.1.3.Final</version>
+    </dependency>
+    <dependency>
+        <groupId>org.hibernate</groupId>
+        <artifactId>hibernate-search-orm</artifactId>
+        <version>5.1.1.Final</version>
     </dependency>
     <dependency>
       <groupId>org.hibernate.javax.persistence</groupId>

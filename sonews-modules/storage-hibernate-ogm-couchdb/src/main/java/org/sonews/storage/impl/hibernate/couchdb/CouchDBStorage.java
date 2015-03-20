@@ -18,6 +18,7 @@
 
 package org.sonews.storage.impl.hibernate.couchdb;
 
+import java.util.Arrays;
 import java.util.List;
 
 import javax.persistence.EntityManager;
@@ -28,6 +29,8 @@ import org.sonews.storage.ArticleHead;
 import org.sonews.storage.Group;
 import org.sonews.storage.StorageBackendException;
 import org.sonews.util.Pair;
+import org.springframework.web.client.HttpStatusCodeException;
+import org.springframework.web.client.RestTemplate;
 
 /**
  *
@@ -35,7 +38,7 @@ import org.sonews.util.Pair;
  */
 public class CouchDBStorage implements org.sonews.storage.Storage {
 
-    private EntityManager em;
+    private final EntityManager em;
     
     public CouchDBStorage(EntityManager em) {
         this.em = em;
@@ -95,12 +98,37 @@ public class CouchDBStorage implements org.sonews.storage.Storage {
 
     @Override
     public int getFirstArticleNumber(Group group) throws StorageBackendException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        try {
+            return getMaxMinArticleIndex("min", group.getName());
+        } catch(HttpStatusCodeException ex) {
+            throw new StorageBackendException(ex);
+        }
     }
 
+    protected int getMaxMinArticleIndex(String what, String groupName) {
+        // FIXME Get Server address from config
+        String url = "http://localhost:5984/{db}/_design/access/_view/{what}_article_index?group=true&key=\"{group}\"";
+        RestTemplate rt = new RestTemplate();
+        ViewResult res = rt.getForObject(url,
+                ViewResult.class,
+                "hibernate-sonews", // TODO Get this from config
+                what, // max or min
+                groupName);
+
+        if (res.getRows().length == 0) {
+            return 0;
+        }
+
+        return Integer.parseInt(res.getRows()[0].getValue(), 10);
+    }
+    
     @Override
     public int getLastArticleNumber(Group group) throws StorageBackendException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        try {
+            return getMaxMinArticleIndex("max", group.getName());
+        } catch(HttpStatusCodeException ex) {
+            throw new StorageBackendException(ex);
+        }
     }
 
     @Override
