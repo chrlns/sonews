@@ -22,6 +22,8 @@ import java.sql.Driver;
 import java.sql.DriverManager;
 import java.time.LocalDateTime;
 import java.util.Enumeration;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.sonews.config.Config;
 import org.sonews.daemon.ChannelLineBuffers;
@@ -62,8 +64,7 @@ public class Application {
      * @throws Exception
      */
     public static void main(String[] args) throws Exception {
-        System.out.println(VERSION);
-        Thread.currentThread().setName("Mainthread");
+        Logger.getLogger("org.sonews").log(Level.INFO, VERSION);
 
         // Command line arguments
         boolean async = false;

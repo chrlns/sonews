@@ -20,6 +20,8 @@ package org.sonews;
 
 import java.sql.SQLException;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.sonews.daemon.AbstractDaemon;
 
@@ -31,16 +33,21 @@ import org.sonews.daemon.AbstractDaemon;
  */
 class ShutdownHook extends Thread {
 
+    private final Logger logger;
+    
+    public ShutdownHook() {
+        this.logger= Logger.getLogger("org.sonews");
+    }
     /**
      * Called when the JVM exits.
      */
     @Override
     public void run() {
-        System.out.println("sonews: Trying to shutdown all threads...");
+        logger.log(Level.INFO, "Clean shutdown of daemon threads initiated");
 
         Map<Thread, StackTraceElement[]> threadsMap = Thread.getAllStackTraces();
         
-        threadsMap.keySet().stream().forEach((thread) -> {
+        threadsMap.keySet().parallelStream().forEach((thread) -> {
             // Interrupt the thread if it's a AbstractDaemon
             AbstractDaemon daemon;
             if (thread instanceof AbstractDaemon && thread.isAlive()) {
@@ -57,7 +64,7 @@ class ShutdownHook extends Thread {
             AbstractDaemon daemon;
             if (thread instanceof AbstractDaemon && thread.isAlive()) {
                 daemon = (AbstractDaemon) thread;
-                System.out.println("sonews: Waiting for " + daemon + " to exit...");
+                logger.log(Level.INFO, "Waiting for {0} to exit...", daemon);
                 try {
                     daemon.join(500);
                 } catch (InterruptedException ex) {
@@ -69,6 +76,6 @@ class ShutdownHook extends Thread {
         // We have notified all not-sleeping AbstractDaemons of the shutdown;
         // all other threads can be simply purged on VM shutdown
 
-        System.out.println("sonews: Clean shutdown.");
+        logger.log(Level.INFO, "Clean shutdown of daemon threads completed");
     }
 }
