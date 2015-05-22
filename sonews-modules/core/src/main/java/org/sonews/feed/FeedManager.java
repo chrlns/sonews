@@ -18,6 +18,7 @@
 
 package org.sonews.feed;
 
+import org.sonews.daemon.DaemonThread;
 import org.sonews.storage.Article;
 
 /**
@@ -42,8 +43,8 @@ public final class FeedManager {
         // Force loading of peers.conf
         Subscription.getAll();
         
-        pullFeeder.start();
-        pushFeeder.start();
+        new DaemonThread(pullFeeder).start();
+        new DaemonThread(pushFeeder).start();
     }
 
     public static void queueForPush(Article article) {

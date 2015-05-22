@@ -23,7 +23,7 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.sonews.daemon.AbstractDaemon;
+import org.sonews.daemon.DaemonThread;
 
 /**
  * Will force all other threads to shutdown cleanly.
@@ -31,7 +31,7 @@ import org.sonews.daemon.AbstractDaemon;
  * @author Christian Lins
  * @since sonews/0.5.0
  */
-class ShutdownHook extends Thread {
+class ShutdownHook implements Runnable {
 
     private final Logger logger;
     
@@ -48,12 +48,12 @@ class ShutdownHook extends Thread {
         Map<Thread, StackTraceElement[]> threadsMap = Thread.getAllStackTraces();
         
         threadsMap.keySet().parallelStream().forEach((thread) -> {
-            // Interrupt the thread if it's a AbstractDaemon
-            AbstractDaemon daemon;
-            if (thread instanceof AbstractDaemon && thread.isAlive()) {
+            // Interrupt the thread if it's a DaemonThread
+            DaemonThread daemon;
+            if (thread instanceof DaemonThread && thread.isAlive()) {
                 try {
-                    daemon = (AbstractDaemon) thread;
-                    daemon.shutdownNow();
+                    daemon = (DaemonThread) thread;
+                    daemon.requestShutdown();
                 } catch (SQLException ex) {
                     System.out.println("sonews: " + ex);
                 }
@@ -61,9 +61,9 @@ class ShutdownHook extends Thread {
         });
 
         threadsMap.keySet().stream().forEach((thread) -> {
-            AbstractDaemon daemon;
-            if (thread instanceof AbstractDaemon && thread.isAlive()) {
-                daemon = (AbstractDaemon) thread;
+            DaemonThread daemon;
+            if (thread instanceof DaemonThread && thread.isAlive()) {
+                daemon = (DaemonThread) thread;
                 logger.log(Level.INFO, "Waiting for {0} to exit...", daemon);
                 try {
                     daemon.join(500);

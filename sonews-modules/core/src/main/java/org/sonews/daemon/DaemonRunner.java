@@ -15,19 +15,18 @@
  *   You should have received a copy of the GNU General Public License
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 package org.sonews.daemon;
 
 /**
- *
+ * Provides the default implementation for classes implementing the 
+ * DaemonRunnable interface.
  * @author Christian Lins
  */
-public interface NNTPDaemon {
+public abstract class DaemonRunner implements DaemonRunnable {
+    protected DaemonThread daemon;
     
-    void join() throws InterruptedException;
-    
-    void setPort(int port);
-    
-    /** Daemon starts listening on configured port */
-    void start();
+    @Override
+    public void setDaemon(DaemonThread daemon) {
+        this.daemon = daemon;
+    }
 }

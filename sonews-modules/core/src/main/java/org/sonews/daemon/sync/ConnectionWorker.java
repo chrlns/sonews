@@ -23,9 +23,9 @@ import java.nio.channels.SocketChannel;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.logging.Level;
 
-import org.sonews.daemon.AbstractDaemon;
 import org.sonews.daemon.ChannelLineBuffers;
 import org.sonews.daemon.Connections;
+import org.sonews.daemon.DaemonRunner;
 import org.sonews.daemon.NNTPConnection;
 import org.sonews.daemon.SocketChannelWrapperFactory;
 import org.sonews.util.Log;
@@ -36,7 +36,7 @@ import org.sonews.util.Log;
  * @author Christian Lins
  * @since sonews/0.5.0
  */
-class ConnectionWorker extends AbstractDaemon {
+class ConnectionWorker extends DaemonRunner {
 
     // 256 pending events should be enough
     private static final ArrayBlockingQueue<SocketChannel> pendingChannels =
@@ -57,7 +57,7 @@ class ConnectionWorker extends AbstractDaemon {
      */
     @Override
     public void run() {
-        while (isRunning()) {
+        while (daemon.isRunning()) {
             try {
                 // Retrieve and remove if available, otherwise wait.
                 SocketChannel channel = pendingChannels.take();

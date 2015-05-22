@@ -21,8 +21,8 @@ package org.sonews.feed;
 import java.io.IOException;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Level;
+import org.sonews.daemon.DaemonRunner;
 
-import org.sonews.daemon.AbstractDaemon;
 import org.sonews.storage.Article;
 import org.sonews.storage.Headers;
 import org.sonews.util.Log;
@@ -35,7 +35,7 @@ import org.sonews.util.io.ArticleWriter;
  * @author Christian Lins
  * @since sonews/0.5.0
  */
-class PushFeeder extends AbstractDaemon {
+class PushFeeder extends DaemonRunner {
 
     // TODO Make configurable
     public static final int QUEUE_SIZE = 128;
@@ -44,7 +44,7 @@ class PushFeeder extends AbstractDaemon {
 
     @Override
     public void run() {
-        while (isRunning()) {
+        while (daemon.isRunning()) {
             try {
                 Article article = this.articleQueue.take();
                 String[] newsgroupsHeader = article.getHeader(Headers.NEWSGROUPS);

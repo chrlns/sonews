@@ -18,8 +18,7 @@
 
 package org.sonews;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
+
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -27,7 +26,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
-import org.sonews.daemon.AbstractDaemon;
+import org.sonews.daemon.DaemonThread;
 
 /**
  *
@@ -61,22 +60,20 @@ public class ShutdownHookTest {
     public void testRun() {
         try {
             System.out.println("run");
-            ShutdownHook instance = new ShutdownHook();
+            Thread instance = new Thread(new ShutdownHook());
             instance.start();
             instance.join();
             
-            instance = new ShutdownHook();
+            instance = new Thread(new ShutdownHook());
             
-            AbstractDaemon daemon = new AbstractDaemon() {
-                @Override
-                public void run() {
-                    try {
-                        Thread.sleep(10000);
-                    } catch (InterruptedException ex) {
-                        System.out.println("Sleep interrupted");
-                    }
+            DaemonThread daemon;
+            daemon = new DaemonThread(() -> {
+                try {
+                    Thread.sleep(10000);
+                } catch (InterruptedException ex) {
+                    System.out.println("Sleep interrupted");
                 }
-            };
+            });
             daemon.start();
             
             instance.start();

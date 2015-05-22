@@ -37,7 +37,7 @@ import org.sonews.util.Log;
  * @author Christian Lins
  * @since sonews/0.5.0
  */
-public final class Connections extends AbstractDaemon {
+public final class Connections extends DaemonRunner {
 
     private static final Connections instance = new Connections();
 
@@ -53,7 +53,6 @@ public final class Connections extends AbstractDaemon {
             = new HashMap<>();
 
     private Connections() {
-        setName("Connections");
     }
 
     /**
@@ -86,7 +85,9 @@ public final class Connections extends AbstractDaemon {
      */
     @Override
     public void run() {
-        while (isRunning()) {
+        this.daemon.setName("Connections");
+        
+        while (daemon.isRunning()) {
             int timeoutMillis = 1000 * Config.inst().get(Config.TIMEOUT, 180);
 
             synchronized (this.connections) {

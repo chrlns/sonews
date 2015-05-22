@@ -27,8 +27,8 @@ import java.nio.channels.SocketChannel;
 import java.util.Iterator;
 import java.util.logging.Level;
 
-import org.sonews.daemon.AbstractDaemon;
 import org.sonews.daemon.Connections;
+import org.sonews.daemon.DaemonRunner;
 import org.sonews.daemon.NNTPConnection;
 import org.sonews.daemon.SocketChannelWrapperFactory;
 import org.sonews.util.Log;
@@ -39,7 +39,7 @@ import org.sonews.util.Log;
  * @author Christian Lins
  * @since sonews/0.5.0
  */
-class ChannelWriter extends AbstractDaemon {
+class ChannelWriter extends DaemonRunner {
 
     private static final ChannelWriter instance = new ChannelWriter();
 
@@ -78,7 +78,7 @@ class ChannelWriter extends AbstractDaemon {
     public void run() {
         assert selector != null;
 
-        while (isRunning()) {
+        while (daemon.isRunning()) {
             try {
                 SelectionKey selKey = null;
                 SocketChannel socketChannel = null;

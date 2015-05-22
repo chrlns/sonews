@@ -28,7 +28,8 @@ import java.util.logging.Logger;
 import org.sonews.config.Config;
 import org.sonews.daemon.ChannelLineBuffers;
 import org.sonews.daemon.Connections;
-import org.sonews.daemon.NNTPDaemon;
+import org.sonews.daemon.DaemonThread;
+import org.sonews.daemon.NNTPDaemonRunnable;
 import org.sonews.feed.FeedManager;
 import org.sonews.storage.StorageManager;
 import org.sonews.storage.StorageProvider;
@@ -140,19 +141,22 @@ public class Application {
         ChannelLineBuffers.allocateDirect();
 
         // Add shutdown hook
-        Runtime.getRuntime().addShutdownHook(new ShutdownHook());
+        Runtime.getRuntime().addShutdownHook(new Thread(new ShutdownHook()));
 
         // Start the listening daemon
         if (port <= 0) {
             port = Config.inst().get(Config.PORT, 119);
         }
         
-        NNTPDaemon daemon = context.getBean(NNTPDaemon.class);
-        daemon.setPort(port);
+        NNTPDaemonRunnable nntpDaemon = context.getBean(NNTPDaemonRunnable.class);
+        nntpDaemon.setPort(port);
+        
+        DaemonThread daemon;
+        daemon = new DaemonThread(nntpDaemon);
         daemon.start();
 
         // Start Connections purger thread...
-        Connections.getInstance().start();
+        new DaemonThread(Connections.getInstance()).start();
 
         // Start feeds
         if (feed) {
@@ -160,8 +164,7 @@ public class Application {
         }
 
         if (purger) {
-            Purger purgerDaemon = new Purger();
-            purgerDaemon.start();
+            new DaemonThread(new Purger()).start();
         }
 
         // Wait for main thread to exit (setDaemon(false))

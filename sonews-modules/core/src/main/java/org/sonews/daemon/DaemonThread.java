@@ -21,7 +21,6 @@ package org.sonews.daemon;
 import java.sql.SQLException;
 
 import org.sonews.storage.StorageManager;
-import org.sonews.util.Log;
 
 /**
  * Base class of all sonews threads. Instances of this class will be
@@ -31,15 +30,24 @@ import org.sonews.util.Log;
  * @author Christian Lins
  * @since sonews/0.5.0
  */
-public abstract class AbstractDaemon extends Thread {
+public class DaemonThread extends Thread {
 
     /** This variable is write synchronized through setRunning */
     private volatile boolean isRunning = false;
+    
+    private DaemonRunnable run = null;
 
     /**
-     * Protected constructor. Will be called by derived classes.
+     * Constructs a new DaemonThread with the given Runnable.
+     * @param run
      */
-    protected AbstractDaemon() {
+    public DaemonThread(Runnable run) {
+        super(run);
+        
+        if(run instanceof DaemonRunnable) {
+            this.run = (DaemonRunnable)run;
+        }
+        
         setDaemon(true); // VM will exit when all threads are daemons
         setName(getClass().getSimpleName());
     }
@@ -48,9 +56,7 @@ public abstract class AbstractDaemon extends Thread {
      * @return true if shutdown() was not yet called.
      */
     public boolean isRunning() {
-        synchronized (this) {
-            return this.isRunning;
-        }
+        return this.isRunning;
     }
 
     /**
@@ -66,24 +72,14 @@ public abstract class AbstractDaemon extends Thread {
     /**
      * Marks this thread to exit soon. Closes the associated JDBCDatabase
      * connection if available.
-     *
-     * @throws java.sql.SQLException
      */
-    public void shutdownNow() throws SQLException {
+    public void requestShutdown() {
         synchronized (this) {
             this.isRunning = false;
-            StorageManager.disableProvider();
-        }
-    }
-
-    /**
-     * Calls shutdownNow() but catches SQLExceptions if occurring.
-     */
-    public void shutdown() {
-        try {
-            shutdownNow();
-        } catch (SQLException ex) {
-            Log.get().warning(ex.toString());
+            StorageManager.disableProvider(); // TODO Check if this is correct here
+            if (run != null) {
+                run.dispose();
+            }
         }
     }
 
@@ -92,9 +88,10 @@ public abstract class AbstractDaemon extends Thread {
      */
     @Override
     public void start() {
-        synchronized (this) {
-            this.isRunning = true;
+        if (run != null) {
+            run.setDaemon(this);
         }
+        setRunning(true);
         super.start();
     }
 }

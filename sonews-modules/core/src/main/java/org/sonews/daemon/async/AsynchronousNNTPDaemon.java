@@ -20,21 +20,15 @@ package org.sonews.daemon.async;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.net.SocketAddress;
-import java.net.SocketOption;
 import java.nio.channels.AsynchronousChannelGroup;
 import java.nio.channels.AsynchronousServerSocketChannel;
-import java.nio.channels.AsynchronousSocketChannel;
-import java.nio.channels.CompletionHandler;
-import java.util.Set;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.sonews.daemon.DaemonRunner;
 
-import org.sonews.daemon.AbstractDaemon;
-import org.sonews.daemon.NNTPDaemon;
+import org.sonews.daemon.DaemonThread;
+import org.sonews.daemon.NNTPDaemonRunnable;
 import org.sonews.util.Log;
 import org.springframework.stereotype.Component;
 
@@ -45,7 +39,7 @@ import org.springframework.stereotype.Component;
  * @author Christian Lins
  */
 @Component
-public class AsynchronousNNTPDaemon extends AbstractDaemon implements NNTPDaemon {
+public class AsynchronousNNTPDaemon extends DaemonRunner implements NNTPDaemonRunnable {
 
     private int port;
     private AsynchronousServerSocketChannel serverSocketChannel;

@@ -31,10 +31,11 @@ import java.nio.channels.SocketChannel;
 import java.util.logging.Level;
 
 import org.sonews.config.Config;
-import org.sonews.daemon.AbstractDaemon;
 import org.sonews.daemon.Connections;
+import org.sonews.daemon.DaemonRunner;
+import org.sonews.daemon.DaemonThread;
 import org.sonews.daemon.NNTPConnection;
-import org.sonews.daemon.NNTPDaemon;
+import org.sonews.daemon.NNTPDaemonRunnable;
 import org.sonews.daemon.SocketChannelWrapperFactory;
 import org.sonews.util.Log;
 
@@ -51,7 +52,7 @@ import org.springframework.stereotype.Component;
  */
 @Component
 @Primary
-public class SynchronousNNTPDaemon extends AbstractDaemon implements NNTPDaemon {
+public class SynchronousNNTPDaemon extends DaemonRunner implements NNTPDaemonRunnable {
 
     public static final Object RegisterGate = new Object();
 
@@ -80,17 +81,17 @@ public class SynchronousNNTPDaemon extends AbstractDaemon implements NNTPDaemon 
             // Start working threads
             final int workerThreads = Math.max(4, 2 *
                     Runtime.getRuntime().availableProcessors());
-            ConnectionWorker[] cworkers = new ConnectionWorker[workerThreads];
+            DaemonThread[] cworkers = new DaemonThread[workerThreads];
             for (int n = 0; n < workerThreads; n++) {
-                cworkers[n] = new ConnectionWorker();
+                cworkers[n] = new DaemonThread(new ConnectionWorker());
                 cworkers[n].start();
             }
             Log.get().log(Level.INFO, "{0} worker threads started.", workerThreads);
 
             ChannelWriter.getInstance().setSelector(writeSelector);
             ChannelReader.getInstance().setSelector(readSelector);
-            ChannelWriter.getInstance().start();
-            ChannelReader.getInstance().start();
+            new DaemonThread(ChannelWriter.getInstance()).start();
+            new DaemonThread(ChannelReader.getInstance()).start();
 
             final ServerSocketChannel serverSocketChannel = ServerSocketChannel
                     .open();
@@ -100,7 +101,7 @@ public class SynchronousNNTPDaemon extends AbstractDaemon implements NNTPDaemon 
             serverSocket = serverSocketChannel.socket();
             serverSocket.bind(new InetSocketAddress(this.port));
 
-            while (isRunning()) {
+            while (daemon.isRunning()) {
                 SocketChannel socketChannel;
 
                 try {
@@ -159,7 +160,7 @@ public class SynchronousNNTPDaemon extends AbstractDaemon implements NNTPDaemon 
         } catch (BindException ex) {
             // Could not bind to socket; this is a fatal, so perform a shutdown
             Log.get().log(Level.SEVERE, ex.getLocalizedMessage() + " -> shutdown sonews", ex);
-            setRunning(false);
+            daemon.requestShutdown();
         } catch (IOException ex) {
             ex.printStackTrace();
         } catch (Exception ex) {
@@ -168,7 +169,7 @@ public class SynchronousNNTPDaemon extends AbstractDaemon implements NNTPDaemon 
     }
 
     @Override
-    public void shutdownNow() {
+    public void dispose() {
         if (this.serverSocket != null) {
             try {
                 this.serverSocket.close();

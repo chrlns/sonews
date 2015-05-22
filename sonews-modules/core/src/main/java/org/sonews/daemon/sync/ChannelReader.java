@@ -28,8 +28,8 @@ import java.util.Iterator;
 import java.util.Set;
 import java.util.logging.Level;
 
-import org.sonews.daemon.AbstractDaemon;
 import org.sonews.daemon.Connections;
+import org.sonews.daemon.DaemonRunner;
 import org.sonews.daemon.NNTPConnection;
 import org.sonews.daemon.SocketChannelWrapperFactory;
 import org.sonews.util.Log;
@@ -40,7 +40,7 @@ import org.sonews.util.Log;
  * @author Christian Lins
  * @since sonews/0.5.0
  */
-class ChannelReader extends AbstractDaemon {
+class ChannelReader extends DaemonRunner {
 
     private static final ChannelReader instance = new ChannelReader();
 
@@ -73,7 +73,7 @@ class ChannelReader extends AbstractDaemon {
     public void run() {
         assert selector != null;
 
-        while (isRunning()) {
+        while (daemon.isRunning()) {
             try {
                 // select() blocks until some SelectableChannels are ready for
                 // processing. There is no need to lock the selector as we have

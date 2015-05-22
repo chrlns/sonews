@@ -35,7 +35,9 @@ import java.util.Set;
 import java.util.logging.Level;
 
 import org.sonews.config.Config;
-import org.sonews.daemon.AbstractDaemon;
+import org.sonews.daemon.DaemonRunnable;
+import org.sonews.daemon.DaemonRunner;
+import org.sonews.daemon.DaemonThread;
 import org.sonews.storage.Storage;
 import org.sonews.storage.StorageBackendException;
 import org.sonews.storage.StorageManager;
@@ -48,7 +50,7 @@ import org.sonews.util.io.ArticleTransmitter;
  * @author Christian Lins
  * @since sonews/0.5.0
  */
-class PullFeeder extends AbstractDaemon {
+class PullFeeder extends DaemonRunner {
 
     private final Map<Subscription, Integer> highMarks = new HashMap<>();
     private BufferedReader in;
@@ -198,7 +200,7 @@ class PullFeeder extends AbstractDaemon {
             Storage storage = StorageManager.current();
             if (storage == null) {
                 Log.get().log(Level.SEVERE, "No storage available -> disable PullFeeder");
-                setRunning(false);
+                daemon.requestShutdown();
                 return;
             }
 
@@ -221,7 +223,7 @@ class PullFeeder extends AbstractDaemon {
     
     @Override
     public void run() {
-        while (isRunning()) {
+        while (daemon.isRunning()) {
             int pullInterval = 1000 * Config.inst().get(
                     Config.FEED_PULLINTERVAL, 3600);
 
@@ -240,4 +242,5 @@ class PullFeeder extends AbstractDaemon {
             }
         }
     }
+
 }
