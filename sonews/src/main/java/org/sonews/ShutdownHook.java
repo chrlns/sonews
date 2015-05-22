@@ -51,12 +51,8 @@ class ShutdownHook implements Runnable {
             // Interrupt the thread if it's a DaemonThread
             DaemonThread daemon;
             if (thread instanceof DaemonThread && thread.isAlive()) {
-                try {
-                    daemon = (DaemonThread) thread;
-                    daemon.requestShutdown();
-                } catch (SQLException ex) {
-                    System.out.println("sonews: " + ex);
-                }
+                daemon = (DaemonThread) thread;
+                daemon.requestShutdown();
             }
         });
 
