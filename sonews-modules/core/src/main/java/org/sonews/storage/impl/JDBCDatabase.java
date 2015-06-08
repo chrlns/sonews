@@ -219,6 +219,17 @@ public class JDBCDatabase implements Storage {
             throw new Error("JDBC Driver not found!", ex);
         }
     }
+    
+    protected void closeResultSet(ResultSet rs) {
+        if (rs != null) {
+            try {
+                rs.close();
+            } catch (SQLException ex) {
+                // Ignore exception
+            }
+            restarts = 0; // Reset error count
+        }
+    }
 
     /**
      * Adds an article to the database.
@@ -315,14 +326,7 @@ public class JDBCDatabase implements Storage {
             restartConnection(ex);
             return countArticles();
         } finally {
-            if (rs != null) {
-                try {
-                    rs.close();
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
-                }
-                restarts = 0;
-            }
+            closeResultSet(rs);
         }
     }
 
@@ -374,14 +378,7 @@ public class JDBCDatabase implements Storage {
             restartConnection(ex);
             return getArticle(messageID);
         } finally {
-            if (rs != null) {
-                try {
-                    rs.close();
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
-                }
-                restarts = 0; // Reset error count
-            }
+            closeResultSet(rs);
         }
     }
 
@@ -414,14 +411,7 @@ public class JDBCDatabase implements Storage {
             restartConnection(ex);
             return getArticle(articleIndex, gid);
         } finally {
-            if (rs != null) {
-                try {
-                    rs.close();
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
-                }
-                restarts = 0;
-            }
+            closeResultSet(rs);
         }
     }
 
@@ -432,7 +422,7 @@ public class JDBCDatabase implements Storage {
      * @param start
      * @param end
      * @param headerKey
-     * @param pattern
+     * @param patStr
      * @return
      * @throws StorageBackendException
      */
@@ -441,7 +431,7 @@ public class JDBCDatabase implements Storage {
             long end, String headerKey, String patStr)
             throws StorageBackendException, PatternSyntaxException {
         ResultSet rs = null;
-        List<Pair<Long, String>> heads = new ArrayList<Pair<Long, String>>();
+        List<Pair<Long, String>> heads = new ArrayList<>();
 
         try {
             this.pstmtGetArticleHeaders1.setString(1, group.getName());
@@ -462,7 +452,7 @@ public class JDBCDatabase implements Storage {
                     String headerValue = rs.getString(2);
                     Matcher matcher = pattern.matcher(headerValue);
                     if (matcher.matches()) {
-                        heads.add(new Pair<Long, String>(articleIndex,
+                        heads.add(new Pair<>(articleIndex,
                                 headerValue));
                     }
                 }
@@ -471,13 +461,7 @@ public class JDBCDatabase implements Storage {
             restartConnection(ex);
             return getArticleHeaders(group, start, end, headerKey, patStr);
         } finally {
-            if (rs != null) {
-                try {
-                    rs.close();
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
-                }
-            }
+            closeResultSet(rs);
         }
 
         return heads;
@@ -511,13 +495,7 @@ public class JDBCDatabase implements Storage {
             restartConnection(ex);
             return getArticleHeaders(articleID);
         } finally {
-            if (rs != null) {
-                try {
-                    rs.close();
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
-                }
-            }
+            closeResultSet(rs);
         }
     }
 
@@ -540,20 +518,16 @@ public class JDBCDatabase implements Storage {
             restartConnection(ex);
             return getArticleIndex(article, group);
         } finally {
-            if (rs != null) {
-                try {
-                    rs.close();
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
-                }
-            }
+            closeResultSet(rs);
         }
     }
 
     /**
      * Returns a list of Long/Article Pairs.
      *
-     * @throws java.sql.SQLException
+     * @param first
+     * @param last
+     * @return 
      */
     @Override
     public List<Pair<Long, ArticleHead>> getArticleHeads(Group group,
@@ -566,14 +540,13 @@ public class JDBCDatabase implements Storage {
             this.pstmtGetArticleHeads.setLong(3, last);
             rs = pstmtGetArticleHeads.executeQuery();
 
-            List<Pair<Long, ArticleHead>> articles = new ArrayList<Pair<Long, ArticleHead>>();
+            List<Pair<Long, ArticleHead>> articles = new ArrayList<>();
 
             while (rs.next()) {
                 long aid = rs.getLong("article_id");
                 long aidx = rs.getLong("article_index");
                 String headers = getArticleHeaders(aid);
-                articles.add(new Pair<Long, ArticleHead>(aidx, new ArticleHead(
-                        headers)));
+                articles.add(new Pair<>(aidx, new ArticleHead(headers)));
             }
 
             return articles;
@@ -581,13 +554,7 @@ public class JDBCDatabase implements Storage {
             restartConnection(ex);
             return getArticleHeads(group, first, last);
         } finally {
-            if (rs != null) {
-                try {
-                    rs.close();
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
-                }
-            }
+            closeResultSet(rs);
         }
     }
 
@@ -596,7 +563,7 @@ public class JDBCDatabase implements Storage {
             throws StorageBackendException {
         ResultSet rs = null;
         try {
-            List<Long> ids = new ArrayList<Long>();
+            List<Long> ids = new ArrayList<>();
             this.pstmtGetArticleIDs.setLong(1, gid);
             rs = this.pstmtGetArticleIDs.executeQuery();
             while (rs.next()) {
@@ -607,15 +574,7 @@ public class JDBCDatabase implements Storage {
             restartConnection(ex);
             return getArticleNumbers(gid);
         } finally {
-            if (rs != null) {
-                try {
-                    rs.close();
-                    restarts = 0; // Clear the restart count after successful
-                                  // request
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
-                }
-            }
+            closeResultSet(rs);
         }
     }
 
@@ -636,13 +595,7 @@ public class JDBCDatabase implements Storage {
             restartConnection(ex);
             return getMaxArticleIndex(groupID);
         } finally {
-            if (rs != null) {
-                try {
-                    rs.close();
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
-                }
-            }
+            closeResultSet(rs);
         }
     }
 
@@ -662,13 +615,7 @@ public class JDBCDatabase implements Storage {
             restartConnection(ex);
             return getMaxArticleID();
         } finally {
-            if (rs != null) {
-                try {
-                    rs.close();
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
-                }
-            }
+            closeResultSet(rs);
         }
     }
 
@@ -688,13 +635,7 @@ public class JDBCDatabase implements Storage {
             restartConnection(ex);
             return getLastArticleNumber(group);
         } finally {
-            if (rs != null) {
-                try {
-                    rs.close();
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
-                }
-            }
+            closeResultSet(rs);
         }
     }
 
@@ -714,13 +655,7 @@ public class JDBCDatabase implements Storage {
             restartConnection(ex);
             return getFirstArticleNumber(group);
         } finally {
-            if (rs != null) {
-                try {
-                    rs.close();
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
-                }
-            }
+            closeResultSet(rs);
         }
     }
 
@@ -739,13 +674,7 @@ public class JDBCDatabase implements Storage {
             restartConnection(ex);
             return getOldestArticle();
         } finally {
-            if (rs != null) {
-                try {
-                    rs.close();
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
-                }
-            }
+            closeResultSet(rs);
         }
     }
 
@@ -773,13 +702,7 @@ public class JDBCDatabase implements Storage {
             restartConnection(ex);
             return getPostingsCount(groupname);
         } finally {
-            if (rs != null) {
-                try {
-                    rs.close();
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
-                }
-            }
+            closeResultSet(rs);
         }
     }
 
@@ -804,18 +727,13 @@ public class JDBCDatabase implements Storage {
             restartConnection(ex);
             return isArticleExisting(messageID);
         } finally {
-            if (rs != null) {
-                try {
-                    rs.close();
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
-                }
-            }
+            closeResultSet(rs);
         }
     }
 
     /**
      * Closes the JDBCDatabase connection.
+     * @throws org.sonews.storage.StorageBackendException
      */
     public void shutdown() throws StorageBackendException {
         try {
@@ -841,16 +759,18 @@ public class JDBCDatabase implements Storage {
         }
     }
 
+    /**
+     * Restart the JDBC connection to the Database server.
+     * @param cause
+     * @throws StorageBackendException 
+     */
     protected void restartConnection(SQLException cause)
             throws StorageBackendException {
-        restarts++;
-        Log.get().log(
-                Level.SEVERE,
-                Thread.currentThread()
+        Log.get().log(Level.SEVERE, Thread.currentThread()
                         + ": Database connection was closed (restart "
                         + restarts + ").", cause);
 
-        if (restarts >= MAX_RESTARTS) {
+        if (++restarts >= MAX_RESTARTS) {
             // Delete the current, probably broken JDBCDatabase instance.
             // So no one can use the instance any more.
             JDBCStorageProvider.instances.remove(Thread.currentThread());
@@ -862,7 +782,7 @@ public class JDBCDatabase implements Storage {
         try {
             Thread.sleep(1500L * restarts);
         } catch (InterruptedException ex) {
-            Log.get().warning("Interrupted: " + ex.getMessage());
+            // Sleep was interrupted. Ignore the InterruptedException.
         }
 
         // Try to properly close the old database connection
@@ -873,6 +793,8 @@ public class JDBCDatabase implements Storage {
         } catch (SQLException ex) {
             Log.get().warning(ex.getMessage());
         }
+        
+        this.conn = null;
 
         try {
             // Try to reinitialize database connection
@@ -903,7 +825,7 @@ public class JDBCDatabase implements Storage {
             try {
                 this.conn.rollback();
             } catch (SQLException ex2) {
-                Log.get().severe("Rollback failed: " + ex2.getMessage());
+                Log.get().log(Level.SEVERE, "Rollback failed: {0}", ex2.getMessage());
             }
             restartConnection(ex);
             return update(article);

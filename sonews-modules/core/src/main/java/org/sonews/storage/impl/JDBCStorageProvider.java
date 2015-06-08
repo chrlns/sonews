@@ -27,7 +27,7 @@ import org.sonews.storage.StorageBackendException;
 import org.sonews.storage.StorageProvider;
 
 /**
- * 
+ * StorageProvider for JDBC databases.
  * @author Christian Lins
  * @since sonews/1.0
  */
