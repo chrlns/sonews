@@ -23,6 +23,7 @@ import javax.persistence.Persistence;
 import org.sonews.storage.Storage;
 import org.sonews.storage.StorageBackendException;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestTemplate;
 
 /**
  *
@@ -31,15 +32,29 @@ import org.springframework.stereotype.Component;
 @Component
 public class CouchDBStorageProvider implements org.sonews.storage.StorageProvider {
     
-    private EntityManagerFactory emf;
+    private final EntityManagerFactory emf;
     
     public CouchDBStorageProvider() {
         this.emf = Persistence.createEntityManagerFactory("sonews");
+        
+        // Check if the design/access document is in the most recent version
+        
     }
 
+    protected DesignDoc getDesignDocument(String name) {
+        String url = "http://localhost:5984/{db}/{name}";
+        RestTemplate rt = new RestTemplate();
+        DesignDoc doc = rt.getForObject(url,
+                DesignDoc.class,
+                "hibernate-sonews", // TODO Get this from config
+                name); 
+
+        return doc;
+    }
+    
     @Override
     public boolean isSupported(String uri) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return uri.startsWith("http://");
     }
 
     @Override
