@@ -17,7 +17,7 @@
     </bean>
     //-->
     
-    <bean id="NNTPDaemon" class="org.sonews.daemon.async.AsynchronousNNTPDaemon">
+    <bean id="NNTPDaemon" class="org.sonews.daemon.sync.SynchronousNNTPDaemon">
     </bean>
 
 </beans>

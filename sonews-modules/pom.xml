@@ -16,6 +16,7 @@
         <module>storage-hibernate-ogm-couchdb</module>
         <module>storage-jdbc</module>
         <module>core</module>
+        <module>core-nio2</module>
     </modules>
 
 </project>
