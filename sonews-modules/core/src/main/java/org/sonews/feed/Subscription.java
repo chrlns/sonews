@@ -18,9 +18,14 @@
 
 package org.sonews.feed;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
 
 import org.sonews.util.Log;
 import org.sonews.util.io.Resource;
@@ -36,43 +41,43 @@ public class Subscription {
 
     private static List<Subscription> allSubs;
 
+    private static Subscription parseSubscription(String str) {
+        str = str.trim();
+        String[] subLineChunks = str.split("\\s+");
+        if (subLineChunks.length != 3) {
+            Log.get().log(Level.WARNING, "Malformed peers.conf line: {0}", str);
+        } else {
+            int feedtype = FeedManager.PULL;
+            if (subLineChunks[0].contains("PUSH")) {
+                feedtype = FeedManager.PUSH;
+            }
+            Log.get().log(Level.INFO, "Found peer subscription {0}", feedtype);
+            Subscription sub = new Subscription(subLineChunks[2], 119, feedtype, subLineChunks[1]);
+            return sub;
+        }
+        return null;
+    }
+    
     /**
      * @return List of all groups this server handles.
      */
     public static List<Subscription> getAll() {
-        if(allSubs == null) {
-            String peersStr = Resource.getAsString("peers.conf", true);
-            if(peersStr == null) {
-                Log.get().log(Level.WARNING, "Could not read peers.conf");
+        if(allSubs == null) {            
+            try {
+                List<Subscription> subs = Files.lines(Paths.get("peers.conf"))
+                        .filter(s -> !s.startsWith("#"))
+                        .map(Subscription::parseSubscription)
+                        .filter(s -> s != null)
+                        .collect(Collectors.toList());
+
+                // The subscription loading is not synchronized so it is possible that
+                // this method is called multiple times parallel.
+                // Therefore we better set allSubs in a (more or less) atomic way...
+                Subscription.allSubs = subs;
+            } catch(IOException ex) {
+                Log.get().log(Level.WARNING, "Could not read peers.conf", ex);
                 return new ArrayList<>(); // return empty list
             }
-
-            String[] peersLines = peersStr.split("\n");
-            List<Subscription> subs = new ArrayList<>(peersLines.length);
-            for(String subLine : peersLines) {
-                if(subLine.startsWith("#")) {
-                    continue;
-                }
-
-                subLine = subLine.trim();
-                String[] subLineChunks = subLine.split("\\s+");
-                if(subLineChunks.length != 3) {
-                    Log.get().log(Level.WARNING, "Malformed peers.conf line: {0}", subLine);
-                } else {
-                    int feedtype = FeedManager.PULL;
-                    if (subLineChunks[0].contains("PUSH")) {
-                        feedtype = FeedManager.PUSH;
-                    }
-                    Log.get().log(Level.INFO, "Found peer subscription {0}", feedtype);
-                    Subscription sub = new Subscription(subLineChunks[2], 119, feedtype, subLineChunks[1]);
-                    subs.add(sub);
-                }
-            }
-
-            // The subscription loading is not synchronized so it is possible that
-            // this method is called multiple times parallel.
-            // Therefore we better set allSubs in a (more or less) atomic way...
-            Subscription.allSubs = subs;
         }
         return allSubs;
     }

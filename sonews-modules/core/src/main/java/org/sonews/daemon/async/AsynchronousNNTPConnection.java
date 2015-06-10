@@ -119,7 +119,7 @@ public class AsynchronousNNTPConnection implements NNTPConnection {
     }
 
     @Override
-    public void println(CharSequence line) throws IOException {
+    public void println(CharSequence line) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 

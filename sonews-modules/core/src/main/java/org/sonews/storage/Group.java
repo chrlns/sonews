@@ -18,11 +18,16 @@
 
 package org.sonews.storage;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
 
 import org.sonews.util.Log;
 import org.sonews.util.Pair;
@@ -56,12 +61,24 @@ public class Group {
      */
     public static final int DELETED = 0x80;
 
-    private static final List<Group> allGroups = new ArrayList<>();
-    private static final Map<String, Group> allGroupNames = new HashMap<>();
+    private static List<Group> allGroups = new ArrayList<>();
+    private static Map<String, Group> allGroupNames = new HashMap<>();
 
-    private long id = 0;
-    private int flags = -1;
-    private String name = null;
+    private static Group parseGroup(String str) {
+        str = str.trim();
+        String[] groupLineChunks = str.split("\\s+");
+        if (groupLineChunks.length != 3) {
+            Log.get().log(Level.WARNING, "Malformed group.conf line: {0}", str);
+            return null;
+        } else {
+            Log.get().log(Level.INFO, "Found group {0}", groupLineChunks[0]);
+            Group group = new Group(
+                    groupLineChunks[0],
+                    Long.parseLong(groupLineChunks[1]),
+                    Integer.parseInt(groupLineChunks[2]));
+            return group;
+        }
+    }
 
     /**
      * Reads and parses the groups.conf file if not done yet and returns
@@ -71,48 +88,36 @@ public class Group {
      *
      * @return List of all groups this server handles.
      */
-    public static List<Group> getAll() {
-        synchronized(allGroups) {
-            if(allGroups.isEmpty()) {
-                String groupsStr = Resource.getAsString("groups.conf", true);
-                if(groupsStr == null) {
-                    Log.get().log(Level.WARNING, "Could not read groups.conf");
-                    return allGroups;
-                }
-
-                String[] groupLines = groupsStr.split("\n");
-                for(String groupLine : groupLines) {
-                    if(groupLine.startsWith("#")) {
-                        continue;
-                    }
-
-                    groupLine = groupLine.trim();
-                    String[] groupLineChunks = groupLine.split("\\s+");
-                    if(groupLineChunks.length != 3) {
-                        Log.get().log(Level.WARNING, "Malformed group.conf line: {0}", groupLine);
-                    } else {
-                        Log.get().log(Level.INFO, "Found group {0}", groupLineChunks[0]);
-                        Group group = new Group(
-                                groupLineChunks[0],
-                                Long.parseLong(groupLineChunks[1]),
-                                Integer.parseInt(groupLineChunks[2]));
-                        allGroups.add(group);
-                        allGroupNames.put(groupLineChunks[0], group);
-                    }
-                }
+    public static synchronized List<Group> getAll() {
+        if (allGroups.isEmpty()) {
+            try {
+                allGroups = Files.lines(Paths.get("groups.conf"))
+                        .filter(l -> !l.startsWith("#"))
+                        .map(Group::parseGroup)
+                        .filter(g -> g != null)
+                        .collect(Collectors.toList());
+            } catch (IOException ex) {
+                Log.get().log(Level.WARNING, "Could not read groups.conf", ex);
+                return allGroups;
             }
-            return allGroups;
+
+            allGroupNames = allGroups.stream().collect(
+                    Collectors.toMap(Group::getName, Function.identity()));
         }
+        return allGroups;
     }
 
     public static Group get(String name) {
-        synchronized(allGroups) {
-            if(allGroups.isEmpty()) {
-                getAll();
-            }
-            return allGroupNames.get(name);
+        if(allGroups.isEmpty()) {
+            getAll();
         }
+        return allGroupNames.get(name);
     }
+    
+    
+    private long id = 0;
+    private int flags = -1;
+    private String name = null;
 
     /**
      * Constructor.

@@ -59,7 +59,7 @@ public interface NNTPConnection {
 
     void println(byte[] line) throws IOException;
 
-    void println(CharSequence line) throws IOException;
+    void println(CharSequence line);
 
     void setCurrentArticle(Article art);
 

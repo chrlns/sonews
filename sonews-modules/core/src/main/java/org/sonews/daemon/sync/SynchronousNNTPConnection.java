@@ -31,6 +31,7 @@ import java.util.Arrays;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.sonews.acl.User;
 import org.sonews.daemon.ChannelLineBuffers;
@@ -304,18 +305,14 @@ public class SynchronousNNTPConnection implements NNTPConnection {
             }
         } catch (IOException | StorageBackendException ex1) {
             // This will catch a second StorageBackendException
-            try {
-                command = null;
-                Log.get().log(Level.WARNING, ex1.getLocalizedMessage(), ex1);
-                println("403 Internal server error");
+            command = null;
+            Log.get().log(Level.WARNING, ex1.getLocalizedMessage(), ex1);
+            println("403 Internal server error");
 
-                // Should we end the connection here?
-                // RFC says we MUST return 400 before closing the connection
-                shutdownInput();
-                shutdownOutput();
-            } catch (IOException ex2) {
-                ex2.printStackTrace();
-            }
+            // Should we end the connection here?
+            // RFC says we MUST return 400 before closing the connection
+            shutdownInput();
+            shutdownOutput();
         }
 
         if (command == null || command.hasFinished()) {
@@ -407,8 +404,15 @@ public class SynchronousNNTPConnection implements NNTPConnection {
         }
     }
 
-    public void println(final CharSequence line) throws IOException {
-        println(line, charset);
+    @Override
+    public void println(final CharSequence line) {
+        try {
+            println(line, charset);
+        } catch (IOException ex) {
+            Log.get().log(Level.SEVERE, null, ex);
+            shutdownInput();
+            shutdownOutput();
+        }
     }
 
     public void print(final String line) throws IOException {

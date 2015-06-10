@@ -19,6 +19,7 @@
 package org.sonews.daemon.command;
 
 import java.io.IOException;
+import java.util.stream.Stream;
 
 import org.sonews.daemon.CommandSelector;
 import org.sonews.daemon.NNTPConnection;
@@ -64,23 +65,20 @@ public class HelpCommand implements Command {
     }
 
     @Override
-    public void processLine(NNTPConnection conn, final String line, byte[] raw)
+    public void processLine(final NNTPConnection conn, final String line, byte[] raw)
             throws IOException {
         final String[] command = line.split(" ");
         conn.println("100 help text follows");
 
         if (line.length() <= 1) {
-            final String helpRes = Resource.getAsString("helpers/helptext", true);
-            if (helpRes == null) {
+            final Stream<String> helpLines = Resource.getLines("/helpers/helptext");
+            if (helpLines == null) {
                 Log.get().warning("helpers/helptext could not be loaded");
                 conn.println("500 Internal Server Error");
                 return;
             }
 
-            final String[] help = helpRes.split("\n");
-            for (String hstr : help) {
-                conn.println(hstr);
-            }
+            helpLines.forEach(l -> conn.println(l));
 
             // FIXME
             /*Set<String> commandNames = CommandSelector.getCommandNames();
