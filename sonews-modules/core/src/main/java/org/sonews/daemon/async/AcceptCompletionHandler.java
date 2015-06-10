@@ -22,6 +22,7 @@ import java.nio.channels.AsynchronousServerSocketChannel;
 import java.nio.channels.AsynchronousSocketChannel;
 import java.nio.channels.CompletionHandler;
 import java.util.logging.Level;
+import org.sonews.config.Config;
 
 import org.sonews.daemon.Connections;
 import org.sonews.util.Log;
@@ -46,6 +47,10 @@ class AcceptCompletionHandler
 
         AsynchronousNNTPConnection conn = new AsynchronousNNTPConnection(channel);
         Connections.getInstance().add(conn);
+        
+        conn.println("200 " + Config.inst().get(Config.HOSTNAME, "localhost")
+                            + " <unknown version>" // + Application.VERSION
+                            + " news server ready - (posting ok).");
     }
 
     @Override

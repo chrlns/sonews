@@ -25,11 +25,11 @@ import java.nio.channels.AsynchronousServerSocketChannel;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
-import org.sonews.daemon.DaemonRunner;
 
-import org.sonews.daemon.DaemonThread;
+import org.sonews.daemon.DaemonRunner;
 import org.sonews.daemon.NNTPDaemonRunnable;
 import org.sonews.util.Log;
+
 import org.springframework.stereotype.Component;
 
 /**

@@ -18,10 +18,6 @@
 
 package org.sonews;
 
-import java.io.IOException;
-import java.net.URISyntaxException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.sql.Driver;
 import java.sql.DriverManager;
 import java.time.LocalDateTime;
@@ -37,7 +33,6 @@ import org.sonews.daemon.NNTPDaemonRunnable;
 import org.sonews.feed.FeedManager;
 import org.sonews.storage.StorageManager;
 import org.sonews.storage.StorageProvider;
-import org.sonews.util.Log;
 import org.sonews.util.Purger;
 import org.sonews.util.io.Resource;
 
@@ -153,7 +148,7 @@ public class Application {
             port = Config.inst().get(Config.PORT, 119);
         }
         
-        NNTPDaemonRunnable nntpDaemon = context.getBean(NNTPDaemonRunnable.class);
+        NNTPDaemonRunnable nntpDaemon = (NNTPDaemonRunnable)context.getBean("NNTPDaemon");
         nntpDaemon.setPort(port);
         
         DaemonThread daemon;

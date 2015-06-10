@@ -31,7 +31,6 @@ import java.util.Arrays;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.sonews.acl.User;
 import org.sonews.daemon.ChannelLineBuffers;

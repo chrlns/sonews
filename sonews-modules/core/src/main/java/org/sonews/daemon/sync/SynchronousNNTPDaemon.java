@@ -51,7 +51,6 @@ import org.springframework.stereotype.Component;
  * @since sonews/0.5.0
  */
 @Component
-@Primary
 public class SynchronousNNTPDaemon extends DaemonRunner implements NNTPDaemonRunnable {
 
     public static final Object RegisterGate = new Object();
