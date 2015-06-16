@@ -37,7 +37,7 @@ import org.sonews.util.Log;
  * @author Christian Lins
  * @since sonews/0.5.0
  */
-public class ArticleHead {
+class ArticleHead {
 
     protected InternetHeaders headers = null;
     protected String headerSrc = null;

@@ -51,7 +51,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class PostCommand implements Command {
 
-    private final Article article = new Article();
+    private Article article;
     private int lineCount = 0;
     private long bodySize = 0;
     private InternetHeaders headers = null;
@@ -87,6 +87,7 @@ public class PostCommand implements Command {
      *
      * @param conn
      * @param line
+     * @param raw
      * @throws java.io.IOException
      * @throws org.sonews.storage.StorageBackendException
      */
@@ -97,8 +98,10 @@ public class PostCommand implements Command {
         switch (state) {
         case WaitForLineOne: {
             if (line.equalsIgnoreCase("POST")) {
-                conn.println("340 send article to be posted. End with <CR-LF>.<CR-LF>");
+                this.article = StorageManager.createArticle();
                 state = PostState.ReadingHeaders;
+                
+                conn.println("340 send article to be posted. End with <CR-LF>.<CR-LF>");
             } else {
                 conn.println("500 invalid command usage");
             }
@@ -222,7 +225,9 @@ public class PostCommand implements Command {
 
     private void postArticle(NNTPConnection conn, Article article)
             throws IOException {
-        article.setUser(conn.getUser());
+        //article.setUser(conn.getUser());
+        // FIXME: Setting the user for authentication at article is wrong
+        // Set it at the StorageManager instead
 
         if (article.getHeader(Headers.CONTROL)[0].length() > 0) {
             controlMessage(conn, article);

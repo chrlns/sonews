@@ -24,10 +24,14 @@ package org.sonews.storage;
  * @author Christian Lins
  * @since sonews/1.0
  */
-public final class StorageManager {
+public class StorageManager {
 
     private static StorageProvider provider;
 
+    public static Article createArticle() {
+        return new ArticleImpl();
+    }
+    
     public static Storage current() throws StorageBackendException {
         synchronized (StorageManager.class) {
             if (provider == null) {

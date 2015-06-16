@@ -29,7 +29,7 @@ import java.net.UnknownHostException;
 import org.sonews.storage.Article;
 
 /**
- * Posts an Article to a NNTP server using the POST command.
+ * Posts an ArticleImpl to a NNTP server using the POST command.
  *
  * @author Christian Lins
  * @since sonews/0.5.0

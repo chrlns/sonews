@@ -25,6 +25,7 @@ import org.sonews.daemon.sync.SynchronousNNTPConnection;
 import org.sonews.storage.Article;
 import org.sonews.storage.Group;
 import org.sonews.storage.StorageBackendException;
+import org.sonews.storage.StorageManager;
 
 import org.springframework.stereotype.Component;
 
@@ -74,7 +75,7 @@ public class ArticleCommand implements Command {
             }
         } else if (command[1].matches(SynchronousNNTPConnection.MESSAGE_ID_PATTERN)) {
             // Message-ID
-            article = Article.getByMessageID(command[1]);
+            article = StorageManager.current().getArticle(command[1]);
             if (article == null) {
                 conn.println("430 no such article found");
                 return;
@@ -134,7 +135,7 @@ public class ArticleCommand implements Command {
            * number is invalid
            *
            * Parameters number Requested article number n Returned article
-           * number message-id Article message-id
+           * number message-id ArticleImpl message-id
            */else if (command[0].equalsIgnoreCase("HEAD")) {
             conn.println("221 " + artIndex + " " + article.getMessageID()
                     + " Headers follow (multi-line)");

@@ -18,6 +18,8 @@
 
 package org.sonews.storage;
 
+import java.io.IOException;
+
 /**
  * Exception caused by the storage backend.
  * 
@@ -25,7 +27,7 @@ package org.sonews.storage;
  * @since sonews/1.0
  */
 @SuppressWarnings("serial")
-public class StorageBackendException extends Exception {
+public class StorageBackendException extends IOException {
 
     public StorageBackendException(Throwable cause) {
         super(cause);

@@ -35,9 +35,7 @@ import java.util.Set;
 import java.util.logging.Level;
 
 import org.sonews.config.Config;
-import org.sonews.daemon.DaemonRunnable;
 import org.sonews.daemon.DaemonRunner;
-import org.sonews.daemon.DaemonThread;
 import org.sonews.storage.Storage;
 import org.sonews.storage.StorageBackendException;
 import org.sonews.storage.StorageManager;
@@ -133,7 +131,7 @@ class PullFeeder extends DaemonRunner {
                         sub.getPort(), 
                         "localhost", 
                         Config.inst().get(Config.PORT, 119));
-        } catch (IOException | StorageBackendException ex) {
+        } catch (IOException ex) {
             // There may be a temporary network failure
             Log.get().log(Level.WARNING, 
                     "Skipping message {0} due to exception: {1}",

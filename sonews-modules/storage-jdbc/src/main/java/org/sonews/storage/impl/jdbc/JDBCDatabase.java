@@ -36,7 +36,7 @@ import javax.mail.internet.MimeUtility;
 
 import org.sonews.config.Config;
 import org.sonews.util.Log;
-import org.sonews.storage.Article;
+import org.sonews.storage.ArticleImpl;
 import org.sonews.storage.ArticleHead;
 import org.sonews.storage.Group;
 import org.sonews.storage.Storage;
@@ -238,7 +238,7 @@ public class JDBCDatabase implements Storage {
      * @throws StorageBackendException
      */
     @Override
-    public void addArticle(final Article article)
+    public void addArticle(final ArticleImpl article)
             throws StorageBackendException {
         try {
             this.conn.setAutoCommit(false);
@@ -275,7 +275,7 @@ public class JDBCDatabase implements Storage {
      * @return
      * @throws java.sql.SQLException
      */
-    void addArticle(final Article article, final int newArticleID)
+    void addArticle(final ArticleImpl article, final int newArticleID)
             throws SQLException, StorageBackendException {
         // Fill prepared statement with values;
         // writes body to article table
@@ -361,7 +361,7 @@ public class JDBCDatabase implements Storage {
     }
 
     @Override
-    public Article getArticle(String messageID) throws StorageBackendException {
+    public ArticleImpl getArticle(String messageID) throws StorageBackendException {
         ResultSet rs = null;
         try {
             pstmtGetArticle0.setString(1, messageID);
@@ -372,7 +372,7 @@ public class JDBCDatabase implements Storage {
             } else {
                 byte[] body = rs.getBytes("body");
                 String headers = getArticleHeaders(rs.getInt("article_id"));
-                return new Article(headers, body);
+                return new ArticleImpl(headers, body);
             }
         } catch (SQLException ex) {
             restartConnection(ex);
@@ -390,7 +390,7 @@ public class JDBCDatabase implements Storage {
      * @throws StorageBackendException
      */
     @Override
-    public Article getArticle(long articleIndex, long gid)
+    public ArticleImpl getArticle(long articleIndex, long gid)
             throws StorageBackendException {
         ResultSet rs = null;
 
@@ -403,7 +403,7 @@ public class JDBCDatabase implements Storage {
             if (rs.next()) {
                 byte[] body = rs.getBytes("body");
                 String headers = getArticleHeaders(rs.getInt("article_id"));
-                return new Article(headers, body);
+                return new ArticleImpl(headers, body);
             } else {
                 return null;
             }
@@ -500,7 +500,7 @@ public class JDBCDatabase implements Storage {
     }
 
     @Override
-    public long getArticleIndex(Article article, Group group)
+    public long getArticleIndex(ArticleImpl article, Group group)
             throws StorageBackendException {
         ResultSet rs = null;
 
@@ -523,7 +523,7 @@ public class JDBCDatabase implements Storage {
     }
 
     /**
-     * Returns a list of Long/Article Pairs.
+     * Returns a list of Long/ArticleImpl Pairs.
      *
      * @param first
      * @param last
@@ -806,7 +806,7 @@ public class JDBCDatabase implements Storage {
     }
 
     @Override
-    public boolean update(Article article) throws StorageBackendException {
+    public boolean update(ArticleImpl article) throws StorageBackendException {
         ResultSet rs = null;
         try {
             // Retrieve internal article_id

@@ -24,7 +24,6 @@ import java.util.List;
 import org.sonews.daemon.NNTPConnection;
 import org.sonews.util.Log;
 import org.sonews.storage.Article;
-import org.sonews.storage.ArticleHead;
 import org.sonews.storage.Headers;
 import org.sonews.storage.StorageBackendException;
 import org.sonews.util.Pair;
@@ -189,7 +188,7 @@ public class OverCommand implements Command {
                     for (long n = artStart; n <= artEnd; n += MAX_LINES_PER_DBREQUEST) {
                         long nEnd = Math.min(n + MAX_LINES_PER_DBREQUEST - 1,
                                 artEnd);
-                        List<Pair<Long, ArticleHead>> articleHeads = conn
+                        List<Pair<Long, Article>> articleHeads = conn
                                 .getCurrentGroup().getArticleHeads(n, nEnd);
                         if (articleHeads.isEmpty() && n == artStart
                                 && command[0].equalsIgnoreCase("OVER")) {
@@ -203,7 +202,7 @@ public class OverCommand implements Command {
                             conn.println("224 overview information follows");
                         }
 
-                        for (Pair<Long, ArticleHead> article : articleHeads) {
+                        for (Pair<Long, Article> article : articleHeads) {
                             String overview = buildOverview(article.getB(),
                                     article.getA());
                             conn.println(overview);
@@ -215,7 +214,7 @@ public class OverCommand implements Command {
         }
     }
 
-    private String buildOverview(ArticleHead art, long nr) {
+    private String buildOverview(Article art, long nr) {
         StringBuilder overview = new StringBuilder();
         overview.append(nr);
         overview.append('\t');

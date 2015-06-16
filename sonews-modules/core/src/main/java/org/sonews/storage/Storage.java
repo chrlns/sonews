@@ -46,7 +46,7 @@ public interface Storage {
     Article getArticle(long articleIndex, long groupID)
             throws StorageBackendException;
 
-    List<Pair<Long, ArticleHead>> getArticleHeads(Group group, long first,
+    List<Pair<Long, Article>> getArticleHeads(Group group, long first,
             long last) throws StorageBackendException;
 
     List<Pair<Long, String>> getArticleHeaders(Group group, long start,

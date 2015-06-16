@@ -24,6 +24,7 @@ import org.sonews.daemon.NNTPConnection;
 import org.sonews.daemon.sync.SynchronousNNTPConnection;
 import org.sonews.storage.Article;
 import org.sonews.storage.StorageBackendException;
+import org.sonews.storage.StorageManager;
 
 import org.springframework.stereotype.Component;
 
@@ -71,7 +72,7 @@ public class StatCommand implements Command {
             }
         } else if (command[1].matches(SynchronousNNTPConnection.MESSAGE_ID_PATTERN)) {
             // Message-ID
-            article = Article.getByMessageID(command[1]);
+            article = StorageManager.current().getArticle(command[1]);
             if (article == null) {
                 conn.println("430 no such article found");
                 return;
@@ -81,9 +82,7 @@ public class StatCommand implements Command {
             try {
                 long aid = Long.parseLong(command[1]);
                 article = conn.getCurrentGroup().getArticle(aid);
-            } catch (NumberFormatException ex) {
-                ex.printStackTrace();
-            } catch (StorageBackendException ex) {
+            } catch (NumberFormatException | StorageBackendException ex) {
                 ex.printStackTrace();
             }
             if (article == null) {

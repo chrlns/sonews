@@ -302,7 +302,7 @@ public class SynchronousNNTPConnection implements NNTPConnection {
             } catch (Exception ex0a) {
                 Log.get().log(Level.INFO, ex0a.getLocalizedMessage(), ex0a);
             }
-        } catch (IOException | StorageBackendException ex1) {
+        } catch (IOException ex1) {
             // This will catch a second StorageBackendException
             command = null;
             Log.get().log(Level.WARNING, ex1.getLocalizedMessage(), ex1);

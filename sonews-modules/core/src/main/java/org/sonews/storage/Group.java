@@ -31,7 +31,6 @@ import java.util.stream.Collectors;
 
 import org.sonews.util.Log;
 import org.sonews.util.Pair;
-import org.sonews.util.io.Resource;
 
 /**
  * Represents a logical Group within this newsserver.
@@ -146,11 +145,17 @@ public class Group {
         return (name + id).hashCode();
     }
 
+    /**
+     *
+     * @param idx
+     * @return
+     * @throws StorageBackendException
+     */
     public Article getArticle(long idx) throws StorageBackendException {
         return StorageManager.current().getArticle(idx, this.id);
     }
 
-    public List<Pair<Long, ArticleHead>> getArticleHeads(final long first,
+    public List<Pair<Long, Article>> getArticleHeads(final long first,
             final long last) throws StorageBackendException {
         return StorageManager.current().getArticleHeads(this, first, last);
     }

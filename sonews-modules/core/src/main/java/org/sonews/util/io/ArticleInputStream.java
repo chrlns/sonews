@@ -25,7 +25,7 @@ import java.io.UnsupportedEncodingException;
 import org.sonews.storage.Article;
 
 /**
- * Capsulates an Article to provide a raw InputStream.
+ * Capsulates an ArticleImpl to provide a raw InputStream.
  *
  * @author Christian Lins
  * @since sonews/0.5.0
