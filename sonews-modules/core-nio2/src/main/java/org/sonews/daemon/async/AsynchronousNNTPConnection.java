@@ -33,7 +33,7 @@ import org.sonews.daemon.NNTPConnection;
 import org.sonews.daemon.SocketChannelWrapper;
 import org.sonews.daemon.SocketChannelWrapperFactory;
 import static org.sonews.daemon.sync.SynchronousNNTPConnection.NEWLINE;
-import org.sonews.storage.ArticleImpl;
+import org.sonews.storage.Article;
 import org.sonews.storage.Group;
 import org.sonews.util.Log;
 
@@ -103,7 +103,7 @@ public class AsynchronousNNTPConnection implements NNTPConnection {
     }
 
     @Override
-    public ArticleImpl getCurrentArticle() {
+    public Article getCurrentArticle() {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
@@ -174,7 +174,7 @@ public class AsynchronousNNTPConnection implements NNTPConnection {
     }
 
     @Override
-    public void setCurrentArticle(ArticleImpl art) {
+    public void setCurrentArticle(Article art) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 

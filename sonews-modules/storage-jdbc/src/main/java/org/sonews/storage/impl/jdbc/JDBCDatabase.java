@@ -36,11 +36,11 @@ import javax.mail.internet.MimeUtility;
 
 import org.sonews.config.Config;
 import org.sonews.util.Log;
-import org.sonews.storage.ArticleImpl;
-import org.sonews.storage.ArticleHead;
+import org.sonews.storage.Article;
 import org.sonews.storage.Group;
 import org.sonews.storage.Storage;
 import org.sonews.storage.StorageBackendException;
+import org.sonews.storage.StorageManager;
 import org.sonews.util.Pair;
 
 /**
@@ -238,7 +238,7 @@ public class JDBCDatabase implements Storage {
      * @throws StorageBackendException
      */
     @Override
-    public void addArticle(final ArticleImpl article)
+    public void addArticle(final Article article)
             throws StorageBackendException {
         try {
             this.conn.setAutoCommit(false);
@@ -275,7 +275,7 @@ public class JDBCDatabase implements Storage {
      * @return
      * @throws java.sql.SQLException
      */
-    void addArticle(final ArticleImpl article, final int newArticleID)
+    void addArticle(final Article article, final int newArticleID)
             throws SQLException, StorageBackendException {
         // Fill prepared statement with values;
         // writes body to article table
@@ -361,7 +361,7 @@ public class JDBCDatabase implements Storage {
     }
 
     @Override
-    public ArticleImpl getArticle(String messageID) throws StorageBackendException {
+    public Article getArticle(String messageID) throws StorageBackendException {
         ResultSet rs = null;
         try {
             pstmtGetArticle0.setString(1, messageID);
@@ -372,7 +372,7 @@ public class JDBCDatabase implements Storage {
             } else {
                 byte[] body = rs.getBytes("body");
                 String headers = getArticleHeaders(rs.getInt("article_id"));
-                return new ArticleImpl(headers, body);
+                return StorageManager.createArticle(headers, body);
             }
         } catch (SQLException ex) {
             restartConnection(ex);
@@ -385,12 +385,13 @@ public class JDBCDatabase implements Storage {
     /**
      * Retrieves an article by its ID.
      *
-     * @param articleID
+     * @param articleIndex
+     * @param gid
      * @return
      * @throws StorageBackendException
      */
     @Override
-    public ArticleImpl getArticle(long articleIndex, long gid)
+    public Article getArticle(long articleIndex, long gid)
             throws StorageBackendException {
         ResultSet rs = null;
 
@@ -403,7 +404,7 @@ public class JDBCDatabase implements Storage {
             if (rs.next()) {
                 byte[] body = rs.getBytes("body");
                 String headers = getArticleHeaders(rs.getInt("article_id"));
-                return new ArticleImpl(headers, body);
+                return StorageManager.createArticle(headers, body);
             } else {
                 return null;
             }
@@ -500,7 +501,7 @@ public class JDBCDatabase implements Storage {
     }
 
     @Override
-    public long getArticleIndex(ArticleImpl article, Group group)
+    public long getArticleIndex(Article article, Group group)
             throws StorageBackendException {
         ResultSet rs = null;
 
@@ -525,12 +526,14 @@ public class JDBCDatabase implements Storage {
     /**
      * Returns a list of Long/ArticleImpl Pairs.
      *
+     * @param group
      * @param first
      * @param last
      * @return 
+     * @throws org.sonews.storage.StorageBackendException 
      */
     @Override
-    public List<Pair<Long, ArticleHead>> getArticleHeads(Group group,
+    public List<Pair<Long, Article>> getArticleHeads(Group group,
             long first, long last) throws StorageBackendException {
         ResultSet rs = null;
 
@@ -540,13 +543,13 @@ public class JDBCDatabase implements Storage {
             this.pstmtGetArticleHeads.setLong(3, last);
             rs = pstmtGetArticleHeads.executeQuery();
 
-            List<Pair<Long, ArticleHead>> articles = new ArrayList<>();
+            List<Pair<Long, Article>> articles = new ArrayList<>(rs.getFetchSize());
 
             while (rs.next()) {
                 long aid = rs.getLong("article_id");
                 long aidx = rs.getLong("article_index");
                 String headers = getArticleHeaders(aid);
-                articles.add(new Pair<>(aidx, new ArticleHead(headers)));
+                articles.add(new Pair<>(aidx, StorageManager.createArticle(headers, null)));
             }
 
             return articles;
@@ -806,7 +809,7 @@ public class JDBCDatabase implements Storage {
     }
 
     @Override
-    public boolean update(ArticleImpl article) throws StorageBackendException {
+    public boolean update(Article article) throws StorageBackendException {
         ResultSet rs = null;
         try {
             // Retrieve internal article_id

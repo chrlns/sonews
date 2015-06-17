@@ -34,6 +34,7 @@ import javax.mail.Header;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.internet.InternetHeaders;
+import javax.mail.internet.MimeUtility;
 
 import org.sonews.acl.User;
 import org.sonews.config.Config;
@@ -46,8 +47,11 @@ import org.sonews.util.Log;
  * @author Dennis Schwerdel
  * @since n3tpd/0.1
  */
-public class ArticleImpl extends ArticleHead implements Article {
+public class ArticleImpl implements Article {
 
+    protected InternetHeaders headers = null;
+    protected String headerSrc = null;
+    
     private byte[] body = new byte[0];
     private User sender;
 
@@ -163,6 +167,7 @@ public class ArticleImpl extends ArticleHead implements Article {
      * Returns the body string.
      * @return 
      */
+    @Override
     public byte[] getBody() {
         return body;
     }
@@ -170,6 +175,7 @@ public class ArticleImpl extends ArticleHead implements Article {
     /**
      * @return List of newsgroups this ArticleImpl belongs to.
      */
+    @Override
     public List<Group> getGroups() {
         String[] groupnames = getHeader(Headers.NEWSGROUPS)[0].split(",");
         List<Group> groups = new ArrayList<>(groupnames.length);
@@ -187,6 +193,7 @@ public class ArticleImpl extends ArticleHead implements Article {
         return groups;
     }
 
+    @Override
     public void setBody(byte[] body) {
         this.body = body;
     }
@@ -196,6 +203,7 @@ public class ArticleImpl extends ArticleHead implements Article {
      * @param groupname
      *            Name(s) of newsgroups
      */
+    @Override
     public void setGroup(String groupname) {
         this.headers.setHeader(Headers.NEWSGROUPS, groupname);
     }
@@ -206,6 +214,7 @@ public class ArticleImpl extends ArticleHead implements Article {
      *
      * @return Message-ID of this ArticleImpl.
      */
+    @Override
     public String getMessageID() {
         String msgID;
 
@@ -248,5 +257,109 @@ public class ArticleImpl extends ArticleHead implements Article {
      */
     public void setUser(User sender) {
         this.sender = sender;
+    }
+    
+       /**
+     * Returns the header field with given name.
+     *
+     * @param name
+     *            Name of the header field(s).
+     * @param returnNull
+     *            If set to true, this method will return null instead of an
+     *            empty array if there is no header field found.
+     * @return Header values or empty string.
+     */
+    public String[] getHeader(String name, boolean returnNull) {
+        String[] ret = this.headers.getHeader(name);
+        if (ret == null && !returnNull) {
+            ret = new String[] { "" };
+        }
+        return ret;
+    }
+
+    public String[] getHeader(String name) {
+        return getHeader(name, false);
+    }
+
+    /**
+     * Sets the header value identified through the header name.
+     *
+     * @param name
+     * @param value
+     */
+    @Override
+    public void setHeader(String name, String value) {
+        this.headers.setHeader(name, value);
+        this.headerSrc = null;
+    }
+
+    @Override
+    public Enumeration<?> getAllHeaders() {
+        return this.headers.getAllHeaders();
+    }
+
+    /**
+     * @return Header source code of this Article.
+     */
+    @Override
+    public String getHeaderSource() {
+        if (this.headerSrc != null) {
+            return this.headerSrc;
+        }
+
+        StringBuilder buf = new StringBuilder();
+
+        for (Enumeration<?> en = this.headers.getAllHeaders(); en
+                .hasMoreElements();) {
+            Header entry = (Header) en.nextElement();
+
+            String value = entry.getValue().replaceAll("[\r\n]", " ");
+            buf.append(entry.getName());
+            buf.append(": ");
+            buf.append(MimeUtility.fold(entry.getName().length() + 2, value));
+
+            if (en.hasMoreElements()) {
+                buf.append("\r\n");
+            }
+        }
+
+        this.headerSrc = buf.toString();
+        return this.headerSrc;
+    }
+
+    /**
+     * Sets the headers of this Article. If headers contain no Message-Id a new
+     * one is created.
+     *
+     * @param headers
+     */
+    @Override
+    public void setHeaders(InternetHeaders headers) {
+        this.headers = headers;
+        this.headerSrc = null;
+        validateHeaders();
+    }
+
+    /**
+     * Checks some headers for their validity and generates an appropriate
+     * Path-header for this host if not yet existing. This method is called by
+     * some Article constructors and the method setHeaders().
+     */
+    private void validateHeaders() {
+        // Check for valid Path-header
+        final String path = getHeader(Headers.PATH)[0];
+        final String host = Config.inst().get(Config.HOSTNAME, "localhost");
+        if (!path.startsWith(host)) {
+            StringBuilder pathBuf = new StringBuilder();
+            pathBuf.append(host);
+            pathBuf.append('!');
+            pathBuf.append(path);
+            this.headers.setHeader(Headers.PATH, pathBuf.toString());
+        }
+    }
+
+    @Override
+    public boolean hasBody() {
+        return this.body == null;
     }
 }

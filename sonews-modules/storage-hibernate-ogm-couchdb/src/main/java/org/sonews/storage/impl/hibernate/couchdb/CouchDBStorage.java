@@ -18,14 +18,12 @@
 
 package org.sonews.storage.impl.hibernate.couchdb;
 
-import java.util.Arrays;
 import java.util.List;
 
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
 
 import org.sonews.storage.Article;
-import org.sonews.storage.ArticleHead;
 import org.sonews.storage.Group;
 import org.sonews.storage.StorageBackendException;
 import org.sonews.util.Pair;
@@ -77,7 +75,7 @@ public class CouchDBStorage implements org.sonews.storage.Storage {
     }
 
     @Override
-    public List<Pair<Long, ArticleHead>> getArticleHeads(Group group, long first, long last) throws StorageBackendException {
+    public List<Pair<Long, Article>> getArticleHeads(Group group, long first, long last) throws StorageBackendException {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 

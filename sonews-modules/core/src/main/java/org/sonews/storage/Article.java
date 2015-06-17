@@ -18,7 +18,9 @@
 
 package org.sonews.storage;
 
+import java.util.Enumeration;
 import java.util.List;
+
 import javax.mail.internet.InternetHeaders;
 
 /**
@@ -28,6 +30,8 @@ import javax.mail.internet.InternetHeaders;
  */
 public interface Article {
 
+    Enumeration<?> getAllHeaders();
+    
     /**
      * Returns the body string.
      * 
@@ -63,6 +67,12 @@ public interface Article {
     
     String getMessageID();
     
+    /**
+     * 
+     * @return false if the body was not fetched from the backend 
+     */
+    boolean hasBody();
+            
     /**
      * Removes the header identified by the given key.
      * @param headerKey

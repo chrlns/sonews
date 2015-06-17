@@ -18,6 +18,10 @@
 
 package org.sonews.storage;
 
+import java.io.IOException;
+import javax.mail.Message;
+import javax.mail.MessagingException;
+
 /**
  * Provides access to a storage backend.
  * 
@@ -28,8 +32,17 @@ public class StorageManager {
 
     private static StorageProvider provider;
 
+    // FIXME Is this the right place for factory methods?
     public static Article createArticle() {
         return new ArticleImpl();
+    }
+    
+    public static Article createArticle(String headers, byte[] body) {
+        return new ArticleImpl(headers, body);
+    }
+    
+    public static Article createArticle(Message msg) throws IOException, MessagingException {
+        return new ArticleImpl(msg);
     }
     
     public static Storage current() throws StorageBackendException {
