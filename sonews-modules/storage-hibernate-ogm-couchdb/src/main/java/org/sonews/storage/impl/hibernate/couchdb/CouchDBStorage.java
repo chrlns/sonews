@@ -25,6 +25,7 @@ import javax.transaction.Transactional;
 
 import org.sonews.storage.Article;
 import org.sonews.storage.Group;
+import org.sonews.storage.Storage;
 import org.sonews.storage.StorageBackendException;
 import org.sonews.util.Pair;
 import org.springframework.web.client.HttpStatusCodeException;
@@ -34,7 +35,7 @@ import org.springframework.web.client.RestTemplate;
  *
  * @author Christian Lins
  */
-public class CouchDBStorage implements org.sonews.storage.Storage {
+public class CouchDBStorage implements Storage {
 
     private final EntityManager em;
     
@@ -44,7 +45,7 @@ public class CouchDBStorage implements org.sonews.storage.Storage {
     
     @Override
     public void addArticle(Article art) throws StorageBackendException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        addArticle(new CouchDBArticle(art));
     }
     
     @Transactional

@@ -20,6 +20,7 @@ package org.sonews.storage.impl.hibernate.couchdb;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,9 +39,10 @@ import javax.persistence.Version;
 
 import org.hibernate.ogm.datastore.document.options.AssociationStorage;
 import org.hibernate.ogm.datastore.document.options.AssociationStorageType;
+import org.sonews.storage.Article;
 
 /**
- *
+ * An Article in CouchDB flavour.
  * @author Christian Lins
  */
 @Entity
@@ -69,6 +71,29 @@ public class CouchDBArticle implements Serializable {
     private String bodyEncoding;
     
     private byte[] body;
+    
+    /**
+     * Default constructor required for deserialization.
+     */
+    public CouchDBArticle() {
+    }
+    
+    /**
+     * Initializes this CouchDBArticle with the attributes provided by the given
+     * Article object.
+     * @param art 
+     */
+    public CouchDBArticle(Article art) {
+        this.body = art.getBody();
+        this.bodyEncoding = "base64"; // TODO
+        this.messageID = art.getMessageID();
+        
+        Enumeration<?> eh = art.getAllHeaders();
+        while(eh.hasMoreElements()) {
+            final javax.mail.Header header = (javax.mail.Header)eh.nextElement();
+            this.headers.add(new Header(header.getName(), header.getValue()));
+        }
+    }
     
     /**
      * Fills the instance with random test data. Used for testing purposes.

@@ -20,8 +20,12 @@ package org.sonews.storage.impl.hibernate.couchdb;
 
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
+import org.json.JSONObject;
+import org.json.JSONTokener;
+
 import org.sonews.storage.Storage;
 import org.sonews.storage.StorageBackendException;
+import org.sonews.storage.StorageProvider;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
@@ -30,19 +34,26 @@ import org.springframework.web.client.RestTemplate;
  * @author Christian Lins
  */
 @Component
-public class CouchDBStorageProvider implements org.sonews.storage.StorageProvider {
+public class CouchDBStorageProvider implements StorageProvider {
     
     private final EntityManagerFactory emf;
     
     public CouchDBStorageProvider() {
         this.emf = Persistence.createEntityManagerFactory("sonews");
         
-        // Check if the design/access document is in the most recent version
+        // Load design document
+        JSONObject lddoc = new JSONObject(new JSONTokener(
+                getClass().getResourceAsStream("/couchdb/design-access.json")));
         
+        // Check if the design/access document is in the most recent version
+        DesignDoc rddoc = getDesignDocument("access");
+        if (rddoc.getVersion() < lddoc.getInt("version")) {
+            
+        }
     }
 
-    protected DesignDoc getDesignDocument(String name) {
-        String url = "http://localhost:5984/{db}/{name}";
+    private DesignDoc getDesignDocument(String name) {
+        String url = "http://localhost:5984/{db}/_design/{name}";
         RestTemplate rt = new RestTemplate();
         DesignDoc doc = rt.getForObject(url,
                 DesignDoc.class,
