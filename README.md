@@ -1,6 +1,7 @@
 [![Build Status](https://travis-ci.org/cli/sonews.svg?branch=master)](https://travis-ci.org/cli/sonews)
 [![Coverty Scan](https://scan.coverity.com/projects/2030/badge.svg)](https://scan.coverity.com/projects/2030)
 [![Gitter chat](https://badges.gitter.im/cli/sonews.png)](https://gitter.im/cli/sonews)
+[![OpenHub](https://www.openhub.net/p/sonews/widgets/project_thin_badge.gif)](https://www.openhub.net/p/sonews/)
 
 sonews
 ======
