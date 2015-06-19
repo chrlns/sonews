@@ -18,19 +18,20 @@
 
 package org.sonews.storage.impl.hibernate.couchdb;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+
 import java.io.Serializable;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.TreeMap;
 import javax.persistence.Column;
-import javax.persistence.ElementCollection;
 import javax.persistence.Embeddable;
 import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.Id;
-import javax.persistence.Version;
 
 import org.hibernate.ogm.datastore.document.options.AssociationStorage;
 import org.hibernate.ogm.datastore.document.options.AssociationStorageType;
+import org.json.JSONObject;
 
 /**
  * A CouchDB design document.
@@ -38,15 +39,14 @@ import org.hibernate.ogm.datastore.document.options.AssociationStorageType;
  */
 @Entity
 @AssociationStorage(AssociationStorageType.ASSOCIATION_DOCUMENT)
-class DesignDoc implements Serializable {
-    @Id // Fake Id
-    private Long id;
-    
+@JsonAutoDetect(fieldVisibility=JsonAutoDetect.Visibility.ANY)
+class DesignDoc implements Serializable {    
+    @Id
     @Column(name="_id")
-    private String couchId;
+    private String _id;
     
     @Column(name="_rev")
-    private String couchRev;
+    private String _rev;
     
     private String language;
     
@@ -55,6 +55,30 @@ class DesignDoc implements Serializable {
     @Embedded
     private Map<String, ViewFunction> views;
     
+    public DesignDoc() {
+    }
+    
+    public DesignDoc(JSONObject obj, String rev) {
+        this._id  = obj.getString("_id");
+        this._rev = rev;
+        this.language = obj.getString("language");
+        this.version  = obj.getInt("version");
+        
+        this.views = new HashMap<>();
+        
+        JSONObject objv = obj.getJSONObject("views");
+        objv.keySet().forEach(k -> addView(objv, (String)k));
+    }
+    
+    private void addView(JSONObject obj, String key) {
+        JSONObject v = obj.getJSONObject(key);
+        
+        String map = v.getString("map");
+        String red = v.optString("reduce");
+        
+        this.views.put(key, new ViewFunction(map, red));
+    }
+    
     public String getLanguage() {
         return this.language;
     }
@@ -62,13 +86,13 @@ class DesignDoc implements Serializable {
     public int getVersion() {
         return this.version;
     }
-
-    public String getCouchId() {
-        return this.couchId;
+    
+    public String getId() {
+        return this._id;
     }
     
-    public String getRevision() {
-        return this.couchRev;
+    public String getRev() {
+        return this._rev;
     }
     
     public Map<String, ViewFunction> getViews() {
@@ -79,6 +103,14 @@ class DesignDoc implements Serializable {
 @Embeddable
 class ViewFunction implements Serializable {
     private String map, reduce;
+    
+    public ViewFunction() {
+    }
+    
+    public ViewFunction(String map, String reduce) {
+        this.map = map;
+        this.reduce = reduce;
+    }
     
     public String getMap() {
         return map;

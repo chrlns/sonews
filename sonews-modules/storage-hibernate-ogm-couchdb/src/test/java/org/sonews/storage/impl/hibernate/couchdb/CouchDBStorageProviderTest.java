@@ -50,7 +50,8 @@ public class CouchDBStorageProviderTest {
     
     @Before
     public void setUp() {
-        subject = new CouchDBStorageProvider(); 
+        subject = new CouchDBStorageProvider();
+        subject = new CouchDBStorageProvider();
     }
     
     @After
