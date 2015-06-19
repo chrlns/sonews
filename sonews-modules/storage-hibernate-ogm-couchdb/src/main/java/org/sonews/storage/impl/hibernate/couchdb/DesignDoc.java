@@ -19,6 +19,7 @@
 package org.sonews.storage.impl.hibernate.couchdb;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 import java.io.Serializable;
 import java.util.HashMap;
@@ -40,6 +41,7 @@ import org.json.JSONObject;
 @Entity
 @AssociationStorage(AssociationStorageType.ASSOCIATION_DOCUMENT)
 @JsonAutoDetect(fieldVisibility=JsonAutoDetect.Visibility.ANY)
+@JsonInclude(JsonInclude.Include.NON_NULL)
 class DesignDoc implements Serializable {    
     @Id
     @Column(name="_id")
@@ -86,7 +88,7 @@ class DesignDoc implements Serializable {
     public int getVersion() {
         return this.version;
     }
-    
+ 
     public String getId() {
         return this._id;
     }
