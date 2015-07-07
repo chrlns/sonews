@@ -156,7 +156,7 @@ public class ChannelLineBuffers {
                 byte b = buffer.get();
                 if (b == 10) // '\n'
                 {
-                // The bytes between the buffer's current position and its
+                    // The bytes between the buffer's current position and its
                     // limit, if any, are copied to the beginning of the buffer.
                     // That is, the byte at index p = position() is copied to
                     // index zero, the byte at index p + 1 is copied to index
@@ -179,7 +179,7 @@ public class ChannelLineBuffers {
             if (buffer.hasRemaining()) {
                 return null;
             } else {
-            // In the first 512 was no newline found, so the input is not
+                // In the first 512 was no newline found, so the input is not
                 // standard compliant. We return the current buffer as new line
                 // and add a space to the beginning of the next line which
                 // corrects some overlong header lines.

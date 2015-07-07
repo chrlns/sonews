@@ -28,32 +28,42 @@ import java.util.logging.StreamHandler;
 import org.sonews.config.Config;
 
 /**
- * Provides logging and debugging methods.
+ * Keeps the reference to a java.util.logging.Logger instance named "org.sonews".
  *
  * @author Christian Lins
  * @since sonews/0.5.0
  */
 public class Log extends Logger {
 
-    private static final Log instance = new Log();
+    private static Log instance = null;
 
     private Log() {
         super("org.sonews", null);
 
-        StreamHandler sHandler = new StreamHandler(System.out,
-                new SimpleFormatter());
-        addHandler(sHandler);
+        SimpleFormatter formatter = new SimpleFormatter();
+        StreamHandler streamHandler = new StreamHandler(System.out, formatter);
+        
+        addHandler(streamHandler);
 
         Level level = Level.parse(Config.inst().get(Config.LOGLEVEL, "INFO"));
         setLevel(level);
         for (Handler handler : getHandlers()) {
             handler.setLevel(level);
         }
-
-        LogManager.getLogManager().addLogger(this);
     }
 
     public static Logger get() {
+        if (instance == null) {
+            // We do not synchronize the creation of the logger instances as
+            // the addLogger() method simply ignores multiple calls with an
+            // equally named ("org.sonews") Logger instance and returns false
+            Log log = new Log();
+            if (LogManager.getLogManager().addLogger(instance)) {
+                // We keep a strong reference to our logger, because LogManager
+                // only keeps a weak reference that may be garbage collected
+                instance = log;
+            }
+        }
         return instance;
     }
 }

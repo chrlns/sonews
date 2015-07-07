@@ -38,10 +38,10 @@ import org.sonews.daemon.NNTPConnection;
 import org.sonews.daemon.NNTPDaemonRunnable;
 import org.sonews.daemon.SocketChannelWrapperFactory;
 import org.sonews.util.Log;
+import org.springframework.beans.BeansException;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
-import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
 /**
@@ -160,9 +160,7 @@ public class SynchronousNNTPDaemon extends DaemonRunner implements NNTPDaemonRun
             // Could not bind to socket; this is a fatal, so perform a shutdown
             Log.get().log(Level.SEVERE, ex.getLocalizedMessage() + " -> shutdown sonews", ex);
             daemon.requestShutdown();
-        } catch (IOException ex) {
-            ex.printStackTrace();
-        } catch (Exception ex) {
+        } catch (IOException | InterruptedException | BeansException ex) {
             ex.printStackTrace();
         }
     }

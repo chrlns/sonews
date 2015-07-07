@@ -27,6 +27,7 @@ import java.util.logging.Level;
 
 import org.sonews.config.Config;
 import org.sonews.daemon.DaemonRunnable;
+import org.sonews.daemon.DaemonRunner;
 import org.sonews.daemon.DaemonThread;
 import org.sonews.storage.Article;
 import org.sonews.storage.Group;
@@ -43,7 +44,7 @@ import org.sonews.storage.StorageManager;
  * @author Christian Lins
  * @since sonews/0.5.0
  */
-public class Purger implements DaemonRunnable {
+public class Purger extends DaemonRunner implements DaemonRunnable {
 
     private DaemonThread daemon;
     
@@ -151,10 +152,5 @@ public class Purger implements DaemonRunnable {
             Log.get().info("Lifetime purger is disabled");
             Thread.sleep(1000 * 60 * 30); // Wait 30 minutes
         }
-    }
-
-    @Override
-    public void setDaemon(DaemonThread daemon) {
-        this.daemon = daemon;
     }
 }

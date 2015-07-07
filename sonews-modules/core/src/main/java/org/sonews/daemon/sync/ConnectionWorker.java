@@ -52,9 +52,6 @@ class ConnectionWorker extends DaemonRunner {
         pendingChannels.put(channel);
     }
 
-    /**
-     * Processing loop.
-     */
     @Override
     public void run() {
         while (daemon.isRunning()) {

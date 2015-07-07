@@ -20,7 +20,6 @@ package org.sonews.feed;
 
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
@@ -28,7 +27,6 @@ import java.util.logging.Level;
 import java.util.stream.Collectors;
 
 import org.sonews.util.Log;
-import org.sonews.util.io.Resource;
 
 /**
  * For every group that is synchronized with or from a remote newsserver a

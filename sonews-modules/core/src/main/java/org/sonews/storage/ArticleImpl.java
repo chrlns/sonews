@@ -47,7 +47,7 @@ import org.sonews.util.Log;
  * @author Dennis Schwerdel
  * @since n3tpd/0.1
  */
-public class ArticleImpl implements Article {
+class ArticleImpl implements Article {
 
     protected InternetHeaders headers = null;
     protected String headerSrc = null;
@@ -125,6 +125,7 @@ public class ArticleImpl implements Article {
      *
      * @param headerKey
      */
+    @Override
     public void removeHeader(final String headerKey) {
         this.headers.removeHeader(headerKey);
         this.headerSrc = null;

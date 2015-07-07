@@ -43,9 +43,6 @@ class ChannelWriter extends DaemonRunner {
 
     private static final ChannelWriter instance = new ChannelWriter();
 
-    /**
-     * @return Returns the active ChannelWriter instance.
-     */
     public static ChannelWriter getInstance() {
         return instance;
     }
@@ -55,25 +52,14 @@ class ChannelWriter extends DaemonRunner {
     protected ChannelWriter() {
     }
 
-    /**
-     * @return Selector associated with this instance.
-     */
     public Selector getSelector() {
         return this.selector;
     }
 
-    /**
-     * Sets the selector that is used by this ChannelWriter.
-     *
-     * @param selector
-     */
     public void setSelector(final Selector selector) {
         this.selector = selector;
     }
 
-    /**
-     * Run loop.
-     */
     @Override
     public void run() {
         assert selector != null;
@@ -133,7 +119,7 @@ class ChannelWriter extends DaemonRunner {
                 }
             } catch (CancelledKeyException ex) {
                 Log.get().log(Level.INFO, "ChannelWriter.run(): {0}", ex);
-            } catch (Exception ex) {
+            } catch (IOException | InterruptedException ex) {
                 ex.printStackTrace();
             }
         } // while(isRunning())

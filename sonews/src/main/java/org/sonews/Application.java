@@ -58,27 +58,15 @@ public class Application {
     /** The server's startup date */
     public static final LocalDateTime STARTDATE = LocalDateTime.now();
 
-    /**
-     * The main entrypoint.
-     *
-     * @param args
-     * @throws Exception
-     */
     public static void main(String[] args) throws Exception {
         Logger.getLogger("org.sonews").log(Level.INFO, VERSION);
 
-        // Command line arguments
-        boolean async = false;
         boolean feed = false; // Enable feeding?
         boolean purger = false; // Enable message purging?
         int port = -1;
 
         for (int n = 0; n < args.length; n++) {
             switch (args[n]) {
-                case "-async": {
-                    async = true;
-                    break;
-                }
                 case "-c":
                 case "-config": {
                     Config.inst().set(Config.LEVEL_CLI, Config.CONFIGFILE,

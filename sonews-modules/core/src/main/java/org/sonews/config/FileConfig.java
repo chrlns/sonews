@@ -50,11 +50,6 @@ class FileConfig extends AbstractConfig {
         defaultConfig.setProperty(Config.STORAGE_PASSWORD, "mysecret");
     }
 
-    /**
-     * Note: this method is not thread-safe
-     *
-     * @return A Config instance
-     */
     public static synchronized FileConfig getInstance() {
         if (instance == null) {
             instance = new FileConfig();

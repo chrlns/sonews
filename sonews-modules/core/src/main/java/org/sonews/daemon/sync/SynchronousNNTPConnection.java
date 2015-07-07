@@ -220,9 +220,6 @@ public class SynchronousNNTPConnection implements NNTPConnection {
         return this.charset;
     }
 
-    /**
-     * @return The currently selected communication channel (not SocketChannel)
-     */
     @Override
     public Group getCurrentGroup() {
         return this.currentGroup;
@@ -432,6 +429,7 @@ public class SynchronousNNTPConnection implements NNTPConnection {
      *         {@link User#isAuthenticated()}, if user is athenticated, or we
      *         just trust him)
      */
+    @Override
     public User getUser() {
         return user;
     }
@@ -441,6 +439,7 @@ public class SynchronousNNTPConnection implements NNTPConnection {
      *
      * @param user username from AUTHINFO USER username.
      */
+    @Override
     public void setUser(User user) {
         this.user = user;
     }
