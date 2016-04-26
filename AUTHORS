@@ -1,21 +1,19 @@
-AUTHORS of
+Contributors to sonews NNTP Usenet Server
 
-sonews NNTP Usenet Server
+Maintainer and original author:
+  Christian Lins <christian@lins.me>
 
-Copyright (C) 2009-2014
-  Christian Lins <christian@sonews.org>
+Contributors:
   František Kučera <informace@frantovo.cz>
   Bernd Eilers <bernd.eilers@oracle.com>
 
 sonews is based partly upon
 
-Neat NNTP Daemon (n3tpd)
-Copyright (C) 2007, 2008  Christian Lins <christian.lins@web.de>
-
 tNNTPd
-Copyright (C) 2003  Dennis Schwerdel
+Copyright (C) 2003 Dennis Schwerdel
 
-This program is free software: you can redistribute it and/or modify
+
+sonews is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.

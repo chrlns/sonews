@@ -1,0 +1,15 @@
+{
+   "_id": "_design/access",
+   "version" : 2,
+   "language": "javascript",
+   "views": {
+       "max_article_index": {
+           "map": "function (doc) { for(var n = 0; n < doc.indices.length; n++) { emit(doc.indices[n].indices_KEY, parseInt(doc.indices[n].indices, 10)); }}",
+           "reduce": "function (key, values, rereduce) { return Math.max.apply({}, values); }"
+       },
+       "min_article_index": {
+           "map": "function (doc) { for(var n = 0; n < doc.indices.length; n++) { emit(doc.indices[n].indices_KEY, parseInt(doc.indices[n].indices, 10)); }}",
+           "reduce": "function (key, values, rereduce) { return Math.min.apply({}, values); }"
+       }
+   }
+}
