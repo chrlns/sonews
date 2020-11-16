@@ -1,5 +1,5 @@
+[![Build Status](https://travis-ci.org/chrlns/sonews.svg?branch=master)](https://travis-ci.org/chrlns/sonews)
 [![Coverty Scan](https://scan.coverity.com/projects/2030/badge.svg)](https://scan.coverity.com/projects/2030)
-[![Gitter chat](https://badges.gitter.im/chrlns/sonews.png)](https://gitter.im/chrlns/sonews)
 [![OpenHub](https://www.openhub.net/p/sonews/widgets/project_thin_badge.gif)](https://www.openhub.net/p/sonews/)
 
 sonews
