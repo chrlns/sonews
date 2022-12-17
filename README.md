@@ -1,6 +1,4 @@
-[![Build Status](https://travis-ci.org/chrlns/sonews.svg?branch=master)](https://travis-ci.org/chrlns/sonews)
 [![Coverty Scan](https://scan.coverity.com/projects/2030/badge.svg)](https://scan.coverity.com/projects/2030)
-[![OpenHub](https://www.openhub.net/p/sonews/widgets/project_thin_badge.gif)](https://www.openhub.net/p/sonews/)
 
 sonews
 ======
@@ -14,7 +12,7 @@ Requirements
 The requirements for building and running sonews are:
 
 * Apache Maven
-* Java 7 JDK (or newer) (Java 8 for sonews/2.1 or higher)
+* Java 17 for sonews/2.1 or higher
 * MySQL/PostgreSQL installation (CouchDB for sonews/2.1 or higher)
 
 Build
@@ -60,5 +58,5 @@ Contribution
 
 sonews is Free Software licensed under the terms of the GPLv3.
 
-Please report any issues at https://github.com/cli/sonews/ or write a mail to
+Please report any issues at https://github.com/chrlns/sonews/ or write a mail to
 mail(at)sonews.org. 
