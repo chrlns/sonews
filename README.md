@@ -13,7 +13,10 @@ The requirements for building and running sonews are:
 
 * Apache Maven
 * Java 17 for sonews/2.1 or higher
-* MySQL/PostgreSQL installation (CouchDB for sonews/2.1 or higher)
+* MySQL/PostgreSQL installation (CouchDB possible for sonews/2.1 or higher)
+
+Note: Hibernate OGM required for CouchDB support is currently unmaintained and 
+should not be used.
 
 Build
 -----
@@ -28,6 +31,11 @@ Use the following command to build and package sonews:
 
     $ mvn clean compile package
 
+If you get an error message such as
+
+    Fatal error compiling: error: invalid target release: 17
+
+then make sure that the default JDK of your machine is at least Java 17.
 
 To start sonews/2.0 on port 9119:
 
