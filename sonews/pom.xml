@@ -67,12 +67,14 @@
             <artifactId>sonews-core-nio2</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <!-- // currently unmaintained
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>storage-hibernate-ogm-couchdb</artifactId>
             <version>2.1-SNAPSHOT</version>
             <scope>runtime</scope>
         </dependency>
+        -->
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>mlgw</artifactId>
