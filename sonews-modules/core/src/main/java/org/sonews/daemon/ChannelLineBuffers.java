@@ -210,6 +210,7 @@ public class ChannelLineBuffers {
             buf = ByteBuffer.allocate(BUFFER_SIZE);
         }
 
+        assert buf != null;
         assert buf.position() == 0;
         assert buf.limit() >= BUFFER_SIZE;
 
@@ -240,9 +241,12 @@ public class ChannelLineBuffers {
      * Recycles all buffers of this ChannelLineBuffers object.
      */
     public void recycleBuffers() {
-        synchronized (inputBuffer) {
-            recycleBuffer(inputBuffer);
-            this.inputBuffer = null;
+        if (inputBuffer != null) {
+            // It happens that inputBuffer is null, although unclear why
+            synchronized (inputBuffer) {
+                recycleBuffer(inputBuffer);
+                this.inputBuffer = null;
+            }
         }
 
         synchronized (outputBuffers) {

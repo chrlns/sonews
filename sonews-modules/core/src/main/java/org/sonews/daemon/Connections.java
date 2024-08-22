@@ -110,13 +110,15 @@ public final class Connections extends DaemonRunner {
                         try {
                             assert channel != null;
 
+                            var remoteAddress = channel.getRemoteAddress();
+
                             // Close the channel; implicitely cancels all
                             // selectionkeys
                             channel.close();
                             Log.get().log(
                                     Level.INFO,
                                     "Disconnected: {0} (timeout)",
-                                    channel.getRemoteAddress());
+                                    remoteAddress);
                         } catch (IOException ex) {
                             Log.get().log(Level.WARNING, "Connections.run(): {0}", ex);
                         }
