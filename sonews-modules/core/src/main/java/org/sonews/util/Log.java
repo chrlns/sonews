@@ -37,8 +37,9 @@ public class Log extends Logger {
 
     private static Log instance = null;
 
-    private Log() {
+    public Log() {
         super("org.sonews", null);
+        System.err.print("Log ctor");
 
         SimpleFormatter formatter = new SimpleFormatter();
         StreamHandler streamHandler = new StreamHandler(System.out, formatter);
@@ -52,16 +53,14 @@ public class Log extends Logger {
         }
     }
 
-    public static Logger get() {
+    public synchronized static Logger get() {
         if (instance == null) {
-            // We do not synchronize the creation of the logger instances as
-            // the addLogger() method simply ignores multiple calls with an
-            // equally named ("org.sonews") Logger instance and returns false
-            Log log = new Log();
-            if (LogManager.getLogManager().addLogger(log)) {
-                // We keep a strong reference to our logger, because LogManager
-                // only keeps a weak reference that may be garbage collected
-                instance = log;
+            // We keep a strong reference to our logger, because LogManager
+            // only keeps a weak reference that may be garbage collected
+            instance = new Log();
+            if (!LogManager.getLogManager().addLogger(instance)) {
+                // Should not happen
+                System.err.println("Failed to register logger.");
             }
         }
         return instance;
