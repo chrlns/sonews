@@ -53,11 +53,6 @@
 	  <version>4.4</version>
 	  <scope>test</scope>
     </dependency>
-    <dependency>
-      <groupId>org.jboss.jbossts</groupId>
-      <artifactId>jbossjta</artifactId>
-      <version>4.16.6.Final</version>
-    </dependency>
   </dependencies>
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -71,6 +66,9 @@
         <configuration>
           <source>17</source>
           <target>17</target>
+          <compilerArgs>
+            <arg>-Xlint:deprecation</arg>
+          </compilerArgs>
         </configuration>
       </plugin>
       <plugin>

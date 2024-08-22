@@ -1,6 +1,6 @@
 /*
  *   SONEWS News Server
- *   Copyright (C) 2009-2015  Christian Lins <christian@lins.me>
+ *   Copyright (C) 2009-2024  Christian Lins <christian@lins.me>
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -26,11 +26,14 @@ import org.sonews.storage.Storage;
 import org.sonews.storage.StorageBackendException;
 import org.sonews.storage.StorageProvider;
 
+import org.springframework.stereotype.Component;
+
 /**
  * StorageProvider for JDBC databases.
  * @author Christian Lins
  * @since sonews/1.0
  */
+@Component
 public class JDBCStorageProvider implements StorageProvider {
 
     protected static final Map<Thread, JDBCDatabase> instances = new ConcurrentHashMap<>();
