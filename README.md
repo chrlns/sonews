@@ -1,5 +1,3 @@
-[![Coverty Scan](https://scan.coverity.com/projects/2030/badge.svg)](https://scan.coverity.com/projects/2030)
-
 sonews
 ======
 
