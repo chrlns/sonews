@@ -55,6 +55,7 @@ Setup
 * Create a database in your database system, e.g. named like 'sonews' and give it a
   dedicated database user
 * Create the necessary table structure using the util/*.sql file
+* Customize the Spring application setup via creating a sonews.xml (use sonews.xml.example file)
 * Customize the settings within the sonews.conf file (you'll find a template in util/
   or let sonews create one on first startup)
 * Start sonews as described above
