@@ -58,7 +58,7 @@ public class Log extends Logger {
             // the addLogger() method simply ignores multiple calls with an
             // equally named ("org.sonews") Logger instance and returns false
             Log log = new Log();
-            if (LogManager.getLogManager().addLogger(instance)) {
+            if (LogManager.getLogManager().addLogger(log)) {
                 // We keep a strong reference to our logger, because LogManager
                 // only keeps a weak reference that may be garbage collected
                 instance = log;
