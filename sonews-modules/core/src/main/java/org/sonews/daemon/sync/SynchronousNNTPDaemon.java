@@ -124,9 +124,7 @@ public class SynchronousNNTPDaemon extends DaemonRunner implements NNTPDaemonRun
                     continue;
                 }
                 
-                //FIXME conn should be NNTPConnection
-                final SynchronousNNTPConnection conn = (SynchronousNNTPConnection)
-                        context.getBean("syncNNTPConnection", NNTPConnection.class);
+                SynchronousNNTPConnection conn = context.getBean(SynchronousNNTPConnection.class);
                 conn.setChannelWrapper(new SocketChannelWrapperFactory(socketChannel).create());
                 Connections.getInstance().add(conn);
 
