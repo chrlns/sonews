@@ -42,7 +42,7 @@ public class SyncSocketChannelWrapper
 
     @Override
     public SocketAddress getRemoteAddress() throws IOException {
-        return this.channel.getRemoteAddress();
+        return channel.isOpen() ? this.channel.getRemoteAddress() : null;
     }
 
     @Override

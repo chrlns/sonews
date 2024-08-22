@@ -374,8 +374,13 @@ public class SynchronousNNTPConnection implements NNTPConnection {
         }
 
         // Write characters to output buffers
-        LineEncoder lenc = new LineEncoder(characters, charset);
-        lenc.encode(lineBuffers);
+        try {
+            LineEncoder lenc = new LineEncoder(characters, charset);
+            lenc.encode(lineBuffers);
+        } catch(ClosedChannelException ex) {
+            // The remote connections is probably already closed
+            Log.get().log(Level.INFO, "Connection channel was closed on write attempt.");
+        }
 
         enableWriteEvents(debugLine);
     }
