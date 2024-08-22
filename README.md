@@ -41,7 +41,7 @@ To start sonews/2.0 on port 9119:
 
 For sonews/2.1 or later use:
 
-    $ mvn exec:java -pl sonews -Dexec.mainClass="org.sonews.Application" -Dexec.args="-p 9119"
+    $ java -jar sonews/target/sonews-boot-2.1-SNAPSHOT-jar-with-dependencies.jar -p 9119
 
 You may want sonews to listen on the default NNTP port (119) without running as
 root user. This can be achieved by redirecting all TCP connections on port 119
