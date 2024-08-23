@@ -240,13 +240,9 @@ public class ChannelLineBuffers {
      * Recycles all buffers of this ChannelLineBuffers object.
      */
     public void recycleBuffers() {
-        /*if (inputBuffer != null) {
-            // It happens that inputBuffer is null, although unclear why
-            synchronized (inputBuffer) {
-                recycleBuffer(inputBuffer);
-                this.inputBuffer = null;
-            }
-        }*/
+        synchronized (inputBuffer) {
+            this.inputBuffer.clear();
+        }
 
         synchronized (outputBuffers) {
             outputBuffers.forEach(ChannelLineBuffers::recycleBuffer);

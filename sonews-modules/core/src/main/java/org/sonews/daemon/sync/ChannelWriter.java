@@ -72,11 +72,16 @@ class ChannelWriter extends DaemonRunner {
                 // select() blocks until some SelectableChannels are ready for
                 // processing. There is no need to synchronize the selector as
                 // we have only one thread per selector.
-                selector.select(); // The return value of select can be ignored
+                while(0 == selector.select()) {
+                    // Eventually wait for a register operation
+                    synchronized (SynchronousNNTPDaemon.RegisterGate) { /* do nothing */
+                    }
+                }
 
                 // Get list of selection keys with pending OP_WRITE events.
                 // The keySET is not thread-safe whereas the keys itself are.
-                Iterator<SelectionKey> it = selector.selectedKeys().iterator();
+                var selKeys = selector.selectedKeys();
+                Iterator<SelectionKey> it = selKeys.iterator();
 
                 while (it.hasNext()) {
                     // We remove the first event from the set and store it for
@@ -149,8 +154,7 @@ class ChannelWriter extends DaemonRunner {
 
                 while (buf != null) // There is data to be send
                 {
-                    // Write buffer to socket channel; this method does not
-                    // block
+                    // Write buffer to socket channel; this method does not block.
                     if (socketChannel.write(buf) <= 0) {
                         // Perhaps there is data to be written, but the
                         // SocketChannel's buffer is full, so we stop writing
