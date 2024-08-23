@@ -1,6 +1,6 @@
 /*
  *   SONEWS News Server
- *   Copyright (C) 2009-2015  Christian Lins <christian@lins.me>
+ *   Copyright (C) 2009-2024  Christian Lins <christian@lins.me>
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -104,7 +104,7 @@ class ChannelWriter extends DaemonRunner {
                         // order.
                         processSelectionKey(connection, socketChannel, selKey);
                     } catch (IOException ex) {
-                        Log.get().log(Level.WARNING, "Error writing to channel: {0}", ex);
+                        Log.get().log(Level.INFO, "ChannelWriter.run(): Error writing to channel");
 
                         // Cancel write events for this channel
                         selKey.cancel();
@@ -118,9 +118,9 @@ class ChannelWriter extends DaemonRunner {
                 synchronized (SynchronousNNTPDaemon.RegisterGate) { /* do nothing */
                 }
             } catch (CancelledKeyException ex) {
-                Log.get().log(Level.INFO, "ChannelWriter.run(): {0}", ex);
+                Log.get().log(Level.INFO, "ChannelWriter.run(): Cancelled key");
             } catch (IOException | InterruptedException ex) {
-                ex.printStackTrace();
+                Log.get().log(Level.WARNING, "ChannelWriter.run()", ex);
             }
         } // while(isRunning())
     }

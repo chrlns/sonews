@@ -178,10 +178,12 @@ public class SynchronousNNTPConnection implements NNTPConnection {
         try {
             // Closes the input line of the channel's socket, so no new data
             // will be received and a timeout can be triggered.
-            this.channel.socket().shutdownInput();
+            if (!channel.socket().isInputShutdown()) {
+                channel.socket().shutdownInput();
+            }
         } catch (IOException ex) {
             Log.get().log(Level.WARNING,
-                    "Exception in NNTPConnection.shutdownInput(): {0}", ex);
+                    "Exception in NNTPConnection.shutdownInput()", ex);
         }
     }
 
@@ -191,15 +193,19 @@ public class SynchronousNNTPConnection implements NNTPConnection {
             public void run() {
                 try {
                     // Closes the output line of the channel's socket.
-                    channel.socket().shutdownOutput();
-                    channel.close();
+                    if (!channel.socket().isOutputShutdown()) {
+                        channel.socket().shutdownOutput();
+                    }
+                    if (channel.isConnected()) {
+                        channel.close();
+                    }
                 } catch (SocketException ex) {
                     // Socket was already disconnected
                     Log.get().log(Level.INFO,
-                            "NNTPConnection.shutdownOutput(): {0}", ex);
+                            "SynchronousNNTPConnection.shutdownOutput()", ex);
                 } catch (IOException ex) {
                     Log.get().log(Level.WARNING,
-                            "NNTPConnection.shutdownOutput(): {0}", ex);
+                            "SynchronousNNTPConnection.shutdownOutput()", ex);
                 }
             }
         }, 3000);

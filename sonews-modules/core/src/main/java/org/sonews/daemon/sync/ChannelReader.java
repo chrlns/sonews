@@ -1,6 +1,6 @@
 /*
  *   SONEWS News Server
- *   Copyright (C) 2009-2015  Christian Lins <christian@lins.me>
+ *   Copyright (C) 2009-2024  Christian Lins <christian@lins.me>
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -156,7 +156,7 @@ class ChannelReader extends DaemonRunner {
         // Some bytes are available for reading
         if (selKey.isValid()) {
             // Lock the channel
-            // synchronized(socketChannel)
+            synchronized(socketChannel) // TODO is synchronization necessary as socketchannel is thread-safe?
             {
                 // Read the data into the appropriate buffer
                 ByteBuffer buf = connection.getInputBuffer();
@@ -166,11 +166,11 @@ class ChannelReader extends DaemonRunner {
                 } catch (IOException ex) {
                     // The connection was probably closed by the remote host
                     // in a non-clean fashion
-                    Log.get().log(Level.INFO,
-                            "ChannelReader.processSelectionKey(): {0}", ex);
+                    Log.get().log(Level.INFO, 
+                        "ChannelReader.processSelectionKey(): Connection reset");
                 } catch (Exception ex) {
                     Log.get().log(Level.WARNING,
-                            "ChannelReader.processSelectionKey(): {0}", ex);
+                            "ChannelReader.processSelectionKey()", ex);
                 }
 
                 if (read == -1) { // End of stream

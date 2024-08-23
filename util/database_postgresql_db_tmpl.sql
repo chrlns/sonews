@@ -1,0 +1,7 @@
+--- Create role sonews with password "sonews"
+CREATE ROLE sonews LOGIN
+  PASSWORD 'sonews'
+  NOSUPERUSER INHERIT NOCREATEDB NOCREATEROLE NOREPLICATION;
+
+CREATE DATABASE sonews WITH OWNER sonews ENCODING 'UTF8';
+
