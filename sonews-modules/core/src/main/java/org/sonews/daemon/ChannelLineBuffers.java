@@ -1,6 +1,6 @@
 /*
  *   SONEWS News Server
- *   Copyright (C) 2009-2015  Christian Lins <christian@lins.me>
+ *   Copyright (C) 2009-2024  Christian Lins <christian@lins.me>
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -58,7 +58,7 @@ public class ChannelLineBuffers {
 
     // Both input and output buffers should be final as we synchronize on them,
     // but the buffers are set somewhere to another object or null. 
-    private ByteBuffer inputBuffer = newLineBuffer();
+    private final ByteBuffer inputBuffer = newLineBuffer();
     private final List<ByteBuffer> outputBuffers = new ArrayList<>();
     private boolean outputBuffersClosed = false;
 
@@ -142,18 +142,16 @@ public class ChannelLineBuffers {
         
         // Synchronization on non-final field inputBuffer is probably okay
         synchronized(inputBuffer) {
-            ByteBuffer buffer = inputBuffer;
-
             // Mark the current write position
-            int mark = buffer.position();
+            int mark = inputBuffer.position();
 
             // Set position to 0 and limit to current position
-            buffer.flip();
+            inputBuffer.flip();
 
             ByteBuffer lineBuffer = newLineBuffer();
 
-            while (buffer.position() < buffer.limit()) {
-                byte b = buffer.get();
+            while (inputBuffer.position() < inputBuffer.limit()) {
+                byte b = inputBuffer.get();
                 if (b == 10) // '\n'
                 {
                     // The bytes between the buffer's current position and its
@@ -164,7 +162,7 @@ public class ChannelLineBuffers {
                     // is copied to index n = limit() - 1 - p.
                     // The buffer's position is then set to n+1 and its limit is
                     // set to its capacity.
-                    buffer.compact();
+                    inputBuffer.compact();
 
                     lineBuffer.flip(); // limit to position, position to 0
                     return lineBuffer;
@@ -173,21 +171,22 @@ public class ChannelLineBuffers {
                 }
             }
 
-            buffer.limit(BUFFER_SIZE);
-            buffer.position(mark);
+            inputBuffer.limit(BUFFER_SIZE);
+            inputBuffer.position(mark);
 
-            if (buffer.hasRemaining()) {
+            if (inputBuffer.hasRemaining()) { // TODO Is this correct here?
                 return null;
             } else {
                 // In the first 512 was no newline found, so the input is not
                 // standard compliant. We return the current buffer as new line
                 // and add a space to the beginning of the next line which
                 // corrects some overlong header lines.
-                inputBuffer = newLineBuffer();
+                inputBuffer.clear();
                 inputBuffer.put((byte) ' ');
-                buffer.flip();
-                return buffer;
             }
+
+            lineBuffer.flip(); // limit to position, position to 0
+            return lineBuffer;
         }
     }
 
@@ -241,13 +240,13 @@ public class ChannelLineBuffers {
      * Recycles all buffers of this ChannelLineBuffers object.
      */
     public void recycleBuffers() {
-        if (inputBuffer != null) {
+        /*if (inputBuffer != null) {
             // It happens that inputBuffer is null, although unclear why
             synchronized (inputBuffer) {
                 recycleBuffer(inputBuffer);
                 this.inputBuffer = null;
             }
-        }
+        }*/
 
         synchronized (outputBuffers) {
             outputBuffers.forEach(ChannelLineBuffers::recycleBuffer);
