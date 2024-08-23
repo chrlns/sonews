@@ -82,14 +82,14 @@ public class ArticleWriter {
     public void writeArticle(Article article) throws IOException,
             UnsupportedEncodingException {
         byte[] buf = new byte[512];
-        ArticleInputStream in = new ArticleInputStream(article);
+        try (ArticleInputStream in = new ArticleInputStream(article)) {
+            preparePOST();
 
-        preparePOST();
-
-        int len = in.read(buf);
-        while (len != -1) {
-            writeLine(buf, len);
-            len = in.read(buf);
+            int len = in.read(buf);
+            while (len != -1) {
+                writeLine(buf, len);
+                len = in.read(buf);
+            }
         }
 
         finishPOST();
