@@ -27,7 +27,6 @@ import org.sonews.daemon.ChannelLineBuffers;
 import org.sonews.daemon.Connections;
 import org.sonews.daemon.DaemonRunner;
 import org.sonews.daemon.NNTPConnection;
-import org.sonews.daemon.SocketChannelWrapperFactory;
 import org.sonews.util.Log;
 
 /**
@@ -61,8 +60,7 @@ class ConnectionWorker extends DaemonRunner {
 
                 if (channel != null) {
                     // Connections.getInstance().get() MAY return null
-                    NNTPConnection conn = Connections.getInstance().get(
-                            new SocketChannelWrapperFactory(channel).create());
+                    NNTPConnection conn = Connections.getInstance().get(channel);
 
                     if (conn == null) {
                         Log.get().log(Level.FINEST, "conn is null");

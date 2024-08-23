@@ -30,7 +30,6 @@ import java.util.logging.Level;
 import org.sonews.daemon.Connections;
 import org.sonews.daemon.DaemonRunner;
 import org.sonews.daemon.NNTPConnection;
-import org.sonews.daemon.SocketChannelWrapperFactory;
 import org.sonews.util.Log;
 
 /**
@@ -84,8 +83,7 @@ class ChannelWriter extends DaemonRunner {
                     // later processing.
                     selKey = it.next();
                     socketChannel = (SocketChannel) selKey.channel();
-                    connection = Connections.getInstance().get(
-                            new SocketChannelWrapperFactory(socketChannel).create());
+                    connection = Connections.getInstance().get(socketChannel);
 
                     it.remove();
                     if (connection != null) {
@@ -97,14 +95,12 @@ class ChannelWriter extends DaemonRunner {
 
                 if (selKey != null) {
                     try {
-                        // Process the selected key.
                         // As there is only one OP_WRITE key for a given
-                        // channel, we need
-                        // not to synchronize this processing to retain the
-                        // order.
+                        // channel, we need not to synchronize this processing 
+                        // to retain the order.
                         processSelectionKey(connection, socketChannel, selKey);
                     } catch (IOException ex) {
-                        Log.get().log(Level.INFO, "ChannelWriter.run(): Error writing to channel");
+                        Log.get().log(Level.INFO, "ChannelWriter.run(): Error writing to channel", ex);
 
                         // Cancel write events for this channel
                         selKey.cancel();
@@ -141,14 +137,12 @@ class ChannelWriter extends DaemonRunner {
                 ByteBuffer buf = connection.getOutputBuffer();
                 if (buf == null) {
                     // Currently we have nothing to write, so we stop the
-                    // writeable
-                    // events until we have something to write to the socket
-                    // channel
+                    // writeable events until we have something to write to the 
+                    // socket channel.
                     // selKey.cancel();
                     selKey.interestOps(0);
                     // Update activity timestamp to prevent too early
-                    // disconnects
-                    // on slow client connections
+                    // disconnects on slow client connections
                     connection.setLastActivity(System.currentTimeMillis());
                     return;
                 }
@@ -164,8 +158,8 @@ class ChannelWriter extends DaemonRunner {
                         break;
                     } else {
                         // Retrieve next buffer if available; method may return
-                        // the same
-                        // buffer instance if it still have some bytes remaining
+                        // the same buffer instance if it still have some bytes 
+                        // remaining.
                         buf = connection.getOutputBuffer();
                     }
                 }

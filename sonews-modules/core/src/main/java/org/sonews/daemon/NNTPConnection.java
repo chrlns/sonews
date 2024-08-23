@@ -20,6 +20,7 @@ package org.sonews.daemon;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
 
 import org.sonews.acl.User;
@@ -51,7 +52,7 @@ public interface NNTPConnection {
 
     ByteBuffer getOutputBuffer();
 
-    SocketChannelWrapper getSocketChannel();
+    SocketChannel getSocketChannel();
 
     User getUser();
 

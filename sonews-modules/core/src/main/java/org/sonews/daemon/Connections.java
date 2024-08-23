@@ -19,6 +19,7 @@
 package org.sonews.daemon;
 
 import java.io.IOException;
+import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -49,7 +50,7 @@ public final class Connections extends DaemonRunner {
     }
 
     private final List<NNTPConnection> connections = new ArrayList<>();
-    private final Map<SocketChannelWrapper, NNTPConnection> connByChannel
+    private final Map<SocketChannel, NNTPConnection> connByChannel
             = new HashMap<>();
 
     private Connections() {
@@ -73,7 +74,7 @@ public final class Connections extends DaemonRunner {
      * @return NNTPConnection instance that is associated with the given
      *         SocketChannel.
      */
-    public NNTPConnection get(final SocketChannelWrapper channel) {
+    public NNTPConnection get(final SocketChannel channel) {
         synchronized (this.connections) {
             return this.connByChannel.get(channel);
         }
@@ -104,7 +105,7 @@ public final class Connections extends DaemonRunner {
                         iter.remove();
 
                         // Close and remove the channel
-                        SocketChannelWrapper channel = conn.getSocketChannel();
+                        SocketChannel channel = conn.getSocketChannel();
                         connByChannel.remove(channel);
 
                         try {

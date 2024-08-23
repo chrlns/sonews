@@ -37,7 +37,6 @@ import org.sonews.daemon.ChannelLineBuffers;
 import org.sonews.daemon.CommandSelector;
 import org.sonews.daemon.LineEncoder;
 import org.sonews.daemon.NNTPConnection;
-import org.sonews.daemon.SocketChannelWrapper;
 import org.sonews.daemon.command.Command;
 import org.sonews.storage.Article;
 import org.sonews.storage.Group;
@@ -66,7 +65,6 @@ public class SynchronousNNTPConnection implements NNTPConnection {
     /** SocketChannel is generally thread-safe */
     private SocketChannel channel;
     
-    private SocketChannelWrapper channelWrapper;
     private Charset charset = Charset.forName("UTF-8");
     private Command command = null;
     
@@ -85,19 +83,14 @@ public class SynchronousNNTPConnection implements NNTPConnection {
     public SynchronousNNTPConnection() {
     }
     
-    public void setChannelWrapper(SocketChannelWrapper channelWrapper)
+    public void setSocketChannel(SocketChannel channel)
             throws IOException
     {
-        if (channelWrapper == null) {
+        if (channel == null) {
             throw new IllegalArgumentException("channel is null");
         }
 
-        this.channelWrapper = channelWrapper;
-        Object wrapier = channelWrapper.getWrapier();
-        if (!(wrapier instanceof SocketChannel)) {
-            throw new IllegalArgumentException("channel is not a SocketChannel");
-        }
-        this.channel = (SocketChannel)channelWrapper.getWrapier();
+        this.channel = channel;
     }
 
     /**
@@ -212,8 +205,8 @@ public class SynchronousNNTPConnection implements NNTPConnection {
     }
 
     @Override
-    public SocketChannelWrapper getSocketChannel() {
-        return this.channelWrapper;
+    public SocketChannel getSocketChannel() {
+        return this.channel;
     }
 
     @Override

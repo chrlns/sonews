@@ -1,6 +1,6 @@
 /*
  *   SONEWS News Server
- *   Copyright (C) 2009-2015  Christian Lins <christian@lins.me>
+ *   Copyright (C) 2009-2024  Christian Lins <christian@lins.me>
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -34,9 +34,7 @@ import org.sonews.config.Config;
 import org.sonews.daemon.Connections;
 import org.sonews.daemon.DaemonRunner;
 import org.sonews.daemon.DaemonThread;
-import org.sonews.daemon.NNTPConnection;
 import org.sonews.daemon.NNTPDaemonRunnable;
-import org.sonews.daemon.SocketChannelWrapperFactory;
 import org.sonews.util.Log;
 import org.springframework.beans.BeansException;
 
@@ -92,8 +90,7 @@ public class SynchronousNNTPDaemon extends DaemonRunner implements NNTPDaemonRun
             new DaemonThread(ChannelWriter.getInstance()).start();
             new DaemonThread(ChannelReader.getInstance()).start();
 
-            final ServerSocketChannel serverSocketChannel = ServerSocketChannel
-                    .open();
+            ServerSocketChannel serverSocketChannel = ServerSocketChannel.open();
             serverSocketChannel.configureBlocking(true); // Set to blocking mode
 
             // Configure ServerSocket; bind to socket...
@@ -105,10 +102,13 @@ public class SynchronousNNTPDaemon extends DaemonRunner implements NNTPDaemonRun
 
                 try {
                     // As we set the server socket channel to blocking mode the
-                    // accept()
-                    // method will block.
+                    // accept() method will block.
                     socketChannel = serverSocketChannel.accept();
                     socketChannel.configureBlocking(false);
+                    
+                    Log.get().log(Level.INFO, "Connected: {0}", 
+                            socketChannel.socket().getRemoteSocketAddress());
+                    
                     assert socketChannel.isConnected();
                     assert socketChannel.finishConnect();
                 } catch (IOException ex) {
@@ -116,16 +116,14 @@ public class SynchronousNNTPDaemon extends DaemonRunner implements NNTPDaemonRun
                     // be thrown. It most cases we should slow down the
                     // connection accepting, to give the worker threads some
                     // time to process work.
-                    Log.get().log(
-                            Level.SEVERE, "IOException while accepting connection: {0}", ex.getMessage());
-                    Log.get().info(
-                            "Connection accepting sleeping for seconds...");
+                    Log.get().log(Level.SEVERE, "IOException while accepting connection: {0}", ex.getMessage());
+                    Log.get().info("Connection accepting sleeping for seconds...");
                     Thread.sleep(5000); // 5 seconds
                     continue;
                 }
                 
                 SynchronousNNTPConnection conn = context.getBean(SynchronousNNTPConnection.class);
-                conn.setChannelWrapper(new SocketChannelWrapperFactory(socketChannel).create());
+                conn.setSocketChannel(socketChannel);
                 Connections.getInstance().add(conn);
 
                 try {
@@ -133,10 +131,6 @@ public class SynchronousNNTPDaemon extends DaemonRunner implements NNTPDaemonRun
                             socketChannel, SelectionKey.OP_WRITE);
                     registerSelector(readSelector, socketChannel,
                             SelectionKey.OP_READ);
-
-                    Log.get().log(
-                            Level.INFO, "Connected: {0}", socketChannel.socket()
-                                    .getRemoteSocketAddress());
 
                     // Set write selection key and send hello to client
                     conn.setWriteSelectionKey(selKeyWrite);
@@ -176,7 +170,8 @@ public class SynchronousNNTPDaemon extends DaemonRunner implements NNTPDaemonRun
 
     public static SelectionKey registerSelector(final Selector selector,
             final SocketChannel channel, final int op)
-            throws CancelledKeyException, ClosedChannelException {
+            throws CancelledKeyException, ClosedChannelException 
+    {
         // Register the selector at the channel, so that it will be notified
         // on the socket's events
         synchronized (RegisterGate) {

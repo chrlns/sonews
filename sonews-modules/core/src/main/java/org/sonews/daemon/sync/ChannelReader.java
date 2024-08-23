@@ -31,7 +31,6 @@ import java.util.logging.Level;
 import org.sonews.daemon.Connections;
 import org.sonews.daemon.DaemonRunner;
 import org.sonews.daemon.NNTPConnection;
-import org.sonews.daemon.SocketChannelWrapperFactory;
 import org.sonews.util.Log;
 
 /**
@@ -95,8 +94,7 @@ class ChannelReader extends DaemonRunner {
                     while (it.hasNext()) {
                         selKey = it.next();
                         channel = (SocketChannel) selKey.channel();
-                        conn = Connections.getInstance().get(
-                                new SocketChannelWrapperFactory(channel).create());
+                        conn = Connections.getInstance().get(channel);
 
                         // Because we cannot lock the selKey as that would cause
                         // a deadlock
