@@ -152,8 +152,7 @@ class ChannelWriter extends DaemonRunner {
                     return;
                 }
 
-                while (buf != null) // There is data to be send
-                {
+                while (buf != null) { // There is data to be send
                     // Write buffer to socket channel; this method does not block.
                     if (socketChannel.write(buf) <= 0) {
                         // Perhaps there is data to be written, but the

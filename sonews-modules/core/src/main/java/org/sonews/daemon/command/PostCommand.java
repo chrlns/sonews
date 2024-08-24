@@ -21,6 +21,7 @@ package org.sonews.daemon.command;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.net.InetAddress;
 import java.util.Arrays;
 import java.util.logging.Level;
 
@@ -94,93 +95,89 @@ public class PostCommand implements Command {
     @Override
     // TODO: Refactor this method to reduce complexity!
     public void processLine(NNTPConnection conn, String line, byte[] raw)
-            throws IOException, StorageBackendException {
+            throws IOException, StorageBackendException 
+    {
         switch (state) {
-        case WaitForLineOne: {
-            if (line.equalsIgnoreCase("POST")) {
-                this.article = StorageManager.createArticle();
-                state = PostState.ReadingHeaders;
-                
-                conn.println("340 send article to be posted. End with <CR-LF>.<CR-LF>");
-            } else {
-                conn.println("500 invalid command usage");
-            }
-            break;
-        }
-        case ReadingHeaders: {
-            strHead.append(line);
-            strHead.append(SynchronousNNTPConnection.NEWLINE);
+            case WaitForLineOne ->  {
+                if (line.equalsIgnoreCase("POST")) {
+                    this.article = StorageManager.createArticle();
+                    state = PostState.ReadingHeaders;
 
-            if ("".equals(line) || ".".equals(line)) {
-                // we finally met the blank line
-                // separating headers from body
-
-                try {
-                    // Parse the header using the InternetHeader class from
-                    // JavaMail API
-                    headers = new InternetHeaders(new ByteArrayInputStream(
-                            strHead.toString().trim()
-                                    .getBytes(conn.getCurrentCharset())));
-
-                    // add the header entries for the article
-                    article.setHeaders(headers);
-                } catch (MessagingException ex) {
-                    Log.get().log(Level.INFO, ex.getLocalizedMessage(), ex);
-                    conn.println("500 posting failed - invalid header");
-                    state = PostState.Finished;
-                    break;
+                    conn.println("340 send article to be posted. End with <CR-LF>.<CR-LF>");
+                } else {
+                    conn.println("500 invalid command usage");
                 }
+            }
+            case ReadingHeaders ->  {
+                strHead.append(line);
+                strHead.append(SynchronousNNTPConnection.NEWLINE);
 
-                // Change charset for reading body;
-                // for multipart messages UTF-8 is returned
-                // conn.setCurrentCharset(article.getBodyCharset());
+                if ("".equals(line) || ".".equals(line)) {
+                    // we finally met the blank line
+                    // separating headers from body
 
-                state = PostState.ReadingBody;
+                    try {
+                        // Parse the header using the InternetHeader class from
+                        // JavaMail API
+                        headers = new InternetHeaders(new ByteArrayInputStream(
+                                strHead.toString().trim()
+                                        .getBytes(conn.getCurrentCharset())));
 
-                // WTF: do we need articles without bodies?
+                        // add the header entries for the article
+                        article.setHeaders(headers);
+                    } catch (MessagingException ex) {
+                        Log.get().log(Level.INFO, ex.getLocalizedMessage(), ex);
+                        conn.println("500 posting failed - invalid header");
+                        state = PostState.Finished;
+                    }
+
+                    // Change charset for reading body;
+                    // for multipart messages UTF-8 is returned
+                    // conn.setCurrentCharset(article.getBodyCharset());
+
+                    state = PostState.ReadingBody;
+
+                    // WTF: do we need articles without bodies?
+                    if (".".equals(line)) {
+                        // Post an article without body
+                        postArticle(conn, article);
+                        state = PostState.Finished;
+                    }
+                }
+            }
+            case ReadingBody ->  {
                 if (".".equals(line)) {
-                    // Post an article without body
+                    // Set some headers needed for Over command
+                    headers.setHeader(Headers.LINES, Integer.toString(lineCount));
+                    headers.setHeader(Headers.BYTES, Long.toString(bodySize));
+
+                    byte[] body = bufBody.toByteArray();
+                    if (body.length >= 2) {
+                        // Remove trailing CRLF
+                        body = Arrays.copyOf(body, body.length - 2);
+                    }
+                    article.setBody(body); // set the article body
+
                     postArticle(conn, article);
                     state = PostState.Finished;
+                } else {
+                    bodySize += line.length() + 1;
+                    lineCount++;
+
+                    // Add line to body buffer
+                    bufBody.write(raw, 0, raw.length);
+                    bufBody.write(SynchronousNNTPConnection.NEWLINE.getBytes("UTF-8"));
+
+                    if (bodySize > maxBodySize) {
+                        conn.println("500 article is too long");
+                        state = PostState.Finished;
+                    }
                 }
             }
-            break;
-        }
-        case ReadingBody: {
-            if (".".equals(line)) {
-                // Set some headers needed for Over command
-                headers.setHeader(Headers.LINES, Integer.toString(lineCount));
-                headers.setHeader(Headers.BYTES, Long.toString(bodySize));
-
-                byte[] body = bufBody.toByteArray();
-                if (body.length >= 2) {
-                    // Remove trailing CRLF
-                    body = Arrays.copyOf(body, body.length - 2);
-                }
-                article.setBody(body); // set the article body
-
-                postArticle(conn, article);
-                state = PostState.Finished;
-            } else {
-                bodySize += line.length() + 1;
-                lineCount++;
-
-                // Add line to body buffer
-                bufBody.write(raw, 0, raw.length);
-                bufBody.write(SynchronousNNTPConnection.NEWLINE.getBytes("UTF-8"));
-
-                if (bodySize > maxBodySize) {
-                    conn.println("500 article is too long");
-                    state = PostState.Finished;
-                    break;
-                }
+            default -> {
+                // Should never happen
+                Log.get().severe("PostCommand::processLine(): already finished...");
             }
-            break;
-        }
-        default: {
-            // Should never happen
-            Log.get().severe("PostCommand::processLine(): already finished...");
-        }
         }
     }
 
@@ -236,7 +233,7 @@ public class PostCommand implements Command {
         } else { // Post the article regularily
             // Circle check; note that Path can already contain the hostname
             // here
-            String host = Config.inst().get(Config.HOSTNAME, "localhost");
+            String host = Config.inst().get(Config.HOSTNAME, InetAddress.getLocalHost().getHostName());
             if (article.getHeader(Headers.PATH)[0].indexOf(host + "!", 1) > 0) {
                 Log.get().log(Level.INFO, "{0} skipped for host {1}",
                         new Object[] { article.getMessageID(), host });

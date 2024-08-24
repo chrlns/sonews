@@ -20,6 +20,7 @@ package org.sonews.daemon.sync;
 
 import java.io.IOException;
 import java.net.BindException;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.nio.channels.CancelledKeyException;
@@ -134,9 +135,13 @@ public class SynchronousNNTPDaemon extends DaemonRunner implements NNTPDaemonRun
 
                     // Set write selection key and send hello to client
                     conn.setWriteSelectionKey(selKeyWrite);
+                    
+                    // The hello string MUST NOT contain any strange characters
+                    // such as '<' or '>'. It took me hours to find this cause
+                    // for Thunderbirds strange behavior.
                     conn.println("200 "
-                            + Config.inst().get(Config.HOSTNAME, "localhost")
-                            + " <unknown version>" // + Application.VERSION
+                            + Config.inst().get(Config.HOSTNAME, InetAddress.getLocalHost().getCanonicalHostName())
+                            + " sonews/2.1-SNAPSHOT" // + Application.VERSION
                             + " news server ready - (posting ok).");
                 } catch (CancelledKeyException cke) {
                     Log.get().log(
