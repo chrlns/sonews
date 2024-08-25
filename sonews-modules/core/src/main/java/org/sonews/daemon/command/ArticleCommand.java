@@ -21,7 +21,7 @@ package org.sonews.daemon.command;
 import java.io.IOException;
 
 import org.sonews.daemon.NNTPConnection;
-import org.sonews.daemon.sync.SynchronousNNTPConnection;
+import org.sonews.daemon.nio.SynchronousNNTPConnection;
 import org.sonews.storage.Article;
 import org.sonews.storage.Group;
 import org.sonews.storage.StorageBackendException;

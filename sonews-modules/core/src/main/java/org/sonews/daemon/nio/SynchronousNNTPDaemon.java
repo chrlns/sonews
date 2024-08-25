@@ -16,7 +16,7 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.sonews.daemon.sync;
+package org.sonews.daemon.nio;
 
 import java.io.IOException;
 import java.net.BindException;

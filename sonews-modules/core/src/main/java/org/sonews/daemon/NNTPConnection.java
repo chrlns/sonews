@@ -56,7 +56,7 @@ public interface NNTPConnection {
 
     User getUser();
 
-    void lineReceived(byte[] line);
+    //void lineReceived(byte[] line);
 
     void println(byte[] line) throws IOException;
 

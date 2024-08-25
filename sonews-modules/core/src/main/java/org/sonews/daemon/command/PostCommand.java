@@ -30,7 +30,7 @@ import javax.mail.internet.InternetHeaders;
 
 import org.sonews.config.Config;
 import org.sonews.daemon.NNTPConnection;
-import org.sonews.daemon.sync.SynchronousNNTPConnection;
+import org.sonews.daemon.nio.SynchronousNNTPConnection;
 import org.sonews.feed.FeedManager;
 import org.sonews.storage.Article;
 import org.sonews.storage.Group;

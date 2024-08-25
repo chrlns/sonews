@@ -16,7 +16,7 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.sonews.daemon.sync;
+package org.sonews.daemon.nio;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -274,7 +274,6 @@ public class SynchronousNNTPConnection implements NNTPConnection {
      * @throws IllegalStateException
      *             if calling thread does not own the readLock.
      */
-    @Override
     public void lineReceived(byte[] raw) {
         if (raw == null) {
             throw new IllegalArgumentException("raw is null");
