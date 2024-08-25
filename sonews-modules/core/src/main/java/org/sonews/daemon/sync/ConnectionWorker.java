@@ -38,6 +38,7 @@ import org.sonews.util.Log;
 class ConnectionWorker extends DaemonRunner {
 
     // 256 pending events should be enough
+    // TODO Set?
     private static final ArrayBlockingQueue<SocketChannel> pendingChannels =
             new ArrayBlockingQueue<>(256, true);
 
@@ -60,16 +61,23 @@ class ConnectionWorker extends DaemonRunner {
 
                 if (channel != null) {
                     // Connections.getInstance().get() MAY return null
-                    NNTPConnection conn = Connections.getInstance().get(channel);
+                    var conn = (SynchronousNNTPConnection)
+                            Connections.getInstance().get(channel);                   
 
                     if (conn == null) {
                         Log.get().log(Level.FINEST, "conn is null");
-                        addChannel(channel);
+                        addChannel(channel); // TODO why add channel again?
                         continue;
                     }
 
                     // Try to lock the connection object
-                    if (conn.tryReadLock()) {
+                    //if (conn.tryReadLock()) {
+                    synchronized(conn) {
+                        if(!conn.applyOwner(this)) {
+                            addChannel(channel);
+                            continue;
+                        }
+                        
                         ByteBuffer buf = conn.getBuffers().nextInputLine();
                         while (buf != null) // Complete line was received
                         {
@@ -79,14 +87,23 @@ class ConnectionWorker extends DaemonRunner {
 
                             // Here is the actual work done
                             conn.lineReceived(line);
+                            
+                            // Wait for output buffers to be flushed before
+                            // continuing, otherwise we could process a QUIT
+                            // before the output of the other commands are sent
+                            // to the client.
+                            conn.flushOutput();
 
                             // Read next line as we could have already received
                             // the next line
                             buf = conn.getBuffers().nextInputLine();
                         }
-                        conn.unlockReadLock();
-                    } else {
-                        addChannel(channel);
+                        conn.removeOwner(this);
+                        //conn.unlockReadLock();
+//                    } else {
+//                        Log.get().log(Level.WARNING, "ConnectionWorker tryReadLock failed");
+//                        addChannel(channel);
+//                    }
                     }
                 }
             } catch (InterruptedException ex) {

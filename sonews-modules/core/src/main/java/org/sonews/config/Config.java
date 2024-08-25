@@ -66,6 +66,8 @@ public class Config extends AbstractConfig {
     public static final String MLSEND_PORT = "sonews.mlsend.port";
     public static final String MLSEND_USER = "sonews.mlsend.user";
     public static final String MLSEND_AUTH = "sonews.mlsend.auth";
+    
+    public static final String PERF_MAX_CACHED_BUFFERS = "sonews.perf.maxcachedbuffers";
 
     /**
      * Key constant. If value is "true" every I/O is written to logfile (which
@@ -138,13 +140,11 @@ public class Config extends AbstractConfig {
 
     public void set(final int level, final String key, final String val) {
         switch (level) {
-            case LEVEL_CLI: {
+            case LEVEL_CLI ->  {
                 CommandLineConfig.getInstance().set(key, val);
-                break;
             }
-            case LEVEL_FILE: {
+            case LEVEL_FILE ->  {
                 FileConfig.getInstance().set(key, val);
-                break;
             }
         }
     }

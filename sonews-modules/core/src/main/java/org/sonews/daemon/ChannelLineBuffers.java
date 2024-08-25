@@ -21,7 +21,9 @@ package org.sonews.daemon;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
+import org.sonews.config.Config;
 
 /**
  * Class holding ByteBuffers for SocketChannels/NNTPConnection. Due to the
@@ -38,28 +40,30 @@ public class ChannelLineBuffers {
      * standard line.
      */
     public static final int BUFFER_SIZE = 512;
-    private static final int maxCachedBuffers = 2048; // Cached buffers maximum
-    private static final List<ByteBuffer> freeSmallBuffers = new ArrayList<>(
-            maxCachedBuffers);
-
+    
+    private static final int MAX_CACHED_BUFFERS_DEFAULT = 2048; // Cached buffers default maximum
+    private static final List<ByteBuffer> freeSmallBuffers = new ArrayList<>(MAX_CACHED_BUFFERS_DEFAULT);
+    
     /**
      * Allocates a predefined number of direct ByteBuffers (allocated via
      * ByteBuffer.allocateDirect()). This method is Thread-safe, but should only
      * called at startup.
      */
     public static void allocateDirect() {
-        synchronized (freeSmallBuffers) {
+        /*synchronized (freeSmallBuffers) {
+            int maxCachedBuffers = Config.inst().get(
+                    Config.PERF_MAX_CACHED_BUFFERS, MAX_CACHED_BUFFERS_DEFAULT);
             for (int n = 0; n < maxCachedBuffers; n++) {
                 ByteBuffer buffer = ByteBuffer.allocateDirect(BUFFER_SIZE);
                 freeSmallBuffers.add(buffer);
             }
-        }
+        }*/
     }
 
     // Both input and output buffers should be final as we synchronize on them,
     // but the buffers are set somewhere to another object or null. 
     private final ByteBuffer inputBuffer = newLineBuffer();
-    private final List<ByteBuffer> outputBuffers = new ArrayList<>();
+    private final List<ByteBuffer> outputBuffers = new LinkedList<>();
     private boolean outputBuffersClosed = false;
 
     public ChannelLineBuffers() {
@@ -103,6 +107,9 @@ public class ChannelLineBuffers {
     public ByteBuffer getOutputBuffer() {
         synchronized (outputBuffers) {
             if (outputBuffers.isEmpty()) {
+                // Wake up ConnectionWorkers that are waiting for the output
+                // to be flushed
+                outputBuffers.notifyAll();
                 return null;
             } else {
                 ByteBuffer buffer = outputBuffers.get(0);
@@ -126,6 +133,18 @@ public class ChannelLineBuffers {
             return outputBuffers.isEmpty();
         }
     }
+    
+    /**
+     * Blocks while output buffers are not empty.
+     * @throws InterruptedException 
+     */
+    public void waitForOutput() throws InterruptedException {
+        synchronized(outputBuffers) {
+            while(!isOutputBufferEmpty()) {
+                outputBuffers.wait();
+            }
+        }
+    }
 
     /**
      * Goes through the input buffer and searches for next line terminator. 
@@ -140,7 +159,6 @@ public class ChannelLineBuffers {
             return null;
         }
         
-        // Synchronization on non-final field inputBuffer is probably okay
         synchronized(inputBuffer) {
             // Mark the current write position
             int mark = inputBuffer.position();

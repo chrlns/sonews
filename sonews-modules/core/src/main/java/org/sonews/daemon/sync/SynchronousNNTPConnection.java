@@ -1,6 +1,6 @@
 /*
  *   SONEWS News Server
- *   Copyright (C) 2009-2015  Christian Lins <christian@lins.me>
+ *   Copyright (C) 2009-2024  Christian Lins <christian@lins.me>
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -79,8 +79,34 @@ public class SynchronousNNTPConnection implements NNTPConnection {
     private final Object readLockGate = new Object();
     private SelectionKey writeSelKey = null;
     private User user;
+    private ConnectionWorker owner = null;
 
     public SynchronousNNTPConnection() {
+    }
+    
+    void setContext(ApplicationContext context) {
+        this.context = context;
+    }
+    
+    synchronized boolean applyOwner(ConnectionWorker worker) {
+        if (owner == null) {
+            owner = worker;
+            return true;
+        } else {
+            return false;
+        }
+    }
+    
+    synchronized void removeOwner(ConnectionWorker worker) {
+        if (worker == owner) {
+            owner = null;
+        } else {
+            throw new IllegalMonitorStateException("Wrong ConnectionWorker");
+        }
+    }
+    
+    void flushOutput() throws InterruptedException {
+        lineBuffers.waitForOutput();
     }
     
     public void setSocketChannel(SocketChannel channel)
@@ -254,9 +280,9 @@ public class SynchronousNNTPConnection implements NNTPConnection {
             throw new IllegalArgumentException("raw is null");
         }
 
-        if (readLock == 0 || readLock != Thread.currentThread().hashCode()) {
-            throw new IllegalStateException("readLock not properly set");
-        }
+       // if (readLock == 0 || readLock != Thread.currentThread().hashCode()) {
+       //     throw new IllegalStateException("readLock not properly set");
+       // }
 
         this.lastActivity = System.currentTimeMillis();
 
@@ -281,8 +307,7 @@ public class SynchronousNNTPConnection implements NNTPConnection {
             try {
                 command.processLine(this, line, raw);
             } catch (StorageBackendException ex) {
-                Log.get()
-                        .info("Retry command processing after StorageBackendException");
+                Log.get().info("Retry command processing after StorageBackendException");
 
                 // Try it a second time, so that the backend has time to recover
                 command.processLine(this, line, raw);
@@ -339,7 +364,8 @@ public class SynchronousNNTPConnection implements NNTPConnection {
      * @throws java.io.IOException
      */
     public void println(final CharSequence line, final Charset charset)
-            throws IOException {
+            throws IOException 
+    {
         writeToChannel(CharBuffer.wrap(line), charset, line);
         writeToChannel(CharBuffer.wrap(NEWLINE), charset, null);
     }
@@ -365,7 +391,8 @@ public class SynchronousNNTPConnection implements NNTPConnection {
      * @throws java.io.IOException
      */
     private void writeToChannel(CharBuffer characters, final Charset charset,
-            CharSequence debugLine) throws IOException {
+            CharSequence debugLine) throws IOException 
+    {
         if (!charset.canEncode()) {
             Log.get().log(Level.SEVERE, "FATAL: Charset {0} cannot encode!",
                     charset);
@@ -385,13 +412,14 @@ public class SynchronousNNTPConnection implements NNTPConnection {
     }
 
     private void enableWriteEvents(CharSequence debugLine) {
-        // Enable OP_WRITE events so that the buffers are processed
         try {
-            this.writeSelKey.interestOps(SelectionKey.OP_WRITE);
-            ChannelWriter.getInstance().getSelector().wakeup();
-        } catch (Exception ex) // CancelledKeyException and
-                               // ChannelCloseException
-        {
+            // Enable OP_WRITE events so that the buffers are processed
+            this.writeSelKey.interestOps(SelectionKey.OP_READ | SelectionKey.OP_WRITE);
+            
+            // Wake up the ChannelWriter
+            //ChannelWriter.getInstance().getSelector().wakeup();
+            ChannelIO.getInstance().getSelector().wakeup();
+        } catch (Exception ex) {
             Log.get().log(Level.WARNING,
                     "NNTPConnection.writeToChannel(): {0}", ex);
             return;

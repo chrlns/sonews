@@ -75,10 +75,13 @@ class ChannelReader extends DaemonRunner {
         while (daemon.isRunning()) {
             try {
                 // select() blocks until some SelectableChannels are ready for
-                // processing. There is no need to lock the selector as we have
-                // only
-                // one thread per selector.
-                selector.select();
+                // processing. There is no need to synchronize the selector as
+                // we have only one thread per selector.
+                while(0 == selector.select()) {
+                    // Eventually wait for a register operation
+                    synchronized (SynchronousNNTPDaemon.RegisterGate) { /* do nothing */
+                    }
+                }
 
                 // Get list of selection keys with pending events.
                 // Note: the selected key set is not thread-safe
@@ -93,54 +96,49 @@ class ChannelReader extends DaemonRunner {
                     // Process the first pending event
                     while (it.hasNext()) {
                         selKey = it.next();
+                        if(!selKey.isReadable()) {
+                            continue;
+                        }
+                        
                         channel = (SocketChannel) selKey.channel();
                         conn = Connections.getInstance().get(channel);
 
                         // Because we cannot lock the selKey as that would cause
-                        // a deadlock
-                        // we lock the connection. To preserve the order of the
-                        // received
-                        // byte blocks a selection key for a connection that has
-                        // pending
-                        // read events is skipped.
-                        if (conn == null || conn.tryReadLock()) {
+                        // a deadlock we lock the connection. To preserve the 
+                        // order of the received byte blocks a selection key for 
+                        // a connection that has pending read events is skipped.
+                        synchronized(conn) {
+                        //if (conn == null || conn.tryReadLock()) {
                             // Remove from set to indicate that it's being
                             // processed
                             it.remove();
-                            if (conn != null) {
-                                break; // End while loop
-                            }
-                        } else {
-                            selKey = null;
-                            channel = null;
-                            conn = null;
+                            
+                            // Do not lock the selKeys while processing because this causes
+                // a deadlock in sun.nio.ch.SelectorImpl.lockAndDoSelect()
+                        //if (selKey != null && channel != null && conn != null) {
+                            processSelectionKey(conn, channel, selKey);
+                            //conn.unlockReadLock();
+                        //}
+                        //    if (conn != null) {
+                               // break; // End while loop
+                        //    }
+//                        } else {
+//                            Log.get().log(Level.WARNING, "ChannelReader conn == null || tryReadLock failed");
+//                            selKey = null;
+//                            channel = null;
+//                            conn = null;
+//                        }
                         }
                     }
                 }
 
-                // Do not lock the selKeys while processing because this causes
-                // a deadlock in sun.nio.ch.SelectorImpl.lockAndDoSelect()
-                if (selKey != null && channel != null && conn != null) {
-                    processSelectionKey(conn, channel, selKey);
-                    conn.unlockReadLock();
-                }
+                
 
             } catch (CancelledKeyException ex) {
                 Log.get().log(Level.WARNING, "ChannelReader.run(): {0}", ex);
                 Log.get().log(Level.INFO, "", ex);
             } catch (IOException | InterruptedException ex) {
                 Log.get().log(Level.WARNING, ex.getLocalizedMessage(), ex);
-            }
-
-            // Eventually wait for a register operation
-            synchronized (SynchronousNNTPDaemon.RegisterGate) {
-                // Do nothing; FindBugs may warn about an empty synchronized
-                // statement, but we cannot use a wait()/notify() mechanism
-                // here.
-                // If we used something like RegisterGate.wait() we block here
-                // until the NNTPDaemon calls notify(). But the daemon only
-                // calls notify() if itself is NOT blocked in the listening
-                // socket.
             }
         } // while(isRunning())
     }
@@ -154,8 +152,7 @@ class ChannelReader extends DaemonRunner {
         // Some bytes are available for reading
         if (selKey.isValid()) {
             // Lock the channel
-            synchronized(socketChannel) // TODO is synchronization necessary as socketchannel is thread-safe?
-            {
+            synchronized(socketChannel) { // TODO is synchronization necessary as socketchannel is thread-safe?
                 // Read the data into the appropriate buffer
                 ByteBuffer buf = connection.getInputBuffer();
                 int read = -1;
@@ -170,6 +167,8 @@ class ChannelReader extends DaemonRunner {
                     Log.get().log(Level.WARNING,
                             "ChannelReader.processSelectionKey()", ex);
                 }
+                
+                System.err.println("<< " + new String(buf.array()));
 
                 if (read == -1) { // End of stream
                     selKey.cancel();

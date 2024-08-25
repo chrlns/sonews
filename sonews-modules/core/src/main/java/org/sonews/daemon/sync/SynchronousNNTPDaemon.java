@@ -35,6 +35,7 @@ import org.sonews.config.Config;
 import org.sonews.daemon.Connections;
 import org.sonews.daemon.DaemonRunner;
 import org.sonews.daemon.DaemonThread;
+import org.sonews.daemon.NNTPConnection;
 import org.sonews.daemon.NNTPDaemonRunnable;
 import org.sonews.util.Log;
 import org.springframework.beans.BeansException;
@@ -75,10 +76,11 @@ public class SynchronousNNTPDaemon extends DaemonRunner implements NNTPDaemonRun
             // Create a Selector that handles the SocketChannel multiplexing
             final Selector readSelector = Selector.open();
             final Selector writeSelector = Selector.open();
+            final Selector selector = Selector.open();
 
             // Start working threads
-            final int workerThreads = Math.max(4, 2 *
-                    Runtime.getRuntime().availableProcessors());
+            final int workerThreads = 1; //Math.max(4, 2 *
+                    //Runtime.getRuntime().availableProcessors());
             DaemonThread[] cworkers = new DaemonThread[workerThreads];
             for (int n = 0; n < workerThreads; n++) {
                 cworkers[n] = new DaemonThread(new ConnectionWorker());
@@ -86,11 +88,13 @@ public class SynchronousNNTPDaemon extends DaemonRunner implements NNTPDaemonRun
             }
             Log.get().log(Level.INFO, "{0} worker threads started.", workerThreads);
 
-            ChannelWriter.getInstance().setSelector(writeSelector);
-            ChannelReader.getInstance().setSelector(readSelector);
-            new DaemonThread(ChannelWriter.getInstance()).start();
-            new DaemonThread(ChannelReader.getInstance()).start();
-
+            //ChannelWriter.getInstance().setSelector(writeSelector);
+            //ChannelReader.getInstance().setSelector(readSelector);
+            //new DaemonThread(ChannelWriter.getInstance()).start();
+            //new DaemonThread(ChannelReader.getInstance()).start();
+            ChannelIO.getInstance().setSelector(selector);
+            new DaemonThread(ChannelIO.getInstance()).start();
+            
             ServerSocketChannel serverSocketChannel = ServerSocketChannel.open();
             serverSocketChannel.configureBlocking(true); // Set to blocking mode
 
@@ -123,26 +127,29 @@ public class SynchronousNNTPDaemon extends DaemonRunner implements NNTPDaemonRun
                     continue;
                 }
                 
-                SynchronousNNTPConnection conn = context.getBean(SynchronousNNTPConnection.class);
+                var conn = new SynchronousNNTPConnection(); //context.getBean(SynchronousNNTPConnection.class);
+                conn.setContext(context);
                 conn.setSocketChannel(socketChannel);
                 Connections.getInstance().add(conn);
 
                 try {
-                    SelectionKey selKeyWrite = registerSelector(writeSelector,
+                    /*SelectionKey selKeyWrite = registerSelector(writeSelector,
                             socketChannel, SelectionKey.OP_WRITE);
                     registerSelector(readSelector, socketChannel,
-                            SelectionKey.OP_READ);
+                            SelectionKey.OP_READ);*/
+                    SelectionKey selKey = registerSelector(selector, socketChannel, 
+                            SelectionKey.OP_READ | SelectionKey.OP_WRITE, conn);
 
                     // Set write selection key and send hello to client
-                    conn.setWriteSelectionKey(selKeyWrite);
+                    conn.setWriteSelectionKey(selKey);
                     
                     // The hello string MUST NOT contain any strange characters
-                    // such as '<' or '>'. It took me hours to find this cause
+                    // such as '<', '>' or '/'. It took me hours to find this cause
                     // for Thunderbirds strange behavior.
                     conn.println("200 "
                             + Config.inst().get(Config.HOSTNAME, InetAddress.getLocalHost().getCanonicalHostName())
-                            + " sonews/2.1-SNAPSHOT" // + Application.VERSION
-                            + " news server ready - (posting ok).");
+                            + " sonews news server ready," // + Application.VERSION
+                            + " posting allowed");
                 } catch (CancelledKeyException cke) {
                     Log.get().log(
                             Level.WARNING, "CancelledKeyException {0} was thrown: {1}",
@@ -174,7 +181,7 @@ public class SynchronousNNTPDaemon extends DaemonRunner implements NNTPDaemonRun
     }
 
     public static SelectionKey registerSelector(final Selector selector,
-            final SocketChannel channel, final int op)
+            final SocketChannel channel, final int op, final NNTPConnection conn)
             throws CancelledKeyException, ClosedChannelException 
     {
         // Register the selector at the channel, so that it will be notified
@@ -187,7 +194,7 @@ public class SynchronousNNTPDaemon extends DaemonRunner implements NNTPDaemonRun
             // Lock the selector to prevent the waiting worker threads going
             // into selector.select() which would block the selector.
             synchronized (selector) {
-                return channel.register(selector, op, null);
+                return channel.register(selector, op, conn);
             }
         }
     }

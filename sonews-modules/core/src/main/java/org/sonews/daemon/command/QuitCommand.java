@@ -1,6 +1,6 @@
 /*
  *   SONEWS News Server
- *   Copyright (C) 2009-2015  Christian Lins <christian@lins.me>
+ *   Copyright (C) 2009-2024  Christian Lins <christian@lins.me>
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -57,7 +57,7 @@ public class QuitCommand implements Command {
     @Override
     public void processLine(NNTPConnection conn, final String line, byte[] raw)
             throws IOException, StorageBackendException {
-        conn.println("205 cya");
+        conn.println("205 bye");
         conn.close();
     }
 }

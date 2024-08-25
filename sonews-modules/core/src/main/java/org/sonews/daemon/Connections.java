@@ -66,6 +66,7 @@ public final class Connections extends DaemonRunner {
         synchronized (this.connections) {
             this.connections.add(conn);
             this.connByChannel.put(conn.getSocketChannel(), conn);
+            assert connections.size() == connByChannel.size();
         }
     }
 

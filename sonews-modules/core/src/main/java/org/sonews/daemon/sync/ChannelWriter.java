@@ -77,6 +77,8 @@ class ChannelWriter extends DaemonRunner {
                     synchronized (SynchronousNNTPDaemon.RegisterGate) { /* do nothing */
                     }
                 }
+                
+                Log.get().log(Level.FINE, "ChannelWriter.run(): select");
 
                 // Get list of selection keys with pending OP_WRITE events.
                 // The keySET is not thread-safe whereas the keys itself are.
@@ -87,9 +89,14 @@ class ChannelWriter extends DaemonRunner {
                     // We remove the first event from the set and store it for
                     // later processing.
                     selKey = it.next();
+                    if (!selKey.isWritable()) {
+                        continue;
+                    }
                     socketChannel = (SocketChannel) selKey.channel();
                     connection = Connections.getInstance().get(socketChannel);
 
+                    Log.get().log(Level.FINE, "ChannelWriter.run(): select channel " + socketChannel);
+                    
                     it.remove();
                     if (connection != null) {
                         break;
@@ -105,7 +112,7 @@ class ChannelWriter extends DaemonRunner {
                         // to retain the order.
                         processSelectionKey(connection, socketChannel, selKey);
                     } catch (IOException ex) {
-                        Log.get().log(Level.INFO, "ChannelWriter.run(): Error writing to channel", ex);
+                        Log.get().log(Level.INFO, "ChannelWriter.run(): Error processing selection key", ex);
 
                         // Cancel write events for this channel
                         selKey.cancel();
@@ -113,10 +120,6 @@ class ChannelWriter extends DaemonRunner {
                             connection.close();
                         }
                     }
-                }
-
-                // Eventually wait for a register operation
-                synchronized (SynchronousNNTPDaemon.RegisterGate) { /* do nothing */
                 }
             } catch (CancelledKeyException ex) {
                 Log.get().log(Level.INFO, "ChannelWriter.run(): Cancelled key");
@@ -128,7 +131,8 @@ class ChannelWriter extends DaemonRunner {
 
     private void processSelectionKey(final NNTPConnection connection,
             final SocketChannel socketChannel, final SelectionKey selKey)
-            throws InterruptedException, IOException {
+            throws InterruptedException, IOException 
+    {
         assert connection != null;
         assert socketChannel != null;
         assert selKey != null;
@@ -154,16 +158,22 @@ class ChannelWriter extends DaemonRunner {
 
                 while (buf != null) { // There is data to be send
                     // Write buffer to socket channel; this method does not block.
-                    if (socketChannel.write(buf) <= 0) {
-                        // Perhaps there is data to be written, but the
-                        // SocketChannel's buffer is full, so we stop writing
-                        // to until the next event.
-                        break;
-                    } else {
-                        // Retrieve next buffer if available; method may return
-                        // the same buffer instance if it still have some bytes 
-                        // remaining.
-                        buf = connection.getOutputBuffer();
+                    try {
+                        System.err.println(">> " + new String(buf.array()));
+                        if (socketChannel.write(buf) <= 0) {
+                            // Perhaps there is data to be written, but the
+                            // SocketChannel's buffer is full, so we stop writing
+                            // to until the next event.
+                            break;
+                        } else {
+                            // Retrieve next buffer if available; method may return
+                            // the same buffer instance if it still have some bytes 
+                            // remaining.
+                            buf = connection.getOutputBuffer();
+                        }
+                    } catch(IOException ex) {
+                        Log.get().log(Level.INFO, "ChannelWriter.run(): Error writing to channel", ex);
+                        throw ex;
                     }
                 }
             }
