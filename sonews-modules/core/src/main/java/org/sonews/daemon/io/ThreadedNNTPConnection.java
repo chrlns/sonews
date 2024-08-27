@@ -1,18 +1,32 @@
 /*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ *   SONEWS News Server
+ *   Copyright (C) 2009-2015  Christian Lins <christian@lins.me>
+ *
+ *   This program is free software: you can redistribute it and/or modify
+ *   it under the terms of the GNU General Public License as published by
+ *   the Free Software Foundation, either version 3 of the License, or
+ *   (at your option) any later version.
+ *
+ *   This program is distributed in the hope that it will be useful,
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *   GNU General Public License for more details.
+ *
+ *   You should have received a copy of the GNU General Public License
+ *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 package org.sonews.daemon.io;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.SocketException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
-import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
 import java.util.Arrays;
@@ -31,7 +45,11 @@ import org.sonews.storage.StorageBackendException;
 import org.sonews.util.Log;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
+@Component
+@Scope("prototype")
 public class ThreadedNNTPConnection implements NNTPConnection, Runnable {
 
     public static final String NEWLINE = "\r\n"; // RFC defines this as newline
@@ -39,8 +57,6 @@ public class ThreadedNNTPConnection implements NNTPConnection, Runnable {
     private static final Timer cancelTimer = new Timer(true); // Thread-safe?
                                                               // True for run as
                                                               // daemon
-    /** SocketChannel is generally thread-safe */
-    private SocketChannel channel;
     
     private Charset charset = Charset.forName("UTF-8");
     private Command command = null;
@@ -51,28 +67,25 @@ public class ThreadedNNTPConnection implements NNTPConnection, Runnable {
     private Article currentArticle = null;
     private Group currentGroup = null;
     private volatile long lastActivity = System.currentTimeMillis();
-    private final ChannelLineBuffers lineBuffers = new ChannelLineBuffers();
-    private int readLock = 0;
-    private final Object readLockGate = new Object();
-    private SelectionKey writeSelKey = null;
     private User user;
     
     private final Socket clientSocket;
+    private PrintWriter out;
 
+    @Autowired
     public ThreadedNNTPConnection(Socket socket) {
-        this.clientSocket = socket;
+        clientSocket = socket;
     }
 
     @Override
     public void run() {
         try {
-            // Handle the connection here
-            // You'll need to implement the actual NNTP protocol handling
-            // This is a placeholder for the connection handling logic
-            String hello = "200 " + Config.inst().get(Config.HOSTNAME, InetAddress.getLocalHost().getCanonicalHostName())
+            String hello = "200 "
+                    + Config.inst().get(Config.HOSTNAME, InetAddress.getLocalHost().getCanonicalHostName())
                     + " sonews news server ready, posting allowed";
-            clientSocket.getOutputStream().write(hello.getBytes());
-            clientSocket.getOutputStream().flush();
+           
+            out = new PrintWriter(clientSocket.getOutputStream());
+            println(hello);
             
             BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
             String line;
@@ -111,7 +124,7 @@ public class ThreadedNNTPConnection implements NNTPConnection, Runnable {
      * @throws IllegalStateException
      *             if calling thread does not own the readLock.
      */
-    public void lineReceived(byte[] raw) {
+    public void lineReceived(byte[] raw) throws IOException {
         if (raw == null) {
             throw new IllegalArgumentException("raw is null");
         }
@@ -152,7 +165,7 @@ public class ThreadedNNTPConnection implements NNTPConnection, Runnable {
             try {
                 StringBuilder strBuf = new StringBuilder();
                 strBuf.append("Connection to ");
-                strBuf.append(channel.socket().getRemoteSocketAddress());
+                strBuf.append(clientSocket.getRemoteSocketAddress());
                 strBuf.append(" closed: ");
                 strBuf.append(ex0);
                 Log.get().info(strBuf.toString());
@@ -167,8 +180,7 @@ public class ThreadedNNTPConnection implements NNTPConnection, Runnable {
 
             // Should we end the connection here?
             // RFC says we MUST return 400 before closing the connection
-            shutdownInput();
-            shutdownOutput();
+            close();
         }
 
         if (command == null || command.hasFinished()) {
@@ -179,129 +191,97 @@ public class ThreadedNNTPConnection implements NNTPConnection, Runnable {
 
     @Override
     public void close() throws IOException {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        out.close();
+        clientSocket.close();
     }
 
     @Override
     public ChannelLineBuffers getBuffers() {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        return null; // TODO remove from interface
     }
 
     @Override
     public Article getCurrentArticle() {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        return currentArticle;
     }
 
     @Override
     public Charset getCurrentCharset() {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        return charset;
     }
 
     @Override
     public Group getCurrentGroup() {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        return currentGroup;
     }
 
     @Override
     public ByteBuffer getInputBuffer() {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        return null; // TODO remove from interface
     }
 
     @Override
     public long getLastActivity() {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        return lastActivity;
     }
 
     @Override
     public ByteBuffer getOutputBuffer() {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        return null; // TODO remove from interface
     }
 
     @Override
     public SocketChannel getSocketChannel() {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        return null; // TODO remove from interface
     }
 
     @Override
     public User getUser() {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        return user;
     }
-
+   
     @Override
-    public void println(byte[] line) throws IOException {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    public void println(byte[] line) {
+        println(new String(line, charset));
     }
 
     @Override
     public void println(CharSequence line) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        out.append(line);
+        out.append(NEWLINE);
+        out.flush();
+        
+        Log.get().log(Level.FINE, ">> {0}", line);
     }
 
     @Override
     public void setCurrentArticle(Article art) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        currentArticle = art;
     }
 
     @Override
     public void setCurrentGroup(Group group) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        currentGroup = group;
     }
 
     @Override
     public void setLastActivity(long time) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        lastActivity = time;
     }
 
     @Override
     public void setUser(User user) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        this.user = user;
     }
 
     @Override
     public boolean tryReadLock() {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        return false; // TODO remove from interface
     }
 
     @Override
     public void unlockReadLock() {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
-    }
-    
-    private void shutdownInput() {
-        try {
-            // Closes the input line of the channel's socket, so no new data
-            // will be received and a timeout can be triggered.
-            if (!channel.socket().isInputShutdown()) {
-                channel.socket().shutdownInput();
-            }
-        } catch (IOException ex) {
-            Log.get().log(Level.WARNING,
-                    "Exception in NNTPConnection.shutdownInput()", ex);
-        }
-    }
-
-    private void shutdownOutput() {
-        cancelTimer.schedule(new TimerTask() {
-            @Override
-            public void run() {
-                try {
-                    // Closes the output line of the channel's socket.
-                    if (!channel.socket().isOutputShutdown()) {
-                        channel.socket().shutdownOutput();
-                    }
-                    if (channel.isConnected()) {
-                        channel.close();
-                    }
-                } catch (SocketException ex) {
-                    // Socket was already disconnected
-                    Log.get().log(Level.INFO,
-                            "SynchronousNNTPConnection.shutdownOutput()", ex);
-                } catch (IOException ex) {
-                    Log.get().log(Level.WARNING,
-                            "SynchronousNNTPConnection.shutdownOutput()", ex);
-                }
-            }
-        }, 3000);
+        return; // TODO remove from interface
     }
 
 }

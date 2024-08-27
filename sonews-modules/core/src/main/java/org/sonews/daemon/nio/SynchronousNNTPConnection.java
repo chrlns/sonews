@@ -45,6 +45,7 @@ import org.sonews.util.Log;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 /**
@@ -55,6 +56,7 @@ import org.springframework.stereotype.Component;
  * @since sonews/0.5.0
  */
 @Component
+@Scope("prototype")
 public class SynchronousNNTPConnection implements NNTPConnection {
 
     public static final String NEWLINE = "\r\n"; // RFC defines this as newline
