@@ -1,6 +1,6 @@
 /*
  *   SONEWS News Server
- *   Copyright (C) 2009-2015  Christian Lins <christian@lins.me>
+ *   Copyright (C) 2009-2024  Christian Lins <christian@lins.me>
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -39,7 +39,6 @@ public class Log extends Logger {
 
     public Log() {
         super("org.sonews", null);
-        System.err.print("Log ctor");
 
         SimpleFormatter formatter = new SimpleFormatter();
         StreamHandler streamHandler = new StreamHandler(System.out, formatter);
@@ -47,6 +46,7 @@ public class Log extends Logger {
         addHandler(streamHandler);
 
         Level level = Level.parse(Config.inst().get(Config.LOGLEVEL, "INFO"));
+        System.out.println("Log level: " + level);
         setLevel(level);
         for (Handler handler : getHandlers()) {
             handler.setLevel(level);

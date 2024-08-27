@@ -92,6 +92,8 @@ public class ThreadedNNTPConnection implements NNTPConnection, Runnable {
             while ((line = in.readLine()) != null) {
                 lineReceived(line.getBytes());
             }
+        } catch (SocketException e) {
+            Log.get().log(Level.INFO, "Connection to {0} closed.", clientSocket.getRemoteSocketAddress());
         } catch (IOException e) {
             Log.get().log(Level.SEVERE, "Error handling client connection", e);
         } finally {
