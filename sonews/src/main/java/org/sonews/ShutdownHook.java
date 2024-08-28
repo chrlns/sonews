@@ -1,6 +1,6 @@
 /*
  *   SONEWS News Server
- *   Copyright (C) 2009-2015  Christian Lins <christian@lins.me>
+ *   Copyright (C) 2009-2024  Christian Lins <christian@lins.me>
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -20,9 +20,9 @@ package org.sonews;
 
 import java.util.Map;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.sonews.daemon.DaemonThread;
+import org.sonews.util.Log;
 
 /**
  * Will force all other threads to shutdown cleanly.
@@ -31,18 +31,15 @@ import org.sonews.daemon.DaemonThread;
  * @since sonews/0.5.0
  */
 class ShutdownHook implements Runnable {
-
-    private final Logger logger;
     
     public ShutdownHook() {
-        this.logger= Logger.getLogger("org.sonews");
     }
     /**
      * Called when the JVM exits.
      */
     @Override
     public void run() {
-        logger.log(Level.INFO, "Clean shutdown of daemon threads initiated");
+        Log.get().log(Level.INFO, "Clean shutdown of daemon threads initiated");
 
         Map<Thread, StackTraceElement[]> threadsMap = Thread.getAllStackTraces();
         
@@ -59,11 +56,11 @@ class ShutdownHook implements Runnable {
             DaemonThread daemon;
             if (thread instanceof DaemonThread && thread.isAlive()) {
                 daemon = (DaemonThread) thread;
-                logger.log(Level.INFO, "Waiting for {0} to exit...", daemon);
+                Log.get().log(Level.INFO, "Waiting for {0} to exit...", daemon);
                 try {
                     daemon.join(500);
                 } catch (InterruptedException ex) {
-                    System.out.println(ex.getLocalizedMessage());
+                    Log.get().log(Level.WARNING, "join interrupted", ex);
                 }
             }
         });
@@ -71,6 +68,6 @@ class ShutdownHook implements Runnable {
         // We have notified all not-sleeping AbstractDaemons of the shutdown;
         // all other threads can be simply purged on VM shutdown
 
-        logger.log(Level.INFO, "Clean shutdown of daemon threads completed");
+        Log.get().log(Level.INFO, "Clean shutdown of daemon threads completed");
     }
 }

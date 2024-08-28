@@ -1,6 +1,6 @@
 /*
  *   SONEWS News Server
- *   Copyright (C) 2009-2015  Christian Lins <christian@lins.me>
+ *   Copyright (C) 2009-2024  Christian Lins <christian@lins.me>
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -67,20 +67,16 @@ public class Application {
 
         for (int n = 0; n < args.length; n++) {
             switch (args[n]) {
-                case "-c":
-                case "-config": {
+                case "-c", "-config" -> {
                     Config.inst().set(Config.LEVEL_CLI, Config.CONFIGFILE,
                             args[++n]);
                     System.out.println("Using config file " + args[n]);
-                    break;
                 }
-                case "-C":
-                case "-context": {
+                case "-C", "-context" ->  {
                     // FIXME: Additional context files
                     n++;
-                    break;
                 }
-                case "-dumpjdbcdriver": {
+                case "-dumpjdbcdriver" -> {
                     System.out.println("Available JDBC drivers:");
                     Enumeration<Driver> drvs = DriverManager.getDrivers();
                     while (drvs.hasMoreElements()) {
@@ -88,32 +84,27 @@ public class Application {
                     }
                     return;
                 }
-                case "-feed": {
+                case "-feed" ->  {
                     feed = true;
-                    break;
                 }
-                case "-h":
-                case "-help": {
+                case "-h", "-help" -> {
                     printArguments();
                     return;
                 }
-                case "-p": {
+                case "-p" ->  {
                     port = Integer.parseInt(args[++n]);
-                    break;
                 }
-                case "-plugin-storage": {
+                case "-plugin-storage" -> {
                     System.out
                             .println("Warning: -plugin-storage is not implemented!");
-                    break;
                 }
-                case "-purger": {
+                case "-purger" ->  {
                     purger = true;
-                    break;
                 }
-                case "-v":
-                case "-version":
+                case "-v", "-version" ->  {
                     // Simply return as the version info is already printed above
                     return;
+                }
             }
         }
         
