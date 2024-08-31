@@ -1,6 +1,6 @@
 /*
  *   SONEWS News Server
- *   Copyright (C) 2009-2015  Christian Lins <christian@lins.me>
+ *   Copyright (C) 2009-2024  Christian Lins <christian@lins.me>
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -31,7 +31,6 @@ import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.Timer;
-import java.util.TimerTask;
 import java.util.logging.Level;
 import org.sonews.acl.User;
 import org.sonews.config.Config;
@@ -121,6 +120,7 @@ public class ThreadedNNTPConnection implements NNTPConnection, Runnable {
      * Due to the readLockGate there is no need to synchronize this method.
      *
      * @param raw
+     * @throws java.io.IOException
      * @throws IllegalArgumentException
      *             if raw is null.
      * @throws IllegalStateException
@@ -130,10 +130,6 @@ public class ThreadedNNTPConnection implements NNTPConnection, Runnable {
         if (raw == null) {
             throw new IllegalArgumentException("raw is null");
         }
-
-       // if (readLock == 0 || readLock != Thread.currentThread().hashCode()) {
-       //     throw new IllegalStateException("readLock not properly set");
-       // }
 
         this.lastActivity = System.currentTimeMillis();
 
@@ -198,11 +194,6 @@ public class ThreadedNNTPConnection implements NNTPConnection, Runnable {
     }
 
     @Override
-    public ChannelLineBuffers getBuffers() {
-        return null; // TODO remove from interface
-    }
-
-    @Override
     public Article getCurrentArticle() {
         return currentArticle;
     }
@@ -218,18 +209,8 @@ public class ThreadedNNTPConnection implements NNTPConnection, Runnable {
     }
 
     @Override
-    public ByteBuffer getInputBuffer() {
-        return null; // TODO remove from interface
-    }
-
-    @Override
     public long getLastActivity() {
         return lastActivity;
-    }
-
-    @Override
-    public ByteBuffer getOutputBuffer() {
-        return null; // TODO remove from interface
     }
 
     @Override
@@ -274,16 +255,6 @@ public class ThreadedNNTPConnection implements NNTPConnection, Runnable {
     @Override
     public void setUser(User user) {
         this.user = user;
-    }
-
-    @Override
-    public boolean tryReadLock() {
-        return false; // TODO remove from interface
-    }
-
-    @Override
-    public void unlockReadLock() {
-        return; // TODO remove from interface
     }
 
 }

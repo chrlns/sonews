@@ -1,6 +1,6 @@
 /*
  *   SONEWS News Server
- *   Copyright (C) 2009-2015  Christian Lins <christian@lins.me>
+ *   Copyright (C) 2009-2024  Christian Lins <christian@lins.me>
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -99,8 +99,7 @@ public final class Connections extends DaemonRunner {
 
                 while (iter.hasNext()) {
                     conn = iter.next();
-                    if ((System.currentTimeMillis() - conn.getLastActivity()) > timeoutMillis
-                            && conn.getBuffers().isOutputBufferEmpty()) {
+                    if ((System.currentTimeMillis() - conn.getLastActivity()) > timeoutMillis) {
                         // A connection timeout has occurred so purge the
                         // connection
                         iter.remove();
@@ -125,8 +124,11 @@ public final class Connections extends DaemonRunner {
                             Log.get().log(Level.WARNING, "Connections.run(): {0}", ex);
                         }
 
-                        // Recycle the used buffers
-                        conn.getBuffers().recycleBuffers();
+                        try {
+                            conn.close();
+                        } catch (IOException ex) {
+                            Log.get().info("Exception while closing the connection");
+                        }
                     }
                 }
             }

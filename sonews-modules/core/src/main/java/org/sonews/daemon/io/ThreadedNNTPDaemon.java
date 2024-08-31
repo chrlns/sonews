@@ -1,6 +1,6 @@
 /*
  *   SONEWS News Server
- *   Copyright (C) 2009-2015  Christian Lins <christian@lins.me>
+ *   Copyright (C) 2009-2024  Christian Lins <christian@lins.me>
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -25,8 +25,8 @@ import java.net.Socket;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.sonews.daemon.DaemonRunner;
-import org.sonews.daemon.DaemonThread;
 import org.sonews.daemon.NNTPDaemonRunnable;
 import org.sonews.util.Log;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,11 +38,13 @@ public class ThreadedNNTPDaemon extends DaemonRunner implements NNTPDaemonRunnab
 
     @Autowired
     private ApplicationContext context;
+    private final Logger logger;
     private int port;
     private ServerSocket serverSocket = null;
     private ExecutorService threadPool;
 
     public ThreadedNNTPDaemon() {
+        logger = Log.get();
     }
     
     @Override
@@ -51,11 +53,15 @@ public class ThreadedNNTPDaemon extends DaemonRunner implements NNTPDaemonRunnab
     }
 
     @Override
+    @SuppressWarnings("UseSpecificCatch")
     public void run() {
         try {
-            Log.get().log(Level.INFO, "Server listening on port {0}", port);
+            logger.log(Level.INFO, "Server listening on port {0}", port);
             
-            // Create a thread pool for handling connections
+            // Create a thread pool for handling connections. A cached thread
+            // pool will use as many threads as required (up to the system's 
+            // maximum) to process the connectes. Idle threads are removed from
+            // the pool after 60 seconds.
             threadPool = Executors.newCachedThreadPool();
 
             // Create and bind the server socket
@@ -66,7 +72,7 @@ public class ThreadedNNTPDaemon extends DaemonRunner implements NNTPDaemonRunnab
                     // Accept incoming connections
                     Socket clientSocket = serverSocket.accept();
                     
-                    Log.get().log(Level.INFO, "Connected: {0}", 
+                    logger.log(Level.INFO, "Connected: {0}", 
                             clientSocket.getRemoteSocketAddress());
 
                     // Create a new thread to handle the connection
@@ -74,16 +80,16 @@ public class ThreadedNNTPDaemon extends DaemonRunner implements NNTPDaemonRunnab
                     threadPool.execute(thread);
 
                 } catch (IOException ex) {
-                    Log.get().log(Level.SEVERE, "IOException while accepting connection: {0}", ex.getMessage());
-                    Log.get().info("Connection accepting sleeping for 5 seconds...");
+                    logger.log(Level.SEVERE, "IOException while accepting connection: {0}", ex.getMessage());
+                    logger.info("Connection accepting sleeping for 5 seconds...");
                     Thread.sleep(5000);
                 }
             }
         } catch (BindException ex) {
-            Log.get().log(Level.SEVERE, ex.getLocalizedMessage() + " -> shutdown sonews", ex);
+            logger.log(Level.SEVERE, ex.getLocalizedMessage() + " -> shutdown sonews", ex);
             daemon.requestShutdown();
         } catch (Exception ex) {
-            ex.printStackTrace();
+            logger.log(Level.SEVERE, "Unexpected exception, trying to continue", ex);
         } finally {
             if (threadPool != null) {
                 threadPool.shutdown();
@@ -91,6 +97,9 @@ public class ThreadedNNTPDaemon extends DaemonRunner implements NNTPDaemonRunnab
         }
     }
 
+    /**
+     * Close the server socket and shutdown the thread pool.
+     */
     @Override
     public void dispose() {
         if (this.serverSocket != null) {
@@ -105,6 +114,4 @@ public class ThreadedNNTPDaemon extends DaemonRunner implements NNTPDaemonRunnab
         }
     }
 
-    
-    
 }

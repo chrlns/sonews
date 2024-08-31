@@ -57,7 +57,7 @@ import org.springframework.stereotype.Component;
  */
 @Component
 @Scope("prototype")
-public class SynchronousNNTPConnection implements NNTPConnection {
+public class AsyncNNTPConnection implements NNTPConnection {
 
     public static final String NEWLINE = "\r\n"; // RFC defines this as newline
     public static final String MESSAGE_ID_PATTERN = "<[^>]+>";
@@ -83,7 +83,7 @@ public class SynchronousNNTPConnection implements NNTPConnection {
     private User user;
     private ConnectionWorker owner = null;
 
-    public SynchronousNNTPConnection() {
+    public AsyncNNTPConnection() {
     }
     
     void setContext(ApplicationContext context) {
@@ -127,7 +127,6 @@ public class SynchronousNNTPConnection implements NNTPConnection {
      * the lock is still hold by another Thread the method returns false.
      * @return true if lock could be aquired
      */
-    @Override
     public boolean tryReadLock() {
         // As synchronizing simple types may cause deadlocks,
         // we use a gate object.
@@ -147,7 +146,6 @@ public class SynchronousNNTPConnection implements NNTPConnection {
      * @throws IllegalMonitorStateException
      *             if a Thread not holding the lock tries to release it.
      */
-    @Override
     public void unlockReadLock() {
         synchronized (readLockGate) {
             if (readLock == Thread.currentThread().hashCode()) {
@@ -161,7 +159,6 @@ public class SynchronousNNTPConnection implements NNTPConnection {
     /**
      * @return Current input buffer of this NNTPConnection instance.
      */
-    @Override
     public ByteBuffer getInputBuffer() {
         return this.lineBuffers.getInputBuffer();
     }
@@ -170,7 +167,6 @@ public class SynchronousNNTPConnection implements NNTPConnection {
      * @return Output buffer of this NNTPConnection which has at least one byte
      *         free storage.
      */
-    @Override
     public ByteBuffer getOutputBuffer() {
         return this.lineBuffers.getOutputBuffer();
     }
@@ -178,7 +174,6 @@ public class SynchronousNNTPConnection implements NNTPConnection {
     /**
      * @return ChannelLineBuffers instance associated with this NNTPConnection.
      */
-    @Override
     public ChannelLineBuffers getBuffers() {
         return this.lineBuffers;
     }

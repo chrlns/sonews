@@ -38,25 +38,22 @@ public interface NNTPConnection {
 
     void close() throws IOException;
 
-    ChannelLineBuffers getBuffers();
-
     Article getCurrentArticle();
 
     Charset getCurrentCharset();
 
     Group getCurrentGroup();
 
-    ByteBuffer getInputBuffer();
+    //ByteBuffer getInputBuffer();
 
     long getLastActivity();
 
-    ByteBuffer getOutputBuffer();
+    //ByteBuffer getOutputBuffer();
 
+    @Deprecated
     SocketChannel getSocketChannel();
 
     User getUser();
-
-    //void lineReceived(byte[] line);
 
     void println(byte[] line) throws IOException;
 
@@ -70,7 +67,7 @@ public interface NNTPConnection {
 
     void setUser(User user);
 
-    boolean tryReadLock();
+    //boolean tryReadLock();
 
-    void unlockReadLock();
+    //void unlockReadLock();
 }

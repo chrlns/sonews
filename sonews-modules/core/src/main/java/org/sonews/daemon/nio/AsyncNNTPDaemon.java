@@ -51,7 +51,7 @@ import org.springframework.stereotype.Component;
  * @since sonews/0.5.0
  */
 @Component
-public class SynchronousNNTPDaemon extends DaemonRunner implements NNTPDaemonRunnable {
+public class AsyncNNTPDaemon extends DaemonRunner implements NNTPDaemonRunnable {
 
     public static final Object RegisterGate = new Object();
 
@@ -60,7 +60,7 @@ public class SynchronousNNTPDaemon extends DaemonRunner implements NNTPDaemonRun
     private int port;
     private ServerSocket serverSocket = null;
 
-    public SynchronousNNTPDaemon() {
+    public AsyncNNTPDaemon() {
     }
     
     @Override
@@ -127,7 +127,7 @@ public class SynchronousNNTPDaemon extends DaemonRunner implements NNTPDaemonRun
                     continue;
                 }
                 
-                var conn = new SynchronousNNTPConnection(); //context.getBean(SynchronousNNTPConnection.class);
+                var conn = new AsyncNNTPConnection(); //context.getBean(SynchronousNNTPConnection.class);
                 conn.setContext(context);
                 conn.setSocketChannel(socketChannel);
                 Connections.getInstance().add(conn);

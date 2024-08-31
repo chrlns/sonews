@@ -1,7 +1,21 @@
 /*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ *   SONEWS News Server
+ *   Copyright (C) 2009-2024  Christian Lins <christian@lins.me>
+ *
+ *   This program is free software: you can redistribute it and/or modify
+ *   it under the terms of the GNU General Public License as published by
+ *   the Free Software Foundation, either version 3 of the License, or
+ *   (at your option) any later version.
+ *
+ *   This program is distributed in the hope that it will be useful,
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *   GNU General Public License for more details.
+ *
+ *   You should have received a copy of the GNU General Public License
+ *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 package org.sonews.daemon.nio;
 
 import java.io.IOException;
@@ -13,7 +27,6 @@ import java.nio.channels.SocketChannel;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.logging.Level;
-import org.sonews.daemon.Connections;
 import org.sonews.daemon.DaemonRunner;
 import org.sonews.daemon.NNTPConnection;
 import org.sonews.util.Log;
@@ -66,7 +79,7 @@ public class ChannelIO extends DaemonRunner {
                 // we have only one thread per selector.
                 while (0 == selector.select()) {
                     // Eventually wait for a register operation
-                    synchronized (SynchronousNNTPDaemon.RegisterGate) {
+                    synchronized (AsyncNNTPDaemon.RegisterGate) {
                         /* do nothing */
                     }
                 }
@@ -74,7 +87,7 @@ public class ChannelIO extends DaemonRunner {
                 // Get list of selection keys with pending events.
                 // Note: the selected key set is not thread-safe
                 SocketChannel channel = null;
-                NNTPConnection conn = null;
+                AsyncNNTPConnection conn = null;
                 final Set<SelectionKey> selKeys = selector.selectedKeys();
                 SelectionKey selKey = null;
 
@@ -86,7 +99,7 @@ public class ChannelIO extends DaemonRunner {
                         selKey = it.next();
 
                         channel = (SocketChannel) selKey.channel();
-                        conn = (SynchronousNNTPConnection)selKey.attachment();
+                        conn = (AsyncNNTPConnection)selKey.attachment();
 
                         if (selKey.isWritable() || selKey.isReadable()) {
                             it.remove();
@@ -116,7 +129,7 @@ public class ChannelIO extends DaemonRunner {
         } // while(isRunning())
     }
 
-    private void processRead(final NNTPConnection connection,
+    private void processRead(final AsyncNNTPConnection connection,
             final SocketChannel socketChannel, final SelectionKey selKey)
             throws InterruptedException, IOException {
         assert selKey != null;
@@ -155,7 +168,7 @@ public class ChannelIO extends DaemonRunner {
         }
     }
     
-    private void processWrite(final NNTPConnection connection,
+    private void processWrite(final AsyncNNTPConnection connection,
             final SocketChannel socketChannel, final SelectionKey selKey)
             throws InterruptedException, IOException 
     {

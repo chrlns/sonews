@@ -67,14 +67,14 @@ class ChannelWriter extends DaemonRunner {
             try {
                 SelectionKey selKey = null;
                 SocketChannel socketChannel = null;
-                NNTPConnection connection = null;
+                AsyncNNTPConnection connection = null;
 
                 // select() blocks until some SelectableChannels are ready for
                 // processing. There is no need to synchronize the selector as
                 // we have only one thread per selector.
                 while(0 == selector.select()) {
                     // Eventually wait for a register operation
-                    synchronized (SynchronousNNTPDaemon.RegisterGate) { /* do nothing */
+                    synchronized (AsyncNNTPDaemon.RegisterGate) { /* do nothing */
                     }
                 }
                 
@@ -93,9 +93,10 @@ class ChannelWriter extends DaemonRunner {
                         continue;
                     }
                     socketChannel = (SocketChannel) selKey.channel();
-                    connection = Connections.getInstance().get(socketChannel);
+                    // FIXME Avoid cast
+                    connection = (AsyncNNTPConnection)Connections.getInstance().get(socketChannel);
 
-                    Log.get().log(Level.FINE, "ChannelWriter.run(): select channel " + socketChannel);
+                    Log.get().log(Level.FINE, "ChannelWriter.run(): select channel {0}", socketChannel);
                     
                     it.remove();
                     if (connection != null) {
@@ -129,7 +130,7 @@ class ChannelWriter extends DaemonRunner {
         } // while(isRunning())
     }
 
-    private void processSelectionKey(final NNTPConnection connection,
+    private void processSelectionKey(final AsyncNNTPConnection connection,
             final SocketChannel socketChannel, final SelectionKey selKey)
             throws InterruptedException, IOException 
     {

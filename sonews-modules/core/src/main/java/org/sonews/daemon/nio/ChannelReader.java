@@ -79,14 +79,14 @@ class ChannelReader extends DaemonRunner {
                 // we have only one thread per selector.
                 while(0 == selector.select()) {
                     // Eventually wait for a register operation
-                    synchronized (SynchronousNNTPDaemon.RegisterGate) { /* do nothing */
+                    synchronized (AsyncNNTPDaemon.RegisterGate) { /* do nothing */
                     }
                 }
 
                 // Get list of selection keys with pending events.
                 // Note: the selected key set is not thread-safe
                 SocketChannel channel = null;
-                NNTPConnection conn = null;
+                AsyncNNTPConnection conn = null;
                 final Set<SelectionKey> selKeys = selector.selectedKeys();
                 SelectionKey selKey = null;
 
@@ -101,7 +101,8 @@ class ChannelReader extends DaemonRunner {
                         }
                         
                         channel = (SocketChannel) selKey.channel();
-                        conn = Connections.getInstance().get(channel);
+                        // FIXME avoid cast
+                        conn = (AsyncNNTPConnection)Connections.getInstance().get(channel);
 
                         // Because we cannot lock the selKey as that would cause
                         // a deadlock we lock the connection. To preserve the 
@@ -143,7 +144,7 @@ class ChannelReader extends DaemonRunner {
         } // while(isRunning())
     }
 
-    private void processSelectionKey(final NNTPConnection connection,
+    private void processSelectionKey(final AsyncNNTPConnection connection,
             final SocketChannel socketChannel, final SelectionKey selKey)
             throws InterruptedException, IOException {
         assert selKey != null;

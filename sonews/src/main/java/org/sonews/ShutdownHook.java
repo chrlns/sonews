@@ -34,6 +34,7 @@ class ShutdownHook implements Runnable {
     
     public ShutdownHook() {
     }
+    
     /**
      * Called when the JVM exits.
      */

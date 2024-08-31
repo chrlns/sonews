@@ -61,7 +61,7 @@ class ConnectionWorker extends DaemonRunner {
 
                 if (channel != null) {
                     // Connections.getInstance().get() MAY return null
-                    var conn = (SynchronousNNTPConnection)
+                    var conn = (AsyncNNTPConnection)
                             Connections.getInstance().get(channel);                   
 
                     if (conn == null) {

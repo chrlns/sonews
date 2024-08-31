@@ -1,6 +1,6 @@
 /*
  *   SONEWS News Server
- *   Copyright (C) 2009-2015  Christian Lins <christian@lins.me>
+ *   Copyright (C) 2009-2024  Christian Lins <christian@lins.me>
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
 package org.sonews.daemon;
 
 /**
- *
+ * Interface for an NNTP Daemon.
  * @author Christian Lins
  */
 public interface NNTPDaemonRunnable extends DaemonRunnable {
