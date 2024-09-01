@@ -259,9 +259,10 @@ public class PostCommand implements Command {
                             // group.getName());
                         } else {
                             // Store in database
-                            if (!StorageManager.current().isArticleExisting(
-                                    article.getMessageID())) {
+                            if (!StorageManager.current().isArticleExisting(article.getMessageID())) {
                                 StorageManager.current().addArticle(article);
+                            } else {
+                                Log.get().info("Article exists and is not stored.");
                             }
                             success = true;
                         }
