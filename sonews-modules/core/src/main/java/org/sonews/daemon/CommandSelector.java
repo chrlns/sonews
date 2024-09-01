@@ -20,7 +20,6 @@ package org.sonews.daemon;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Consumer;
 import java.util.logging.Level;
 
 import javax.annotation.PostConstruct;
@@ -54,9 +53,12 @@ public class CommandSelector {
         if (cmd == null) {
             cmd = commandMapping.get("*");
         }
+        if (cmd.isStateful()) {
+            cmd = context.getBean(cmd.getClass());
+        }
         return cmd;
     }
-    
+
     @PostConstruct
     protected void init() {
         Map<String, Command> commands = context.getBeansOfType(Command.class);

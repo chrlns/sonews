@@ -38,6 +38,7 @@ import org.sonews.storage.Headers;
 import org.sonews.storage.StorageBackendException;
 import org.sonews.storage.StorageManager;
 import org.sonews.util.Log;
+import org.springframework.context.annotation.Scope;
 
 import org.springframework.stereotype.Component;
 
@@ -50,6 +51,7 @@ import org.springframework.stereotype.Component;
  * @since sonews/0.5.0
  */
 @Component
+@Scope("prototype")
 public class PostCommand implements Command {
 
     private Article article;
@@ -95,7 +97,7 @@ public class PostCommand implements Command {
     @Override
     // TODO: Refactor this method to reduce complexity!
     public void processLine(NNTPConnection conn, String line, byte[] raw)
-            throws IOException, StorageBackendException 
+            throws IOException, StorageBackendException
     {
         switch (state) {
             case WaitForLineOne ->  {

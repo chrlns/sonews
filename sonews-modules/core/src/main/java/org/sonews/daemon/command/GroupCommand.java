@@ -23,6 +23,7 @@ import java.io.IOException;
 import org.sonews.daemon.NNTPConnection;
 import org.sonews.storage.Group;
 import org.sonews.storage.StorageBackendException;
+import org.springframework.context.annotation.Scope;
 
 import org.springframework.stereotype.Component;
 
@@ -51,6 +52,7 @@ import org.springframework.stereotype.Component;
  * @since n3tpd/0.1
  */
 @Component
+@Scope("prototype")
 public class GroupCommand implements Command {
 
     @Override

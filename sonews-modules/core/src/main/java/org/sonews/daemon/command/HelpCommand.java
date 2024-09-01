@@ -28,6 +28,7 @@ import org.sonews.util.io.Resource;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 /**
@@ -39,11 +40,12 @@ import org.springframework.stereotype.Component;
  * @since sonews/0.5.0
  */
 @Component
+@Scope("prototype")
 public class HelpCommand implements Command {
-    
+
     @Autowired
     private ApplicationContext context;
-    
+
     @Override
     public boolean hasFinished() {
         return true;
