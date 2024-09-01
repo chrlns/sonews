@@ -42,7 +42,7 @@ import org.sonews.util.Log;
 
 /**
  * Represents a newsgroup article.
- * 
+ *
  * @author Christian Lins
  * @author Dennis Schwerdel
  * @since n3tpd/0.1
@@ -51,7 +51,7 @@ class ArticleImpl implements Article {
 
     protected InternetHeaders headers = null;
     protected String headerSrc = null;
-    
+
     private byte[] body = new byte[0];
     private User sender;
 
@@ -146,6 +146,7 @@ class ArticleImpl implements Article {
             md5.update(getBody());
             md5.update(getHeader(Headers.SUBJECT)[0].getBytes("UTF-8"));
             md5.update(getHeader(Headers.FROM)[0].getBytes("UTF-8"));
+            md5.update(getHeader(Headers.DATE)[0].getBytes("UTF-8"));
             byte[] result = md5.digest();
             StringBuilder hexString = new StringBuilder();
             for (int i = 0; i < result.length; i++) {
@@ -166,7 +167,7 @@ class ArticleImpl implements Article {
 
     /**
      * Returns the body string.
-     * @return 
+     * @return
      */
     @Override
     public byte[] getBody() {
@@ -259,7 +260,7 @@ class ArticleImpl implements Article {
     public void setUser(User sender) {
         this.sender = sender;
     }
-    
+
        /**
      * Returns the header field with given name.
      *

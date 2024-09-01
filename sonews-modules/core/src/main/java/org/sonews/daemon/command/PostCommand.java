@@ -39,7 +39,6 @@ import org.sonews.storage.StorageBackendException;
 import org.sonews.storage.StorageManager;
 import org.sonews.util.Log;
 import org.springframework.context.annotation.Scope;
-
 import org.springframework.stereotype.Component;
 
 /**
