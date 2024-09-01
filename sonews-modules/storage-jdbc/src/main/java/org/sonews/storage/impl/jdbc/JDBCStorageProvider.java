@@ -18,14 +18,10 @@
 
 package org.sonews.storage.impl.jdbc;
 
-import java.sql.SQLException;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-
 import org.sonews.storage.Storage;
 import org.sonews.storage.StorageBackendException;
 import org.sonews.storage.StorageProvider;
-
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 /**
@@ -36,7 +32,8 @@ import org.springframework.stereotype.Component;
 @Component
 public class JDBCStorageProvider implements StorageProvider {
 
-    protected static final Map<Thread, JDBCDatabase> instances = new ConcurrentHashMap<>();
+    @Autowired
+    private JDBCDatabase database;
 
     @Override
     public boolean isSupported(String uri) {
@@ -45,18 +42,9 @@ public class JDBCStorageProvider implements StorageProvider {
     }
 
     @Override
-    public Storage storage(Thread thread) throws StorageBackendException {
-        try {
-            if (!instances.containsKey(Thread.currentThread())) {
-                JDBCDatabase db = new JDBCDatabase();
-                db.arise();
-                instances.put(Thread.currentThread(), db);
-                return db;
-            } else {
-                return instances.get(Thread.currentThread());
-            }
-        } catch (SQLException ex) {
-            throw new StorageBackendException(ex);
-        }
+    public synchronized Storage storage(Thread thread) throws StorageBackendException {
+        // TODO May return a connection object per Thread but currently this
+        // fills up all available connections when we use the ThreadedNNTPDaemon
+        return database;
     }
 }

@@ -20,9 +20,9 @@ package org.sonews.storage.impl.jdbc;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.PreparedStatement;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
@@ -30,18 +30,18 @@ import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
-
+import javax.annotation.PostConstruct;
 import javax.mail.Header;
 import javax.mail.internet.MimeUtility;
-
 import org.sonews.config.Config;
-import org.sonews.util.Log;
 import org.sonews.storage.Article;
 import org.sonews.storage.Group;
 import org.sonews.storage.Storage;
 import org.sonews.storage.StorageBackendException;
 import org.sonews.storage.StorageManager;
+import org.sonews.util.Log;
 import org.sonews.util.Pair;
+import org.springframework.stereotype.Component;
 
 /**
  * Storage backend facade class for a relational SQL database using JDBC.
@@ -50,6 +50,7 @@ import org.sonews.util.Pair;
  * @author Christian Lins
  * @since sonews/0.5.0
  */
+@Component
 public class JDBCDatabase implements Storage {
     public static final int MAX_RESTARTS = 2;
 
@@ -82,7 +83,7 @@ public class JDBCDatabase implements Storage {
     /** How many times the database connection was reinitialized */
     protected int restarts = 0;
 
-    protected void prepareGetPostingsCountStatement() throws SQLException {
+    protected synchronized void prepareGetPostingsCountStatement() throws SQLException {
         this.pstmtGetPostingsCount = conn
                 .prepareStatement("SELECT Count(*) FROM postings WHERE group_id = ?");
     }
@@ -92,7 +93,8 @@ public class JDBCDatabase implements Storage {
      *
      * @throws java.sql.SQLException
      */
-    protected void arise() throws SQLException {
+    @PostConstruct
+    protected synchronized void arise() throws SQLException {
         try {
             // Load database driver
             //Class.forName(Config.inst().get(Config.LEVEL_FILE,
@@ -219,8 +221,8 @@ public class JDBCDatabase implements Storage {
             throw new Error("JDBC Driver not found!", ex);
         }
     }
-    
-    protected void closeResultSet(ResultSet rs) {
+
+    protected synchronized void closeResultSet(ResultSet rs) {
         if (rs != null) {
             try {
                 rs.close();
@@ -238,8 +240,9 @@ public class JDBCDatabase implements Storage {
      * @throws StorageBackendException
      */
     @Override
-    public void addArticle(final Article article)
-            throws StorageBackendException {
+    public synchronized void addArticle(final Article article)
+            throws StorageBackendException
+    {
         try {
             this.conn.setAutoCommit(false);
 
@@ -272,11 +275,13 @@ public class JDBCDatabase implements Storage {
      * Adds an article to the database.
      *
      * @param article
-     * @return
+     * @param newArticleID
      * @throws java.sql.SQLException
+     * @throws org.sonews.storage.StorageBackendException
      */
-    void addArticle(final Article article, final int newArticleID)
-            throws SQLException, StorageBackendException {
+    protected synchronized void addArticle(final Article article, final int newArticleID)
+            throws SQLException, StorageBackendException
+    {
         // Fill prepared statement with values;
         // writes body to article table
         pstmtAddArticle1.setInt(1, newArticleID);
@@ -312,7 +317,7 @@ public class JDBCDatabase implements Storage {
     }
 
     @Override
-    public int countArticles() throws StorageBackendException {
+    public synchronized int countArticles() throws StorageBackendException {
         ResultSet rs = null;
 
         try {
@@ -331,7 +336,7 @@ public class JDBCDatabase implements Storage {
     }
 
     @Override
-    public void delete(final String messageID) throws StorageBackendException {
+    public synchronized void delete(final String messageID) throws StorageBackendException {
         try {
             this.conn.setAutoCommit(false);
 
@@ -361,7 +366,7 @@ public class JDBCDatabase implements Storage {
     }
 
     @Override
-    public Article getArticle(String messageID) throws StorageBackendException {
+    public synchronized Article getArticle(String messageID) throws StorageBackendException {
         ResultSet rs = null;
         try {
             pstmtGetArticle0.setString(1, messageID);
@@ -391,7 +396,7 @@ public class JDBCDatabase implements Storage {
      * @throws StorageBackendException
      */
     @Override
-    public Article getArticle(long articleIndex, long gid)
+    public synchronized Article getArticle(long articleIndex, long gid)
             throws StorageBackendException {
         ResultSet rs = null;
 
@@ -428,7 +433,7 @@ public class JDBCDatabase implements Storage {
      * @throws StorageBackendException
      */
     @Override
-    public List<Pair<Long, String>> getArticleHeaders(Group group, long start,
+    public synchronized List<Pair<Long, String>> getArticleHeaders(Group group, long start,
             long end, String headerKey, String patStr)
             throws StorageBackendException, PatternSyntaxException {
         ResultSet rs = null;
@@ -468,7 +473,7 @@ public class JDBCDatabase implements Storage {
         return heads;
     }
 
-    private String getArticleHeaders(long articleID)
+    private synchronized String getArticleHeaders(long articleID)
             throws StorageBackendException {
         ResultSet rs = null;
 
@@ -501,7 +506,7 @@ public class JDBCDatabase implements Storage {
     }
 
     @Override
-    public long getArticleIndex(Article article, Group group)
+    public synchronized long getArticleIndex(Article article, Group group)
             throws StorageBackendException {
         ResultSet rs = null;
 
@@ -529,11 +534,11 @@ public class JDBCDatabase implements Storage {
      * @param group
      * @param first
      * @param last
-     * @return 
-     * @throws org.sonews.storage.StorageBackendException 
+     * @return
+     * @throws org.sonews.storage.StorageBackendException
      */
     @Override
-    public List<Pair<Long, Article>> getArticleHeads(Group group,
+    public synchronized List<Pair<Long, Article>> getArticleHeads(Group group,
             long first, long last) throws StorageBackendException {
         ResultSet rs = null;
 
@@ -562,7 +567,7 @@ public class JDBCDatabase implements Storage {
     }
 
     @Override
-    public List<Long> getArticleNumbers(long gid)
+    public synchronized List<Long> getArticleNumbers(long gid)
             throws StorageBackendException {
         ResultSet rs = null;
         try {
@@ -581,7 +586,7 @@ public class JDBCDatabase implements Storage {
         }
     }
 
-    private int getMaxArticleIndex(long groupID) throws StorageBackendException {
+    private synchronized int getMaxArticleIndex(long groupID) throws StorageBackendException {
         ResultSet rs = null;
 
         try {
@@ -602,7 +607,7 @@ public class JDBCDatabase implements Storage {
         }
     }
 
-    private int getMaxArticleID() throws StorageBackendException {
+    private synchronized int getMaxArticleID() throws StorageBackendException {
         ResultSet rs = null;
 
         try {
@@ -623,7 +628,7 @@ public class JDBCDatabase implements Storage {
     }
 
     @Override
-    public int getLastArticleNumber(Group group) throws StorageBackendException {
+    public synchronized int getLastArticleNumber(Group group) throws StorageBackendException {
         ResultSet rs = null;
 
         try {
@@ -643,7 +648,7 @@ public class JDBCDatabase implements Storage {
     }
 
     @Override
-    public int getFirstArticleNumber(Group group)
+    public synchronized int getFirstArticleNumber(Group group)
             throws StorageBackendException {
         ResultSet rs = null;
         try {
@@ -663,7 +668,7 @@ public class JDBCDatabase implements Storage {
     }
 
     @Override
-    public String getOldestArticle() throws StorageBackendException {
+    public synchronized String getOldestArticle() throws StorageBackendException {
         ResultSet rs = null;
 
         try {
@@ -682,7 +687,7 @@ public class JDBCDatabase implements Storage {
     }
 
     @Override
-    public int getPostingsCount(String groupname)
+    public synchronized int getPostingsCount(String groupname)
             throws StorageBackendException {
         ResultSet rs = null;
 
@@ -718,7 +723,7 @@ public class JDBCDatabase implements Storage {
      * @throws StorageBackendException
      */
     @Override
-    public boolean isArticleExisting(String messageID)
+    public synchronized boolean isArticleExisting(String messageID)
             throws StorageBackendException {
         ResultSet rs = null;
 
@@ -738,7 +743,7 @@ public class JDBCDatabase implements Storage {
      * Closes the JDBCDatabase connection.
      * @throws org.sonews.storage.StorageBackendException
      */
-    public void shutdown() throws StorageBackendException {
+    public synchronized void shutdown() throws StorageBackendException {
         try {
             if (this.conn != null) {
                 this.conn.close();
@@ -749,7 +754,7 @@ public class JDBCDatabase implements Storage {
     }
 
     @Override
-    public void purgeGroup(Group group) throws StorageBackendException {
+    public synchronized void purgeGroup(Group group) throws StorageBackendException {
         try {
             this.pstmtPurgeGroup0.setLong(1, group.getInternalID());
             this.pstmtPurgeGroup0.executeUpdate();
@@ -765,19 +770,15 @@ public class JDBCDatabase implements Storage {
     /**
      * Restart the JDBC connection to the Database server.
      * @param cause
-     * @throws StorageBackendException 
+     * @throws StorageBackendException
      */
-    protected void restartConnection(SQLException cause)
+    protected synchronized void restartConnection(SQLException cause)
             throws StorageBackendException {
         Log.get().log(Level.SEVERE, Thread.currentThread()
                         + ": Database connection was closed (restart "
                         + restarts + ").", cause);
 
         if (++restarts >= MAX_RESTARTS) {
-            // Delete the current, probably broken JDBCDatabase instance.
-            // So no one can use the instance any more.
-            JDBCStorageProvider.instances.remove(Thread.currentThread());
-
             // Throw the exception upwards
             throw new StorageBackendException(cause);
         }
@@ -796,7 +797,7 @@ public class JDBCDatabase implements Storage {
         } catch (SQLException ex) {
             Log.get().warning(ex.getMessage());
         }
-        
+
         this.conn = null;
 
         try {
@@ -809,7 +810,7 @@ public class JDBCDatabase implements Storage {
     }
 
     @Override
-    public boolean update(Article article) throws StorageBackendException {
+    public synchronized boolean update(Article article) throws StorageBackendException {
         ResultSet rs = null;
         try {
             // Retrieve internal article_id
@@ -836,7 +837,7 @@ public class JDBCDatabase implements Storage {
     }
 
     @Override
-    public boolean authenticateUser(String username, char[] password)
+    public synchronized boolean authenticateUser(String username, char[] password)
             throws StorageBackendException {
         throw new StorageBackendException("Not supported yet.");
     }
