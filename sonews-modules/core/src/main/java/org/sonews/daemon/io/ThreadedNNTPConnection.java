@@ -25,7 +25,7 @@ import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.SocketException;
-import java.nio.ByteBuffer;
+import java.net.SocketTimeoutException;
 import java.nio.channels.ClosedChannelException;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
@@ -34,7 +34,6 @@ import java.util.Timer;
 import java.util.logging.Level;
 import org.sonews.acl.User;
 import org.sonews.config.Config;
-import org.sonews.daemon.ChannelLineBuffers;
 import org.sonews.daemon.CommandSelector;
 import org.sonews.daemon.NNTPConnection;
 import org.sonews.daemon.command.Command;
@@ -56,24 +55,25 @@ public class ThreadedNNTPConnection implements NNTPConnection, Runnable {
     private static final Timer cancelTimer = new Timer(true); // Thread-safe?
                                                               // True for run as
                                                               // daemon
-    
+
     private Charset charset = Charset.forName("UTF-8");
     private Command command = null;
-    
+
     @Autowired
     private ApplicationContext context;
-    
+
     private Article currentArticle = null;
     private Group currentGroup = null;
     private volatile long lastActivity = System.currentTimeMillis();
     private User user;
-    
-    private final Socket clientSocket;
+
+    private final Socket socket;
     private PrintWriter out;
 
     @Autowired
-    public ThreadedNNTPConnection(Socket socket) {
-        clientSocket = socket;
+    public ThreadedNNTPConnection(Socket socket) throws SocketException {
+        this.socket = socket;
+        socket.setSoTimeout(3 * 60 * 1000); // Timeout of 3 minutes
     }
 
     @Override
@@ -82,28 +82,28 @@ public class ThreadedNNTPConnection implements NNTPConnection, Runnable {
             String hello = "200 "
                     + Config.inst().get(Config.HOSTNAME, InetAddress.getLocalHost().getCanonicalHostName())
                     + " sonews news server ready, posting allowed";
-           
-            out = new PrintWriter(clientSocket.getOutputStream());
+
+            out = new PrintWriter(socket.getOutputStream());
             println(hello);
-            
-            BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+
+            BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             String line;
             while ((line = in.readLine()) != null) {
                 lineReceived(line.getBytes());
             }
-        } catch (SocketException e) {
-            Log.get().log(Level.INFO, "Connection to {0} closed.", clientSocket.getRemoteSocketAddress());
-        } catch (IOException e) {
-            Log.get().log(Level.SEVERE, "Error handling client connection", e);
+        } catch (SocketException | SocketTimeoutException ex) {
+            Log.get().log(Level.INFO, "Connection to {0} closed.", socket.getRemoteSocketAddress());
+        } catch (IOException ex) {
+            Log.get().log(Level.SEVERE, "Error handling client connection", ex);
         } finally {
             try {
-                clientSocket.close();
+                socket.close();
             } catch (IOException e) {
                 Log.get().log(Level.WARNING, "Error closing client socket", e);
             }
         }
     }
-    
+
     /**
      * This method determines the fitting command processing class.
      *
@@ -115,7 +115,7 @@ public class ThreadedNNTPConnection implements NNTPConnection, Runnable {
         CommandSelector csel = context.getBean(CommandSelector.class);
         return csel.get(cmdStr);
     }
-    
+
     /**
      * Due to the readLockGate there is no need to synchronize this method.
      *
@@ -163,7 +163,7 @@ public class ThreadedNNTPConnection implements NNTPConnection, Runnable {
             try {
                 StringBuilder strBuf = new StringBuilder();
                 strBuf.append("Connection to ");
-                strBuf.append(clientSocket.getRemoteSocketAddress());
+                strBuf.append(socket.getRemoteSocketAddress());
                 strBuf.append(" closed: ");
                 strBuf.append(ex0);
                 Log.get().info(strBuf.toString());
@@ -190,7 +190,7 @@ public class ThreadedNNTPConnection implements NNTPConnection, Runnable {
     @Override
     public void close() throws IOException {
         out.close();
-        clientSocket.close();
+        socket.close();
     }
 
     @Override
@@ -222,7 +222,7 @@ public class ThreadedNNTPConnection implements NNTPConnection, Runnable {
     public User getUser() {
         return user;
     }
-   
+
     @Override
     public void println(byte[] line) {
         println(new String(line, charset));
@@ -233,7 +233,7 @@ public class ThreadedNNTPConnection implements NNTPConnection, Runnable {
         out.append(line);
         out.append(NEWLINE);
         out.flush();
-        
+
         Log.get().log(Level.FINE, ">> {0}", line);
     }
 
