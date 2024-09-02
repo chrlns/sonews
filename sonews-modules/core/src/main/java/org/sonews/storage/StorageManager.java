@@ -24,7 +24,7 @@ import javax.mail.MessagingException;
 
 /**
  * Provides access to a storage backend.
- * 
+ *
  * @author Christian Lins
  * @since sonews/1.0
  */
@@ -36,15 +36,15 @@ public class StorageManager {
     public static Article createArticle() {
         return new ArticleImpl();
     }
-    
+
     public static Article createArticle(String headers, byte[] body) {
         return new ArticleImpl(headers, body);
     }
-    
+
     public static Article createArticle(Message msg) throws IOException, MessagingException {
         return new ArticleImpl(msg);
     }
-    
+
     public static Storage current() throws StorageBackendException {
         synchronized (StorageManager.class) {
             if (provider == null) {
@@ -55,23 +55,9 @@ public class StorageManager {
         }
     }
 
-    public static StorageProvider loadProvider(String pluginClassName) {
-        try {
-            Class<?> clazz = Class.forName(pluginClassName);
-            Object inst = clazz.newInstance();
-            return (StorageProvider) inst;
-        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException ex) {
-            // Do not use logging here as the Log class requires a working
-            // backend which is in most cases not available at this point
-            // FIXME
-            System.out.println("Could not instantiate StorageProvider: " + ex);
-            return null;
-        }
-    }
-
     /**
      * Sets the current storage provider.
-     * 
+     *
      * @param provider
      */
     public static void enableProvider(StorageProvider provider) {

@@ -18,10 +18,13 @@
 
 package org.sonews.storage.impl.jdbc;
 
+import javax.annotation.PostConstruct;
+import org.sonews.config.Config;
 import org.sonews.storage.Storage;
 import org.sonews.storage.StorageBackendException;
 import org.sonews.storage.StorageProvider;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
 /**
@@ -33,7 +36,20 @@ import org.springframework.stereotype.Component;
 public class JDBCStorageProvider implements StorageProvider {
 
     @Autowired
-    private JDBCDatabase database;
+    private ApplicationContext context;
+
+    private JDBCDatabase[] databases;
+
+    private int last = 0;
+
+    @PostConstruct
+    public void initialize() {
+        int numConns = Config.inst().get(Config.STORAGE_CONNECTIONS, 4);
+        databases = new JDBCDatabase[numConns];
+        for (int i = 0; i < numConns; i++) {
+            databases[i] = context.getBean(JDBCDatabase.class);
+        }
+    }
 
     @Override
     public boolean isSupported(String uri) {
@@ -43,8 +59,8 @@ public class JDBCStorageProvider implements StorageProvider {
 
     @Override
     public synchronized Storage storage(Thread thread) throws StorageBackendException {
-        // TODO May return a connection object per Thread but currently this
-        // fills up all available connections when we use the ThreadedNNTPDaemon
+        var database = databases[last];
+        last = (last + 1) % databases.length;
         return database;
     }
 }

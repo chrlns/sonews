@@ -19,7 +19,6 @@
 package org.sonews.config;
 
 import java.util.logging.Level;
-
 import org.sonews.util.Log;
 
 /**
@@ -66,7 +65,7 @@ public class Config extends AbstractConfig {
     public static final String MLSEND_PORT = "sonews.mlsend.port";
     public static final String MLSEND_USER = "sonews.mlsend.user";
     public static final String MLSEND_AUTH = "sonews.mlsend.auth";
-    
+
     public static final String PERF_MAX_CACHED_BUFFERS = "sonews.perf.maxcachedbuffers";
 
     /**
@@ -86,6 +85,7 @@ public class Config extends AbstractConfig {
     public static final String STORAGE_PASSWORD = "sonews.storage.password";
     public static final String STORAGE_PORT     = "sonews.storage.port";
     public static final String STORAGE_PROVIDER = "sonews.storage.provider";
+    public static final String STORAGE_CONNECTIONS = "sonews.storage.connections";
 
     /**
      * Key constant. Value is the name of the host which is allowed to use the

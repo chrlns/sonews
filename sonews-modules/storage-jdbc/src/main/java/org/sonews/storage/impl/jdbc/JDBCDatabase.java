@@ -41,6 +41,7 @@ import org.sonews.storage.StorageBackendException;
 import org.sonews.storage.StorageManager;
 import org.sonews.util.Log;
 import org.sonews.util.Pair;
+import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 /**
@@ -51,6 +52,7 @@ import org.springframework.stereotype.Component;
  * @since sonews/0.5.0
  */
 @Component
+@Scope("prototype")
 public class JDBCDatabase implements Storage {
     public static final int MAX_RESTARTS = 2;
 
