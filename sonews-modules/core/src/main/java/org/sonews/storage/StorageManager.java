@@ -55,6 +55,10 @@ public class StorageManager {
         }
     }
 
+    public static void dispose() {
+        provider.dispose();
+    }
+
     /**
      * Sets the current storage provider.
      *

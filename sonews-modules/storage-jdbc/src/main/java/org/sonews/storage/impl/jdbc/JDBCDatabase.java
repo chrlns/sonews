@@ -31,6 +31,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import javax.mail.Header;
 import javax.mail.internet.MimeUtility;
 import org.sonews.config.Config;
@@ -41,6 +42,7 @@ import org.sonews.storage.StorageBackendException;
 import org.sonews.storage.StorageManager;
 import org.sonews.util.Log;
 import org.sonews.util.Pair;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
@@ -55,6 +57,9 @@ import org.springframework.stereotype.Component;
 @Scope("prototype")
 public class JDBCDatabase implements Storage {
     public static final int MAX_RESTARTS = 2;
+
+    @Autowired
+    private Log log;
 
     protected Connection conn = null;
     protected PreparedStatement pstmtAddArticle1 = null;
@@ -111,10 +116,9 @@ public class JDBCDatabase implements Storage {
                     Config.inst().get(Config.LEVEL_FILE,
                             Config.STORAGE_PASSWORD, ""));
 
-            this.conn
-                    .setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE);
-            if (this.conn.getTransactionIsolation() != Connection.TRANSACTION_SERIALIZABLE) {
-                Log.get().warning("Database is NOT fully serializable!");
+            conn.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE);
+            if (conn.getTransactionIsolation() != Connection.TRANSACTION_SERIALIZABLE) {
+                log.warning("Database is NOT fully serializable!");
             }
 
             // Prepare statements for method addArticle()
@@ -743,15 +747,15 @@ public class JDBCDatabase implements Storage {
 
     /**
      * Closes the JDBCDatabase connection.
-     * @throws org.sonews.storage.StorageBackendException
      */
-    public synchronized void shutdown() throws StorageBackendException {
+    @PreDestroy
+    public synchronized void close() {
         try {
             if (this.conn != null) {
                 this.conn.close();
             }
         } catch (SQLException ex) {
-            throw new StorageBackendException(ex);
+            log.warning(ex.getLocalizedMessage());
         }
     }
 

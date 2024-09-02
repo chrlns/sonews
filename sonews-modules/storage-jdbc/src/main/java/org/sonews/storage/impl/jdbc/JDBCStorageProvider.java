@@ -18,11 +18,14 @@
 
 package org.sonews.storage.impl.jdbc;
 
+import java.util.Arrays;
 import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import org.sonews.config.Config;
 import org.sonews.storage.Storage;
 import org.sonews.storage.StorageBackendException;
 import org.sonews.storage.StorageProvider;
+import org.sonews.util.Log;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
@@ -38,6 +41,9 @@ public class JDBCStorageProvider implements StorageProvider {
     @Autowired
     private ApplicationContext context;
 
+    @Autowired
+    private Log log;
+
     private JDBCDatabase[] databases;
 
     private int last = 0;
@@ -48,6 +54,14 @@ public class JDBCStorageProvider implements StorageProvider {
         databases = new JDBCDatabase[numConns];
         for (int i = 0; i < numConns; i++) {
             databases[i] = context.getBean(JDBCDatabase.class);
+        }
+    }
+
+    @PreDestroy
+    @Override
+    public void dispose() {
+        if (databases != null) {
+            Arrays.asList(databases).forEach(JDBCDatabase::close);
         }
     }
 

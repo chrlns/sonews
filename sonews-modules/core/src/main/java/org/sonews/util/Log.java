@@ -15,7 +15,6 @@
  *   You should have received a copy of the GNU General Public License
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 package org.sonews.util;
 
 import java.util.logging.Handler;
@@ -24,15 +23,18 @@ import java.util.logging.LogManager;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 import java.util.logging.StreamHandler;
-
+import javax.annotation.PostConstruct;
 import org.sonews.config.Config;
+import org.springframework.stereotype.Component;
 
 /**
- * Keeps the reference to a java.util.logging.Logger instance named "org.sonews".
+ * Keeps the reference to a java.util.logging.Logger instance named
+ * "org.sonews".
  *
  * @author Christian Lins
  * @since sonews/0.5.0
  */
+@Component
 public class Log extends Logger {
 
     private static Log instance = null;
@@ -42,7 +44,7 @@ public class Log extends Logger {
 
         SimpleFormatter formatter = new SimpleFormatter();
         StreamHandler streamHandler = new StreamHandler(System.out, formatter);
-        
+
         addHandler(streamHandler);
 
         Level level = Level.parse(Config.inst().get(Config.LOGLEVEL, "INFO"));
@@ -51,10 +53,26 @@ public class Log extends Logger {
         for (Handler handler : getHandlers()) {
             handler.setLevel(level);
         }
+
+        if (instance == null)
+            instance = this;
     }
 
-    public synchronized static Logger get() {
-        if (instance == null) {
+    @PostConstruct
+    public void register() {
+        if (this != instance) {
+            return;
+        }
+        
+        if (!LogManager.getLogManager().addLogger(instance)) {
+            // Should not happen
+            System.err.println("Failed to register logger.");
+        }
+    }
+
+    @Deprecated
+    public static Log get() {
+        /*if (instance == null) {
             // We keep a strong reference to our logger, because LogManager
             // only keeps a weak reference that may be garbage collected
             instance = new Log();
@@ -62,7 +80,7 @@ public class Log extends Logger {
                 // Should not happen
                 System.err.println("Failed to register logger.");
             }
-        }
+        }*/
         return instance;
     }
 }

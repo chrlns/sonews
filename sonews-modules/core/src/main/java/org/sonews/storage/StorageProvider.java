@@ -20,7 +20,7 @@ package org.sonews.storage;
 
 /**
  * Provides access to storage backend instances.
- * 
+ *
  * @author Christian Lins
  * @since sonews/1.0
  */
@@ -32,10 +32,15 @@ public interface StorageProvider {
      * This method returns the reference to the associated storage. The
      * reference MAY be unique for each thread. In any case it MUST be
      * thread-safe to use this method.
-     * 
+     *
      * @param thread
      * @return The reference to the associated Storage.
      * @throws org.sonews.storage.StorageBackendException
      */
     public Storage storage(Thread thread) throws StorageBackendException;
+
+    /**
+     * Closes this storage provider and frees all resources and connections.
+     */
+    public void dispose();
 }

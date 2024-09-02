@@ -19,11 +19,11 @@
 package org.sonews.storage.impl.hibernate.couchdb;
 
 import java.util.logging.Level;
+import javax.annotation.PreDestroy;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
 import org.json.JSONObject;
 import org.json.JSONTokener;
-
 import org.sonews.storage.Storage;
 import org.sonews.storage.StorageBackendException;
 import org.sonews.storage.StorageProvider;
@@ -38,28 +38,29 @@ import org.springframework.web.client.RestTemplate;
  * @author Christian Lins
  */
 @Component
+@Deprecated
 public class CouchDBStorageProvider implements StorageProvider {
-    
+
     private final EntityManagerFactory emf;
     private final String ddocUrl;
     private final String db;
-    
+
     public CouchDBStorageProvider() {
         this.emf     = Persistence.createEntityManagerFactory("sonews");
         // TODO Get this from config
         this.ddocUrl = "http://localhost:5984/{db}/_design/{name}";
         this.db      = "hibernate-sonews";
-        
+
         // Load design document
         JSONObject lddoc = new JSONObject(new JSONTokener(
                 getClass().getResourceAsStream("/couchdb/design-access.json")));
-        
+
         // Check if the design/access document is in the most recent version
         try {
             DesignDoc rddoc = getDesignDocument("access");
             if (rddoc.getVersion() < lddoc.getInt("version")) {
-                Log.get().log(Level.INFO, 
-                        "Updating CouchDB _design/access document to version {0}", 
+                Log.get().log(Level.INFO,
+                        "Updating CouchDB _design/access document to version {0}",
                         lddoc.getInt("version"));
                 DesignDoc nddoc = new DesignDoc(lddoc, rddoc.getRev());
                 updateDesignDocument("access", nddoc);
@@ -71,17 +72,17 @@ public class CouchDBStorageProvider implements StorageProvider {
         }
     }
 
-    private DesignDoc getDesignDocument(String name) {       
+    private DesignDoc getDesignDocument(String name) {
         RestTemplate rt = new RestTemplate();
-        DesignDoc doc = rt.getForObject(ddocUrl, DesignDoc.class, db, name); 
+        DesignDoc doc = rt.getForObject(ddocUrl, DesignDoc.class, db, name);
         return doc;
     }
-    
+
     private void updateDesignDocument(String name, DesignDoc ddoc) {
         RestTemplate rt = new RestTemplate();
-        rt.put(ddocUrl, ddoc, db, name); 
+        rt.put(ddocUrl, ddoc, db, name);
     }
-    
+
     @Override
     public boolean isSupported(String uri) {
         return uri.startsWith("http://");
@@ -90,5 +91,11 @@ public class CouchDBStorageProvider implements StorageProvider {
     @Override
     public Storage storage(Thread thread) throws StorageBackendException {
         return new CouchDBStorage(emf.createEntityManager());
+    }
+
+    @PreDestroy
+    @Override
+    public void dispose() {
+
     }
 }

@@ -32,6 +32,7 @@ import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.Timer;
 import java.util.logging.Level;
+import javax.annotation.PreDestroy;
 import org.sonews.acl.User;
 import org.sonews.config.Config;
 import org.sonews.daemon.CommandSelector;
@@ -187,6 +188,7 @@ public class ThreadedNNTPConnection implements NNTPConnection, Runnable {
         }
     }
 
+    @PreDestroy
     @Override
     public void close() throws IOException {
         out.close();

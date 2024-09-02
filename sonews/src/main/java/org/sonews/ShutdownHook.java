@@ -20,21 +20,20 @@ package org.sonews;
 
 import java.util.Map;
 import java.util.logging.Level;
-
 import org.sonews.daemon.DaemonThread;
 import org.sonews.util.Log;
 
 /**
  * Will force all other threads to shutdown cleanly.
- * 
+ *
  * @author Christian Lins
  * @since sonews/0.5.0
  */
 class ShutdownHook implements Runnable {
-    
+
     public ShutdownHook() {
     }
-    
+
     /**
      * Called when the JVM exits.
      */
@@ -43,7 +42,7 @@ class ShutdownHook implements Runnable {
         Log.get().log(Level.INFO, "Clean shutdown of daemon threads initiated");
 
         Map<Thread, StackTraceElement[]> threadsMap = Thread.getAllStackTraces();
-        
+
         threadsMap.keySet().parallelStream().forEach((thread) -> {
             // Interrupt the thread if it's a DaemonThread
             DaemonThread daemon;
@@ -68,7 +67,6 @@ class ShutdownHook implements Runnable {
 
         // We have notified all not-sleeping AbstractDaemons of the shutdown;
         // all other threads can be simply purged on VM shutdown
-
-        Log.get().log(Level.INFO, "Clean shutdown of daemon threads completed");
+        Log.get().info("Clean shutdown of daemon threads completed");
     }
 }
