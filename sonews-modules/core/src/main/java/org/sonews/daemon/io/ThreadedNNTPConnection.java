@@ -30,7 +30,6 @@ import java.nio.channels.ClosedChannelException;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
 import java.util.Arrays;
-import java.util.Timer;
 import java.util.logging.Level;
 import javax.annotation.PreDestroy;
 import org.sonews.acl.User;
@@ -53,9 +52,6 @@ public class ThreadedNNTPConnection implements NNTPConnection, Runnable {
 
     public static final String NEWLINE = "\r\n"; // RFC defines this as newline
     public static final String MESSAGE_ID_PATTERN = "<[^>]+>";
-    private static final Timer cancelTimer = new Timer(true); // Thread-safe?
-                                                              // True for run as
-                                                              // daemon
 
     private Charset charset = Charset.forName("UTF-8");
     private Command command = null;
@@ -74,7 +70,7 @@ public class ThreadedNNTPConnection implements NNTPConnection, Runnable {
     @Autowired
     public ThreadedNNTPConnection(Socket socket) throws SocketException {
         this.socket = socket;
-        socket.setSoTimeout(3 * 60 * 1000); // Timeout of 3 minutes
+        socket.setSoTimeout(15 * 1000); // Timeout of 15 seconds
     }
 
     @Override

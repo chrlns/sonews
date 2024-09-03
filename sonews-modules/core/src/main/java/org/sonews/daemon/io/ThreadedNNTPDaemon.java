@@ -46,7 +46,7 @@ public class ThreadedNNTPDaemon extends DaemonRunner implements NNTPDaemonRunnab
     public ThreadedNNTPDaemon() {
         logger = Log.get();
     }
-    
+
     @Override
     public void setPort(int port) {
         this.port = port;
@@ -57,9 +57,9 @@ public class ThreadedNNTPDaemon extends DaemonRunner implements NNTPDaemonRunnab
     public void run() {
         try {
             logger.log(Level.INFO, "Server listening on port {0}", port);
-            
+
             // Create a thread pool for handling connections. A cached thread
-            // pool will use as many threads as required (up to the system's 
+            // pool will use as many threads as required (up to the system's
             // maximum) to process the connectes. Idle threads are removed from
             // the pool after 60 seconds.
             threadPool = Executors.newCachedThreadPool();
@@ -71,18 +71,25 @@ public class ThreadedNNTPDaemon extends DaemonRunner implements NNTPDaemonRunnab
                 try {
                     // Accept incoming connections
                     Socket clientSocket = serverSocket.accept();
-                    
-                    logger.log(Level.INFO, "Connected: {0}", 
+
+                    logger.log(Level.INFO, "Connected: {0}",
                             clientSocket.getRemoteSocketAddress());
 
                     // Create a new thread to handle the connection
                     var thread = context.getBean(ThreadedNNTPConnection.class, clientSocket);
                     threadPool.execute(thread);
-
                 } catch (IOException ex) {
                     logger.log(Level.SEVERE, "IOException while accepting connection: {0}", ex.getMessage());
                     logger.info("Connection accepting sleeping for 5 seconds...");
                     Thread.sleep(5000);
+                } catch (OutOfMemoryError err) {
+                    // This happens when we handle to many connections
+                    logger.severe("OutOfMemoryError, we'll try to continue.");
+                    err.printStackTrace();
+                    // Try to recreate the threadPool
+                    threadPool.shutdownNow();
+                    threadPool = Executors.newCachedThreadPool();
+                    logger.warning("Killed all existing connections. New ThreadPool.");
                 }
             }
         } catch (BindException ex) {
