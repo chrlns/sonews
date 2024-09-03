@@ -21,12 +21,9 @@ package org.sonews.daemon;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
-
 import javax.annotation.PostConstruct;
-
 import org.sonews.daemon.command.Command;
 import org.sonews.util.Log;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
@@ -44,6 +41,9 @@ public class CommandSelector {
 
     @Autowired
     private ApplicationContext context;
+
+    @Autowired
+    private Log logger;
 
     public CommandSelector() {
     }
@@ -68,7 +68,7 @@ public class CommandSelector {
     private void mapCommandStringsToInstance(Command command) {
         String[] cmdStrings = command.getSupportedCommandStrings();
         for (String cmdString : cmdStrings) {
-            Log.get().log(Level.INFO, "Command {0} processed with {1}", new Object[]{cmdString, command.getClass()});
+            logger.log(Level.INFO, "Command {0} processed with {1}", new Object[]{cmdString, command.getClass()});
             commandMapping.put(cmdString, command);
         }
     }
