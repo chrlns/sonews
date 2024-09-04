@@ -19,6 +19,7 @@
 package org.sonews.daemon.io;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.net.BindException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -85,9 +86,10 @@ public class ThreadedNNTPDaemon extends DaemonRunner implements NNTPDaemonRunnab
             serverSocket = new ServerSocket(this.port);
 
             while (daemon.isRunning()) {
+                Socket clientSocket = null;
                 try {
                     // Accept incoming connections
-                    Socket clientSocket = serverSocket.accept();
+                    clientSocket = serverSocket.accept();
 
                     // It is important to set the timeout as early as possible
                     // as in overload situations the connection times out earlier
@@ -103,6 +105,12 @@ public class ThreadedNNTPDaemon extends DaemonRunner implements NNTPDaemonRunnab
                     threadPool.execute(thread);
                 } catch(RejectedExecutionException ex) {
                     logger.warning("Rejecting execution, queue full.");
+                    if (clientSocket != null) {
+                        try (var out = new PrintWriter(clientSocket.getOutputStream())) {
+                            out.print("400 Temporary overload, please retry later");
+                            out.print(ThreadedNNTPConnection.NEWLINE);
+                        }
+                    }
                     Thread.sleep(100);
                 } catch (IOException ex) {
                     logger.log(Level.SEVERE, "IOException while accepting connection: {0}", ex.getMessage());
