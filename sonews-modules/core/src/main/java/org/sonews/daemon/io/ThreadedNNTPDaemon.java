@@ -22,10 +22,11 @@ import java.io.IOException;
 import java.net.BindException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.sonews.daemon.DaemonRunner;
 import org.sonews.daemon.NNTPDaemonRunnable;
 import org.sonews.util.Log;
@@ -38,13 +39,17 @@ public class ThreadedNNTPDaemon extends DaemonRunner implements NNTPDaemonRunnab
 
     @Autowired
     private ApplicationContext context;
-    private final Logger logger;
+
+    @Autowired
+    private Log logger;
+
     private int port;
     private ServerSocket serverSocket = null;
-    private ExecutorService threadPool;
+    private ThreadPoolExecutor threadPool;
+    private final int numThreads = 2 * Runtime.getRuntime().availableProcessors();
+    private final BlockingQueue<Runnable> connQueue = new LinkedBlockingDeque<>();
 
     public ThreadedNNTPDaemon() {
-        logger = Log.get();
     }
 
     @Override
@@ -62,7 +67,11 @@ public class ThreadedNNTPDaemon extends DaemonRunner implements NNTPDaemonRunnab
             // pool will use as many threads as required (up to the system's
             // maximum) to process the connectes. Idle threads are removed from
             // the pool after 60 seconds.
-            threadPool = Executors.newCachedThreadPool();
+            threadPool = new ThreadPoolExecutor(
+                    numThreads, // min. (core) thread number
+                    numThreads, // max. thread number (ignored with unbounded queue)
+                    1, TimeUnit.MINUTES, // thread idle lifetime
+                    connQueue);
 
             // Create and bind the server socket
             serverSocket = new ServerSocket(this.port);
@@ -72,24 +81,27 @@ public class ThreadedNNTPDaemon extends DaemonRunner implements NNTPDaemonRunnab
                     // Accept incoming connections
                     Socket clientSocket = serverSocket.accept();
 
-                    logger.log(Level.INFO, "Connected: {0}",
-                            clientSocket.getRemoteSocketAddress());
+                    // It is important to set the timeout as early as possible
+                    // as in overload situations the connection times out earlier
+                    // to relieve the server from load.
+                    clientSocket.setSoTimeout(15 * 1000); // Timeout of 15 seconds
 
-                    // Create a new thread to handle the connection
+                    logger.log(Level.INFO, "Connected: {0}", clientSocket.getRemoteSocketAddress());
+
+                    // Create a new thread to handle the connection...
                     var thread = context.getBean(ThreadedNNTPConnection.class, clientSocket);
+
+                    // ...and execute it some time in the future.
                     threadPool.execute(thread);
                 } catch (IOException ex) {
                     logger.log(Level.SEVERE, "IOException while accepting connection: {0}", ex.getMessage());
-                    logger.info("Connection accepting sleeping for 5 seconds...");
-                    Thread.sleep(5000);
+                    logger.info("Connection accepting sleeping for a second...");
+                    Thread.sleep(1000);
                 } catch (OutOfMemoryError err) {
-                    // This happens when we handle to many connections
-                    logger.severe("OutOfMemoryError, we'll try to continue.");
-                    err.printStackTrace();
-                    // Try to recreate the threadPool
-                    threadPool.shutdownNow();
-                    threadPool = Executors.newCachedThreadPool();
-                    logger.warning("Killed all existing connections. New ThreadPool.");
+                    // This may happen when we handle to many connections
+                    logger.log(Level.SEVERE, "OutOfMemoryError, we'll try to continue.", err);
+                    connQueue.clear(); // Give us some space to breathe
+                    logger.warning("Removed all waiting connections.");
                 }
             }
         } catch (BindException ex) {

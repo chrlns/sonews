@@ -68,9 +68,8 @@ public class ThreadedNNTPConnection implements NNTPConnection, Runnable {
     private PrintWriter out;
 
     @Autowired
-    public ThreadedNNTPConnection(Socket socket) throws SocketException {
+    public ThreadedNNTPConnection(Socket socket) {
         this.socket = socket;
-        socket.setSoTimeout(15 * 1000); // Timeout of 15 seconds
     }
 
     @Override
