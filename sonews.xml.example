@@ -12,7 +12,7 @@
     <bean id="storageProvider" class="org.sonews.storage.impl.jdbc.JDBCStorageProvider">
     </bean>
     
-    <bean id="NNTPDaemon" class="org.sonews.daemon.io.ThreadedNNTPDaemon">
+    <bean id="NNTPDaemon" class="org.sonews.daemon.io.VirtualThreadedNNTPDaemon">
     </bean>
 
 </beans>
