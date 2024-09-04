@@ -22,8 +22,9 @@ import java.io.IOException;
 import java.net.BindException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
@@ -46,10 +47,16 @@ public class ThreadedNNTPDaemon extends DaemonRunner implements NNTPDaemonRunnab
     private int port;
     private ServerSocket serverSocket = null;
     private ThreadPoolExecutor threadPool;
-    private final int numThreads = 2 * Runtime.getRuntime().availableProcessors();
-    private final BlockingQueue<Runnable> connQueue = new LinkedBlockingDeque<>();
+    private final int numMinThreads;
+    private final int numMaxThreads;
+    private final BlockingQueue<Runnable> connQueue = new ArrayBlockingQueue<>(1024);
 
     public ThreadedNNTPDaemon() {
+        // At least four threads as minimum
+        numMinThreads = Math.min(4, 2 * Runtime.getRuntime().availableProcessors());
+
+        // Maximum of 128 Threads, could be increased for large machines
+        numMaxThreads = Math.min(128, 20 * Runtime.getRuntime().availableProcessors());
     }
 
     @Override
@@ -58,7 +65,7 @@ public class ThreadedNNTPDaemon extends DaemonRunner implements NNTPDaemonRunnab
     }
 
     @Override
-    @SuppressWarnings("UseSpecificCatch")
+    @SuppressWarnings("SleepWhileInLoop")
     public void run() {
         try {
             logger.log(Level.INFO, "Server listening on port {0}", port);
@@ -68,10 +75,11 @@ public class ThreadedNNTPDaemon extends DaemonRunner implements NNTPDaemonRunnab
             // maximum) to process the connectes. Idle threads are removed from
             // the pool after 60 seconds.
             threadPool = new ThreadPoolExecutor(
-                    numThreads, // min. (core) thread number
-                    numThreads, // max. thread number (ignored with unbounded queue)
+                    numMinThreads, // min. (core) thread number
+                    numMaxThreads, // max. thread number
                     1, TimeUnit.MINUTES, // thread idle lifetime
-                    connQueue);
+                    connQueue,
+                    new ThreadPoolExecutor.AbortPolicy());
 
             // Create and bind the server socket
             serverSocket = new ServerSocket(this.port);
@@ -93,6 +101,9 @@ public class ThreadedNNTPDaemon extends DaemonRunner implements NNTPDaemonRunnab
 
                     // ...and execute it some time in the future.
                     threadPool.execute(thread);
+                } catch(RejectedExecutionException ex) {
+                    logger.warning("Rejecting execution, queue full.");
+                    Thread.sleep(100);
                 } catch (IOException ex) {
                     logger.log(Level.SEVERE, "IOException while accepting connection: {0}", ex.getMessage());
                     logger.info("Connection accepting sleeping for a second...");
@@ -102,6 +113,7 @@ public class ThreadedNNTPDaemon extends DaemonRunner implements NNTPDaemonRunnab
                     logger.log(Level.SEVERE, "OutOfMemoryError, we'll try to continue.", err);
                     connQueue.clear(); // Give us some space to breathe
                     logger.warning("Removed all waiting connections.");
+                    Thread.sleep(5000);
                 }
             }
         } catch (BindException ex) {
