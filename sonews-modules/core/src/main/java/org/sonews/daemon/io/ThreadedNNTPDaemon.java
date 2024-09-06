@@ -36,6 +36,19 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
+/**
+ * An NNTP daemon listening for incoming connections. This implementation of
+ * NNTPDaemonRunnable uses a dynamically growing and shrinking pool of platform
+ * threads to handle the incoming connections. The number of threads is between
+ * min(4, 2*CPU-Cores) to min(128, 20*CPU_Cores). Due to the hard upper limit
+ * this effectively limits the maximum number of connections that can be
+ * processed in parallel. If there are more than 128 (or 20*CPU_Cores) incoming
+ * connections, new connections will be rejected.
+ * Due to this limitations the VirtualThreadedNNTPDaemon is the better choice
+ * in almost any situations.
+ *
+ * @author Christian Lins
+ */
 @Component
 public class ThreadedNNTPDaemon extends DaemonRunner implements NNTPDaemonRunnable {
 
@@ -46,7 +59,7 @@ public class ThreadedNNTPDaemon extends DaemonRunner implements NNTPDaemonRunnab
     private Log logger;
 
     private int port;
-    private ServerSocket serverSocket = null;
+    private ServerSocket serverSocket;
     private ThreadPoolExecutor threadPool;
     private final int numMinThreads;
     private final int numMaxThreads;
@@ -65,8 +78,12 @@ public class ThreadedNNTPDaemon extends DaemonRunner implements NNTPDaemonRunnab
         this.port = port;
     }
 
+    /**
+     * Opens a server socket on the configured port and waits for incoming
+     * connections.
+     */
     @Override
-    @SuppressWarnings("SleepWhileInLoop")
+    @SuppressWarnings({"SleepWhileInLoop", "UseSpecificCatch"})
     public void run() {
         try {
             logger.log(Level.INFO, "Server listening on port {0}", port);
@@ -145,7 +162,7 @@ public class ThreadedNNTPDaemon extends DaemonRunner implements NNTPDaemonRunnab
             try {
                 this.serverSocket.close();
             } catch (IOException ex) {
-                Log.get().log(Level.WARNING, ex.getLocalizedMessage(), ex);
+                logger.log(Level.WARNING, ex.getLocalizedMessage(), ex);
             }
         }
         if (threadPool != null) {
