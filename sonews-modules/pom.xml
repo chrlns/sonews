@@ -11,7 +11,6 @@
     <packaging>pom</packaging>
 
     <modules>
-        <module>commands-rfc3977</module>
         <module>mlgw</module>
         <module>storage-hibernate-ogm-couchdb</module>
         <module>storage-jdbc</module>
