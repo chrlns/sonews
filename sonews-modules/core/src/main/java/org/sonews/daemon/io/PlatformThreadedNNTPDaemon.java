@@ -23,23 +23,62 @@ import java.io.PrintWriter;
 import java.net.BindException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.concurrent.Executors;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import org.springframework.stereotype.Component;
 
+/**
+ * An NNTP daemon listening for incoming connections. This implementation of
+ * NNTPDaemonRunnable uses a dynamically growing and shrinking pool of platform
+ * threads to handle the incoming connections. The number of threads is between
+ * min(4, 2*CPU-Cores) to min(128, 20*CPU_Cores). Due to the hard upper limit
+ * this effectively limits the maximum number of connections that can be
+ * processed in parallel. If there are more than 128 (or 20*CPU_Cores) incoming
+ * connections, new connections will be rejected.
+ * Due to this limitations the VirtualThreadedNNTPDaemon is the better choice
+ * in almost any situations.
+ *
+ * @author Christian Lins
+ */
 @Component
-public class VirtualThreadedNNTPDaemon extends ThreadedNNTPDaemon {
+public class PlatformThreadedNNTPDaemon extends ThreadedNNTPDaemon {
 
+    private final int numMinThreads;
+    private final int numMaxThreads;
+    private final BlockingQueue<Runnable> connQueue = new ArrayBlockingQueue<>(1024);
+
+    public PlatformThreadedNNTPDaemon() {
+        // At least four threads as minimum
+        numMinThreads = Math.min(4, 2 * Runtime.getRuntime().availableProcessors());
+
+        // Maximum of 128 Threads, could be increased for large machines
+        numMaxThreads = Math.min(128, 20 * Runtime.getRuntime().availableProcessors());
+    }
+
+    /**
+     * Opens a server socket on the configured port and waits for incoming
+     * connections.
+     */
     @Override
     @SuppressWarnings({"SleepWhileInLoop", "UseSpecificCatch"})
     public void run() {
         try {
             logger.log(Level.INFO, "Server listening on port {0}", port);
 
-            // Every connections is handled via a virtual thread. The JVM
-            // does the mapping of virtual to platform threads.
-            threadPool = Executors.newVirtualThreadPerTaskExecutor();
+            // Create a thread pool for handling connections. A cached thread
+            // pool will use as many threads as required (up to the system's
+            // maximum) to process the connectes. Idle threads are removed from
+            // the pool after 60 seconds.
+            threadPool = new ThreadPoolExecutor(
+                    numMinThreads, // min. (core) thread number
+                    numMaxThreads, // max. thread number
+                    1, TimeUnit.MINUTES, // thread idle lifetime
+                    connQueue,
+                    new ThreadPoolExecutor.AbortPolicy());
 
             // Create and bind the server socket
             serverSocket = new ServerSocket(this.port);
@@ -61,9 +100,8 @@ public class VirtualThreadedNNTPDaemon extends ThreadedNNTPDaemon {
                     var thread = context.getBean(ThreadedNNTPConnection.class, clientSocket);
 
                     // ...and execute it some time in the future.
-                    threadPool.submit(thread);
+                    threadPool.execute(thread);
                 } catch(RejectedExecutionException ex) {
-                    // Should not happen with virtual threads but we'll never know
                     logger.warning("Rejecting execution, queue full.");
                     if (clientSocket != null) {
                         try (var out = new PrintWriter(clientSocket.getOutputStream())) {
@@ -79,8 +117,7 @@ public class VirtualThreadedNNTPDaemon extends ThreadedNNTPDaemon {
                 } catch (OutOfMemoryError err) {
                     // This may happen when we handle to many connections
                     logger.log(Level.SEVERE, "OutOfMemoryError, we'll try to continue.", err);
-                    threadPool.shutdownNow();
-                    threadPool = Executors.newVirtualThreadPerTaskExecutor();
+                    connQueue.clear(); // Give us some space to breathe
                     logger.warning("Removed all waiting connections.");
                     Thread.sleep(5000);
                 }
