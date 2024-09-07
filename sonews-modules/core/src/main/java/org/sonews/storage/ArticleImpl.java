@@ -36,7 +36,7 @@ import javax.mail.MessagingException;
 import javax.mail.internet.InternetHeaders;
 import javax.mail.internet.MimeUtility;
 
-import org.sonews.acl.User;
+import org.sonews.auth.User;
 import org.sonews.config.Config;
 import org.sonews.util.Log;
 

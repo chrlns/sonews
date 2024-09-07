@@ -23,7 +23,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
 
-import org.sonews.acl.User;
+import org.sonews.auth.User;
 import org.sonews.storage.Article;
 import org.sonews.storage.Group;
 

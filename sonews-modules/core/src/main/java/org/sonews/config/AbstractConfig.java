@@ -1,6 +1,6 @@
 /*
  *   SONEWS News Server
- *   Copyright (C) 2009-2015  Christian Lins <christian@lins.me>
+ *   Copyright (C) 2009-2024  Christian Lins <christian@lins.me>
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -20,7 +20,7 @@ package org.sonews.config;
 
 /**
  * Base class for Config and BootstrapConfig.
- * 
+ *
  * @author Christian Lins
  * @since sonews/0.5.0
  */
@@ -39,7 +39,7 @@ public abstract class AbstractConfig {
 
     /**
      * Returns a long config value specified via the given key.
-     * 
+     *
      * @param key
      * @param defVal
      * @return

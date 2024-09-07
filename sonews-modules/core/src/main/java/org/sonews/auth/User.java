@@ -1,6 +1,6 @@
 /*
  *   SONEWS News Server
- *   Copyright (C) 2009-2015  Christian Lins <christian@lins.me>
+ *   Copyright (C) 2009-2024  Christian Lins <christian@lins.me>
  *   Copyright (C) 2011  František Kučera <informace@frantovo.cz>
  *
  *   This program is free software: you can redistribute it and/or modify
@@ -17,16 +17,16 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.sonews.acl;
+package org.sonews.auth;
 
 /**
  * Represents users (clients) accessing our service through NNTP protocol.
- * 
+ *
  * This class can be extended by your plugin to describe additional information,
  * that was gained during login process.
- * 
+ *
  * When User object is created, default authentication status is false.
- * 
+ *
  * @author František Kučera
  */
 public class User {
@@ -47,7 +47,7 @@ public class User {
      * just tell us their name and we will trust them – in this case User object
      * will exist end user name will be filled, but this method will return
      * false.
-     * 
+     *
      * @return true if user was succesfully authenticated (has provided correct
      *         password).
      */
@@ -57,7 +57,7 @@ public class User {
 
     /**
      * This method is to be called from AUTHINFO PASS Command implementation.
-     * 
+     *
      * @param authenticated
      *            true if user has provided right password in AUTHINFO PASS
      *            password.

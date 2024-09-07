@@ -25,7 +25,7 @@ import java.util.Enumeration;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.sonews.config.Config;
-import org.sonews.daemon.ChannelLineBuffers;
+import org.sonews.daemon.nio.ChannelLineBuffers;
 import org.sonews.daemon.Connections;
 import org.sonews.daemon.DaemonThread;
 import org.sonews.daemon.NNTPDaemonRunnable;
@@ -51,7 +51,7 @@ import org.springframework.context.support.FileSystemXmlApplicationContext;
 public class Application {
 
     /** Version information of the sonews daemon */
-    public static final String VERSION = "sonews/2.1.0";
+    public static final String VERSION = "sonews/2.1-SNAPSHOT";
 
     /** The server's startup date */
     public static final LocalDateTime STARTDATE = LocalDateTime.now();
@@ -116,14 +116,15 @@ public class Application {
         ChannelLineBuffers.allocateDirect();
 
         // Add shutdown hook
-        Runtime.getRuntime().addShutdownHook(new Thread(new ShutdownHook()));
+        var shutdownHook = context.getBean(ShutdownHook.class);
+        Runtime.getRuntime().addShutdownHook(new Thread(shutdownHook));
 
         // Start the listening daemon
         if (port <= 0) {
             port = Config.inst().get(Config.PORT, 119);
         }
 
-        NNTPDaemonRunnable nntpDaemon = (NNTPDaemonRunnable)context.getBean("NNTPDaemon");
+        var nntpDaemon = (NNTPDaemonRunnable)context.getBean("NNTPDaemon");
         nntpDaemon.setPort(port);
 
         DaemonThread daemon;

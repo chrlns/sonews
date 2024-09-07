@@ -32,7 +32,7 @@ import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.logging.Level;
 import javax.annotation.PreDestroy;
-import org.sonews.acl.User;
+import org.sonews.auth.User;
 import org.sonews.config.Config;
 import org.sonews.daemon.CommandSelector;
 import org.sonews.daemon.NNTPConnection;

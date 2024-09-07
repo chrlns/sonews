@@ -1,6 +1,6 @@
 /*
  *   SONEWS News Server
- *   Copyright (C) 2009-2015  Christian Lins <christian@lins.me>
+ *   Copyright (C) 2009-2024  Christian Lins <christian@lins.me>
  *   Copyright (C) 2011  František Kučera <informace@frantovo.cz>
  *
  *   This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.sonews.acl;
+package org.sonews.auth;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -25,16 +25,17 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
 import org.sonews.daemon.NNTPConnection;
 import org.sonews.daemon.command.Command;
 import org.sonews.storage.StorageBackendException;
 import org.sonews.storage.StorageManager;
+import org.springframework.stereotype.Component;
 
 /**
  *
  * @author František Kučera
  */
+@Component
 public class AuthInfoCommand implements Command {
 
     private static final Logger log = Logger.getLogger(AuthInfoCommand.class

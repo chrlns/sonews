@@ -32,10 +32,8 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.logging.Level;
 
-import org.sonews.acl.User;
-import org.sonews.daemon.ChannelLineBuffers;
+import org.sonews.auth.User;
 import org.sonews.daemon.CommandSelector;
-import org.sonews.daemon.LineEncoder;
 import org.sonews.daemon.NNTPConnection;
 import org.sonews.daemon.command.Command;
 import org.sonews.storage.Article;

@@ -22,6 +22,8 @@ import java.util.Map;
 import java.util.logging.Level;
 import org.sonews.daemon.DaemonThread;
 import org.sonews.util.Log;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 /**
  * Will force all other threads to shutdown cleanly.
@@ -29,7 +31,11 @@ import org.sonews.util.Log;
  * @author Christian Lins
  * @since sonews/0.5.0
  */
+@Component
 class ShutdownHook implements Runnable {
+
+    @Autowired
+    private Log logger;
 
     public ShutdownHook() {
     }
@@ -39,7 +45,7 @@ class ShutdownHook implements Runnable {
      */
     @Override
     public void run() {
-        Log.get().log(Level.INFO, "Clean shutdown of daemon threads initiated");
+        logger.info("Clean shutdown of daemon threads initiated");
 
         Map<Thread, StackTraceElement[]> threadsMap = Thread.getAllStackTraces();
 
@@ -56,17 +62,17 @@ class ShutdownHook implements Runnable {
             DaemonThread daemon;
             if (thread instanceof DaemonThread && thread.isAlive()) {
                 daemon = (DaemonThread) thread;
-                Log.get().log(Level.INFO, "Waiting for {0} to exit...", daemon);
+                logger.log(Level.INFO, "Waiting for {0} to exit...", daemon);
                 try {
                     daemon.join(500);
                 } catch (InterruptedException ex) {
-                    Log.get().log(Level.WARNING, "join interrupted", ex);
+                    logger.log(Level.WARNING, "join interrupted", ex);
                 }
             }
         });
 
         // We have notified all not-sleeping AbstractDaemons of the shutdown;
         // all other threads can be simply purged on VM shutdown
-        Log.get().info("Clean shutdown of daemon threads completed");
+        logger.info("Clean shutdown of daemon threads completed");
     }
 }
