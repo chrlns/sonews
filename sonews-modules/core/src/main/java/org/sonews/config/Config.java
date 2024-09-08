@@ -1,6 +1,6 @@
 /*
  *   SONEWS News Server
- *   Copyright (C) 2009-2015  Christian Lins <christian@lins.me>
+ *   Copyright (C) 2009-2024  Christian Lins <christian@lins.me>
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -33,11 +33,13 @@ public class Config extends AbstractConfig {
     public static final int LEVEL_FILE = 2;
 
     public static final String CONFIGFILE = "sonews.configfile";
+
     /**
      * BackendConfig key constant. Value is the maximum article size in
      * kilobytes.
      */
     public static final String ARTICLE_MAXSIZE = "sonews.article.maxsize";
+
     /**
      * BackendConfig key constant. Value: Amount of news that are feeded per
      * run.
@@ -73,6 +75,12 @@ public class Config extends AbstractConfig {
      * is a lot!)
      */
     public static final String DEBUG = "sonews.debug";
+
+    /** Max. lifetime of an Article in storage (as days) */
+    public static final String STORAGE_ARTICLE_LIFETIME = "sonews.storage.article.lifetime";
+
+    /** Max. allowed articles in storage (used by Purger) */
+    public static final String STORAGE_ARTICLE_MAXNUM = "sonews.storage.article.maxnum";
 
     /** Key constant. Value is classname of the JDBC driver */
     public static final String STORAGE_DBMSDRIVER = "sonews.storage.dbmsdriver";

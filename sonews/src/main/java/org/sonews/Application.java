@@ -25,10 +25,10 @@ import java.util.Enumeration;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.sonews.config.Config;
-import org.sonews.daemon.nio.ChannelLineBuffers;
 import org.sonews.daemon.Connections;
 import org.sonews.daemon.DaemonThread;
 import org.sonews.daemon.NNTPDaemonRunnable;
+import org.sonews.daemon.nio.ChannelLineBuffers;
 import org.sonews.feed.FeedManager;
 import org.sonews.storage.StorageManager;
 import org.sonews.storage.StorageProvider;
@@ -60,7 +60,7 @@ public class Application {
         Logger.getLogger("org.sonews").log(Level.INFO, VERSION);
 
         boolean feed = false; // Enable feeding?
-        boolean purger = false; // Enable message purging?
+        boolean purgerEnabled = false; // Enable message purging?
         int port = -1;
 
         for (int n = 0; n < args.length; n++) {
@@ -97,7 +97,7 @@ public class Application {
                             .println("Warning: -plugin-storage is not implemented!");
                 }
                 case "-purger" ->  {
-                    purger = true;
+                    purgerEnabled = true;
                 }
                 case "-v", "-version" ->  {
                     // Simply return as the version info is already printed above
@@ -139,8 +139,9 @@ public class Application {
             FeedManager.startFeeding();
         }
 
-        if (purger) {
-            new DaemonThread(new Purger()).start();
+        if (purgerEnabled) {
+            var purger = context.getBean(Purger.class);
+            new DaemonThread(purger).start();
         }
 
         // Wait for main thread to exit (setDaemon(false))
