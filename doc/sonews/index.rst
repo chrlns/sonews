@@ -1,16 +1,26 @@
 sonews Usenet News Server
 =========================
 
-**sonews** is a NNTP server that can provide access to both local and global Usenets newsgroups. It is written in `Java <http://java.sun.com/>`_ and uses a relational database as backend.
+**sonews** is a NNTP server that can provide access to both local and global
+Usenets newsgroups. It is written in Java and has modular backend API.
 
 Introduction
 ------------
 
-sonews is a RCF3977 compliant NNTP Usenet server. It is written in Java and uses a database management system as backend (currently `PostgreSQL <http://www.postgresql.com/>`_ and `MySQL <http://www.mysql.com/>`_, CouchDB is in development). sonews is highly multithreaded and uses Java NIO asynchronous sockets to handle thousands of concurrent connections.
+sonews aims to be a RCF3977 compliant NNTP Usenet server. It is written in 
+modern Java and uses a database management system as backend (currently 
+`PostgreSQL <http://www.postgresql.com/>`_ and `MySQL <http://www.mysql.com/>`_, 
+CouchDB is in development). sonews is highly multithreaded and uses Java 
+Virtual Threads to handle thousands of concurrent connections with ease.
 
-sonews is Free and Open Source Software (FOSS) licensed under the terms of the `GNU General Public License <http://www.gnu.org/licenses/gpl.html>`_ Version 3 (or later).
+sonews is Free and Open Source Software (FOSS) licensed under the terms of the
+`GNU General Public License <http://www.gnu.org/licenses/gpl.html>`_ Version 3 (or later).
 
-Ancestor of sonews is probably the Neat NNTP Daemon (n3tpd) although there is very little code in sonews that can be identified as direct derivation. sonews was developed as diploma thesis project of Christian Lins at `StarOffice development <http://de.sun.com/>`_ in Hamburg and is now a Free Software project.
+Ancestor of sonews is probably the Neat NNTP Daemon (n3tpd) although there is 
+very little code in sonews that can be identified as direct derivation. 
+sonews started as diploma thesis project of Christian Lins at 
+`StarOffice development <http://de.sun.com/>`_ in Hamburg and is a Free 
+Software project since.
 
 Installation and initial setup
 ------------------------------
@@ -21,45 +31,25 @@ Download & Installation
 Build from source
 ^^^^^^^^^^^^^^^^^
 
-See `sonews.org <http://www.sonews.org/>`_ for recent binary and source tarballs. You may also checkout a recent version from Git at `Github <https://github.com/cli/sonews.git>`_
+See `sonews.org <http://www.sonews.org/>`_ for recent binary and source tarballs. 
+You may also checkout a recent version from `Github <https://github.com/chrlns/sonews.git>`_
 
-Use the archive and extract it in a directory of your choice. Or use the checked-out source of course. Make sure your system provides the necessary prerequisites:
+Use the archive and extract it in a directory of your choice. Or use the 
+checked-out source of course. Make sure your system provides the necessary 
+prerequisites:
 
-- Java 7 JDK (or higher)
+- Java 21 JDK (or higher)
 - Apache Maven 3 (or higher)
 
-Maven will download all necessary dependencies from a repository automatically. Use the following command to build and package sonews:
+Maven will download all necessary dependencies from a repository automatically. 
+Use the following command to build and package sonews:
 
 .. code-block:: bash
 
-   $ mvn clean compile package
+   $ mvn package
 
-You'll find the resulting sonews.jar file in the target/ directory.
-
-Ubuntu and other Debian-based systems
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-You can install sonews with `APT <http://www.debian.org/doc/manuals/apt-howto/>`_ easily. Christian Lins provides a package repository at Launchpad with sonews Debian packages. See https://launchpad.net/~cli/+archive/sonews for more information about how to use an APT repository to install sonews.
-
-On recent Ubuntu version you can use the following command to add the sonews package archive:
-
-.. code-block:: bash
-
-   $ sudo add-apt-repository ppa:cli/sonews
-
-After adding the repository, force an update of your local package list:
-
-.. code-block:: bash
-
-   $ sudo apt-get update
-
-To install sonews and all prerequisites issue the following command:
-
-.. code-block:: bash
-
-   $ sudo apt-get install sonews
-
-This method should work for all recent Debian-based distributions (`Debian <http://www.debian.org/>`_, `Ubuntu <http://www.ubuntu.com/>`_, etc.).
+You'll find the resulting sonews-boot-2.1-SNAPSHOT-jar-with-dependencies.jar 
+file in the sonews/target/ directory. The archive contains all necessary binaries.
 
 Initial database setup
 ~~~~~~~~~~~~~~~~~~~~~~
