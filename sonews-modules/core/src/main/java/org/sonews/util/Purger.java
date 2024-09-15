@@ -15,7 +15,6 @@
  *   You should have received a copy of the GNU General Public License
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 package org.sonews.util;
 
 import java.text.DateFormat;
@@ -61,7 +60,7 @@ public class Purger extends DaemonRunner implements DaemonRunnable {
                 purgeDeleted();
                 purgeOutdated();
 
-                Thread.sleep(120000); // Sleep for two minutes
+                Thread.sleep(5 * 60 * 1000); // Sleep for 5 minutes
             }
         } catch (StorageBackendException ex) {
             logger.log(Level.WARNING, "Storage exception", ex);
@@ -93,7 +92,7 @@ public class Purger extends DaemonRunner implements DaemonRunnable {
 
                 for (int n = 0; n < ids.size() && n < 10; n++) {
                     Article art = StorageManager.current().getArticle(ids.get(n), group.getInternalID());
-                    if(art != null) {
+                    if (art != null) {
                         StorageManager.current().delete(art.getMessageID());
                         logger.log(Level.INFO, "Article {0} purged.", art.getMessageID());
                     }
@@ -103,7 +102,7 @@ public class Purger extends DaemonRunner implements DaemonRunnable {
     }
 
     private int msAsDays(long time) {
-        return (int)(time / 1000 / 3600 / 24);
+        return (int) (time / 1000 / 3600 / 24);
     }
 
     private int currentUnixDays() {
@@ -122,41 +121,40 @@ public class Purger extends DaemonRunner implements DaemonRunnable {
         long lifetime = Config.inst().get(Config.STORAGE_ARTICLE_LIFETIME, -1);
 
         if (lifetime > 0 || articleMaximum < StorageManager.current().countArticles()) {
-            logger.info("Purging old messages...");
-            String mid = StorageManager.current().getOldestArticle();
-            if (mid == null) { // No articles in the database
-                return;
-            }
+            boolean purged = false;
+            do {
+                logger.info("Purging old messages...");
+                String mid = StorageManager.current().getOldestArticle();
+                if (mid == null) { // No articles in the database
+                    return;
+                }
 
-            Article art = StorageManager.current().getArticle(mid);
-            if (art == null) {
-                logger.log(Level.WARNING, "Could not retrieve or delete article: {0}", mid);
-                return;
-            }
-            long artDate = 0; // Article age in UNIX Epoch days
-            String dateStr = art.getHeader(Headers.DATE)[0];
+                Article art = StorageManager.current().getArticle(mid);
+                if (art == null) {
+                    logger.log(Level.WARNING, "Could not retrieve or delete article: {0}", mid);
+                    return;
+                }
+                long artDate = 0; // Article age in UNIX Epoch days
+                String dateStr = art.getHeader(Headers.DATE)[0];
 
-            // FIXME Refactor using java.time classes
-            try {
-                DateFormat dateFormat = DateFormat.getDateInstance(DateFormat.LONG, Locale.US);
-                artDate = msAsDays(dateFormat.parse(dateStr).getTime());
-            } catch (ParseException ex) {
-                logger.log(
-                        Level.WARNING, "Could not parse date string: {0} {1}",
-                        new Object[]{dateStr, ex});
-            }
+                // FIXME Refactor using java.time classes
+                try {
+                    DateFormat dateFormat = DateFormat.getDateInstance(DateFormat.LONG, Locale.US);
+                    artDate = msAsDays(dateFormat.parse(dateStr).getTime());
+                } catch (ParseException ex) {
+                    logger.log(
+                            Level.WARNING, "Could not parse date string: {0} {1}",
+                            new Object[]{dateStr, ex});
+                }
 
-            // Should we delete the message because of its age or because the
-            // article maximum was reached?
-            if (lifetime < 0 || artDate < (currentUnixDays() - lifetime)) {
-                StorageManager.current().delete(mid);
-                logger.log(Level.INFO, "Deleted: {0}", mid);
-            } else {
-                Thread.sleep(1000 * 60); // Wait 60 seconds
-            }
-        } else {
-            logger.info("Lifetime purger is disabled");
-            Thread.sleep(1000 * 60 * 30); // Wait 30 minutes
+                // Should we delete the message because of its age or because the
+                // article maximum was reached?
+                if (lifetime < 0 || artDate < (currentUnixDays() - lifetime)) {
+                    StorageManager.current().delete(mid);
+                    logger.log(Level.INFO, "Deleted: {0}", mid);
+                    purged = true;
+                }
+            } while (purged);
         }
     }
 }
