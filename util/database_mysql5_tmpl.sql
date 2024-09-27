@@ -59,7 +59,8 @@ CREATE TABLE groups
 (
   group_id  INTEGER,
   name      TEXT,
-  access    TEXT,
+  flags     TEXT,
+  watermark BIGINT,
   
   PRIMARY KEY(group_id)
 );

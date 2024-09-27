@@ -1,0 +1,1 @@
+java -ea -cp sonews/target/sonews-core-2.1-SNAPSHOT-jar-with-dependencies.jar:sonews-modules/storage-jdbc/target/storage-jdbc-2.1-SNAPSHOT-jar-with-dependencies.jar org.sonews.Application -p 9119 -purger

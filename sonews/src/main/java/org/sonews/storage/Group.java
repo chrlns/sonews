@@ -28,7 +28,6 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
-
 import org.sonews.util.Log;
 import org.sonews.util.Pair;
 
@@ -45,14 +44,26 @@ public class Group {
      * mirror. In that case every posting and receiving mails must go through
      * the mailing list gateway.
      */
-    public static final int MAILINGLIST = 0x1;
+    public static final int MAILINGLIST = 1;
 
     /**
      * If this flag is set the Group is marked as readonly and the posting is
      * prohibited. This can be useful for groups that are synced only in one
      * direction.
      */
-    public static final int READONLY = 0x2;
+    public static final int READONLY = 2;
+
+    /**
+     * If this flag is set the Group is considered private and only visible to
+     * clients of the private clients access list.
+     */
+    public static final int PRIVATE = 4;
+
+    /**
+     * If this flag is set the Group is local to this server, i.e., the news
+     * are not peered.
+     */
+    public static final int LOCALE = 8;
 
     /**
      * If this flag is set the Group is marked as deleted and must not occur in
@@ -112,8 +123,8 @@ public class Group {
         }
         return allGroupNames.get(name);
     }
-    
-    
+
+
     private long id = 0;
     private int flags = -1;
     private String name = null;
@@ -133,8 +144,8 @@ public class Group {
 
     @Override
     public boolean equals(Object obj) {
-        if (obj instanceof Group) {
-            return ((Group) obj).id == this.id;
+        if (obj instanceof Group group) {
+            return group.id == this.id;
         } else {
             return false;
         }

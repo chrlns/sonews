@@ -19,10 +19,8 @@
 package org.sonews.storage.impl.hibernate.couchdb;
 
 import java.util.List;
-
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
-
 import org.sonews.storage.Article;
 import org.sonews.storage.Group;
 import org.sonews.storage.Storage;
@@ -38,16 +36,16 @@ import org.springframework.web.client.RestTemplate;
 public class CouchDBStorage implements Storage {
 
     private final EntityManager em;
-    
+
     public CouchDBStorage(EntityManager em) {
         this.em = em;
     }
-    
+
     @Override
     public void addArticle(Article art) throws StorageBackendException {
         addArticle(new CouchDBArticle(art));
     }
-    
+
     @Transactional
     public void addArticle(CouchDBArticle art) {
         this.em.getTransaction().begin();
@@ -58,6 +56,11 @@ public class CouchDBStorage implements Storage {
     @Override
     public int countArticles() throws StorageBackendException {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public void createOrUpdateGroup(Group group) throws StorageBackendException {
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
     }
 
     @Override
@@ -120,7 +123,7 @@ public class CouchDBStorage implements Storage {
 
         return Integer.parseInt(res.getRows()[0].getValue(), 10);
     }
-    
+
     @Override
     public int getLastArticleNumber(Group group) throws StorageBackendException {
         try {
@@ -159,5 +162,5 @@ public class CouchDBStorage implements Storage {
     public boolean authenticateUser(String username, char[] password) throws StorageBackendException {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
-    
+
 }

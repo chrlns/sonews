@@ -29,6 +29,8 @@ import org.sonews.daemon.Connections;
 import org.sonews.daemon.DaemonThread;
 import org.sonews.daemon.NNTPDaemonRunnable;
 import org.sonews.feed.FeedManager;
+import org.sonews.storage.Group;
+import org.sonews.storage.StorageBackendException;
 import org.sonews.storage.StorageManager;
 import org.sonews.storage.StorageProvider;
 import org.sonews.util.Purger;
@@ -111,6 +113,15 @@ public class Application {
         // Enable storage backend
         StorageProvider sprov = context.getBean("storageProvider", StorageProvider.class);
         StorageManager.enableProvider(sprov);
+
+        // Reads group list and update database accordingly
+        Group.getAll().forEach(group -> {
+            try {
+                StorageManager.current().createOrUpdateGroup(group);
+            } catch (StorageBackendException ex) {
+                Logger.getLogger("org.sonews").log(Level.SEVERE, ex.getLocalizedMessage(), ex);
+            }
+        });
 
         // Add shutdown hook
         var shutdownHook = context.getBean(ShutdownHook.class);

@@ -18,7 +18,6 @@
 package org.sonews.storage;
 
 import java.util.List;
-
 import org.sonews.util.Pair;
 
 /**
@@ -38,6 +37,8 @@ public interface Storage {
     void addArticle(Article art) throws StorageBackendException;
 
     int countArticles() throws StorageBackendException;
+
+    void createOrUpdateGroup(Group group) throws StorageBackendException;
 
     void delete(String messageID) throws StorageBackendException;
 
@@ -75,7 +76,7 @@ public interface Storage {
      * @throws StorageBackendException
      */
     void purgeGroup(Group group) throws StorageBackendException;
-    
+
     /**
      * Updates headers and group references of the given article.
      *

@@ -48,7 +48,8 @@ CREATE CACHED TABLE groups
 (
   group_id  INTEGER,
   name      TEXT,
-  access    TEXT,
+  flags     INTEGER,
+  watermark BIGINT,
   
   PRIMARY KEY(group_id)
 );

@@ -1,6 +1,6 @@
 /*
  *   SONEWS News Server
- *   Copyright (C) 2009-2015  Christian Lins <christian@lins.me>
+ *   Copyright (C) 2009-2024  Christian Lins <christian@lins.me>
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -15,7 +15,6 @@
  *   You should have received a copy of the GNU General Public License
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 package org.sonews.storage.impl.jdbc;
 
 import java.sql.Connection;
@@ -47,8 +46,8 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 /**
- * Storage backend facade class for a relational SQL database using JDBC.
- * The statements used should work for at least PostgreSQL and MySQL.
+ * Storage backend facade class for a relational SQL database using JDBC. The
+ * statements used should work for at least PostgreSQL and MySQL.
  *
  * @author Christian Lins
  * @since sonews/0.5.0
@@ -56,6 +55,7 @@ import org.springframework.stereotype.Component;
 @Component
 @Scope("prototype")
 public class JDBCDatabase implements Storage {
+
     public static final int MAX_RESTARTS = 2;
 
     @Autowired
@@ -67,6 +67,9 @@ public class JDBCDatabase implements Storage {
     protected PreparedStatement pstmtAddArticle3 = null;
     protected PreparedStatement pstmtAddArticle4 = null;
     protected PreparedStatement pstmtCountArticles = null;
+    protected PreparedStatement pstmtCreateOrUpdateGroup0 = null;
+    protected PreparedStatement pstmtCreateOrUpdateGroup1 = null;
+    protected PreparedStatement pstmtCreateOrUpdateGroup2 = null;
     protected PreparedStatement pstmtDeleteArticle0 = null;
     protected PreparedStatement pstmtDeleteArticle1 = null;
     protected PreparedStatement pstmtDeleteArticle2 = null;
@@ -87,7 +90,11 @@ public class JDBCDatabase implements Storage {
     protected PreparedStatement pstmtIsArticleExisting = null;
     protected PreparedStatement pstmtPurgeGroup0 = null;
     protected PreparedStatement pstmtPurgeGroup1 = null;
-    /** How many times the database connection was reinitialized */
+    protected PreparedStatement pstmtUpdateWatermark = null;
+
+    /**
+     * How many times the database connection was reinitialized
+     */
     protected int restarts = 0;
 
     protected synchronized void prepareGetPostingsCountStatement() throws SQLException {
@@ -136,6 +143,15 @@ public class JDBCDatabase implements Storage {
             // Prepare statement for method countArticles()
             this.pstmtCountArticles = conn
                     .prepareStatement("SELECT Count(article_id) FROM article_ids");
+
+            // Prepare statements for method createOrUpdateGroup(group)
+            this.pstmtCreateOrUpdateGroup0 = conn
+                    .prepareStatement("SELECT group_id FROM groups WHERE group_id = ?");
+            this.pstmtCreateOrUpdateGroup1 = conn
+                    .prepareStatement("INSERT INTO groups (group_id, name, flags, watermark) "
+                            + "VALUES (?, ?, ?, 0)");
+            this.pstmtCreateOrUpdateGroup2 = conn
+                    .prepareStatement("UPDATE groups SET name = ?, flags = ? WHERE group_id = ?");
 
             // Prepare statements for method delete(article)
             this.pstmtDeleteArticle0 = conn
@@ -200,7 +216,7 @@ public class JDBCDatabase implements Storage {
 
             // Prepare statement for method getMaxArticleIndex()
             this.pstmtGetMaxArticleIndex = conn
-                    .prepareStatement("SELECT Max(article_index) FROM postings WHERE group_id = ?");
+                    .prepareStatement("SELECT watermark FROM groups WHERE group_id = ?");
 
             // Prepare statement for method getOldestArticle()
             this.pstmtGetOldestArticle = conn
@@ -223,6 +239,10 @@ public class JDBCDatabase implements Storage {
                     .prepareStatement("DELETE FROM peer_subscriptions WHERE group_id = ?");
             this.pstmtPurgeGroup1 = conn
                     .prepareStatement("DELETE FROM groups WHERE group_id = ?");
+
+            // Prepare statement for method updateWatermark()
+            pstmtUpdateWatermark = conn.prepareStatement(
+                "UPDATE groups SET watermark = ? WHERE group_id = ?");
         } catch (Exception ex) {
             throw new Error("JDBC Driver not found!", ex);
         }
@@ -247,8 +267,7 @@ public class JDBCDatabase implements Storage {
      */
     @Override
     public synchronized void addArticle(final Article article)
-            throws StorageBackendException
-    {
+            throws StorageBackendException {
         try {
             this.conn.setAutoCommit(false);
 
@@ -286,8 +305,7 @@ public class JDBCDatabase implements Storage {
      * @throws org.sonews.storage.StorageBackendException
      */
     protected synchronized void addArticle(final Article article, final int newArticleID)
-            throws SQLException, StorageBackendException
-    {
+            throws SQLException, StorageBackendException {
         // Fill prepared statement with values;
         // writes body to article table
         pstmtAddArticle1.setInt(1, newArticleID);
@@ -309,11 +327,13 @@ public class JDBCDatabase implements Storage {
         // For each newsgroup add a reference
         List<Group> groups = article.getGroups();
         for (Group group : groups) {
+            long newWatermark = getMaxArticleIndex(group.getInternalID()) + 1;
             pstmtAddArticle3.setLong(1, group.getInternalID());
             pstmtAddArticle3.setInt(2, newArticleID);
-            pstmtAddArticle3.setLong(3,
-                    getMaxArticleIndex(group.getInternalID()) + 1);
+            pstmtAddArticle3.setLong(3, newWatermark);
             pstmtAddArticle3.execute();
+
+            updateWatermark(group, newWatermark);
         }
 
         // Write message-id to article_ids table
@@ -336,6 +356,34 @@ public class JDBCDatabase implements Storage {
         } catch (SQLException ex) {
             restartConnection(ex);
             return countArticles();
+        } finally {
+            closeResultSet(rs);
+        }
+    }
+
+    @Override
+    public void createOrUpdateGroup(Group group) throws StorageBackendException {
+        ResultSet rs = null;
+        try {
+            pstmtCreateOrUpdateGroup0.setInt(1, (int) group.getInternalID());
+            rs = pstmtCreateOrUpdateGroup0.executeQuery();
+
+            if (!rs.next()) {
+                // INSERT group_id, name, flags
+                pstmtCreateOrUpdateGroup1.setInt(1, (int) group.getInternalID());
+                pstmtCreateOrUpdateGroup1.setString(2, group.getName());
+                pstmtCreateOrUpdateGroup1.setInt(3, group.getFlags());
+                pstmtCreateOrUpdateGroup1.execute();
+            } else {
+                // UPDATE name, flags, group_id
+                pstmtCreateOrUpdateGroup2.setInt(3, (int) group.getInternalID());
+                pstmtCreateOrUpdateGroup2.setString(1, group.getName());
+                pstmtCreateOrUpdateGroup2.setInt(2, group.getFlags());
+                pstmtCreateOrUpdateGroup2.execute();
+            }
+        } catch (SQLException ex) {
+            restartConnection(ex);
+            createOrUpdateGroup(group);
         } finally {
             closeResultSet(rs);
         }
@@ -459,7 +507,7 @@ public class JDBCDatabase implements Storage {
             while (rs.next()) {
                 Long articleIndex = rs.getLong(1);
                 if (end < 0 || articleIndex <= end) // Match start is done via
-                                                    // SQL
+                // SQL
                 {
                     String headerValue = rs.getString(2);
                     Matcher matcher = pattern.matcher(headerValue);
@@ -785,14 +833,15 @@ public class JDBCDatabase implements Storage {
 
     /**
      * Restart the JDBC connection to the Database server.
+     *
      * @param cause
      * @throws StorageBackendException
      */
     protected synchronized void restartConnection(SQLException cause)
             throws StorageBackendException {
         Log.get().log(Level.SEVERE, Thread.currentThread()
-                        + ": Database connection was closed (restart "
-                        + restarts + ").", cause);
+                + ": Database connection was closed (restart "
+                + restarts + ").", cause);
 
         if (++restarts >= MAX_RESTARTS) {
             // Throw the exception upwards
@@ -849,6 +898,16 @@ public class JDBCDatabase implements Storage {
             }
             restartConnection(ex);
             return update(article);
+        }
+    }
+
+    protected void updateWatermark(Group group, long watermark) throws StorageBackendException {
+        try {
+            pstmtUpdateWatermark.setLong(1, watermark);
+            pstmtUpdateWatermark.setInt(2, (int)group.getInternalID());
+            pstmtUpdateWatermark.execute();
+        } catch (SQLException ex) {
+            restartConnection(ex);
         }
     }
 
