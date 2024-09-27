@@ -242,7 +242,7 @@ public class JDBCDatabase implements Storage {
 
             // Prepare statement for method updateWatermark()
             pstmtUpdateWatermark = conn.prepareStatement(
-                "UPDATE groups SET watermark = ? WHERE group_id = ?");
+                    "UPDATE groups SET watermark = ? WHERE group_id = ?");
         } catch (Exception ex) {
             throw new Error("JDBC Driver not found!", ex);
         }
@@ -266,33 +266,37 @@ public class JDBCDatabase implements Storage {
      * @throws StorageBackendException
      */
     @Override
-    public synchronized void addArticle(final Article article)
-            throws StorageBackendException {
-        try {
-            this.conn.setAutoCommit(false);
-
-            int newArticleID = getMaxArticleID() + 1;
-            addArticle(article, newArticleID);
-            this.conn.commit();
-            this.conn.setAutoCommit(true);
-
-            this.restarts = 0; // Reset error count
-        } catch (SQLException ex) {
+    @SuppressWarnings("InfiniteRecursion")
+    public void addArticle(final Article article) throws StorageBackendException {
+        // It is necessary to synchronize this over all connections otherwise
+        // several threads would update the article_id that is database-unique.
+        synchronized (JDBCDatabase.class) {
             try {
-                this.conn.rollback(); // Rollback changes
-            } catch (SQLException ex2) {
-                Log.get().log(Level.SEVERE, "Rollback of addArticle() failed: {0}", ex2);
-            }
+                this.conn.setAutoCommit(false);
 
-            try {
-                this.conn.setAutoCommit(true); // and release locks
-            } catch (SQLException ex2) {
-                Log.get().log(
-                        Level.SEVERE, "setAutoCommit(true) of addArticle() failed: {0}", ex2);
-            }
+                int newArticleID = getMaxArticleID() + 1;
+                addArticle(article, newArticleID);
+                this.conn.commit();
+                this.conn.setAutoCommit(true);
 
-            restartConnection(ex);
-            addArticle(article);
+                this.restarts = 0; // Reset error count
+            } catch (SQLException ex) {
+                try {
+                    this.conn.rollback(); // Rollback changes
+                } catch (SQLException ex2) {
+                    Log.get().log(Level.SEVERE, "Rollback of addArticle() failed: {0}", ex2);
+                }
+
+                try {
+                    this.conn.setAutoCommit(true); // and release locks
+                } catch (SQLException ex2) {
+                    Log.get().log(
+                            Level.SEVERE, "setAutoCommit(true) of addArticle() failed: {0}", ex2);
+                }
+
+                restartConnection(ex);
+                addArticle(article);
+            }
         }
     }
 
@@ -671,7 +675,14 @@ public class JDBCDatabase implements Storage {
         }
     }
 
-    private synchronized int getMaxArticleID() throws StorageBackendException {
+    /**
+     * This method is only called by addArticle which is already synchronized,
+     * so we do not need a synchronization here.
+     *
+     * @return
+     * @throws StorageBackendException
+     */
+    private int getMaxArticleID() throws StorageBackendException {
         ResultSet rs = null;
 
         try {
@@ -904,7 +915,7 @@ public class JDBCDatabase implements Storage {
     protected void updateWatermark(Group group, long watermark) throws StorageBackendException {
         try {
             pstmtUpdateWatermark.setLong(1, watermark);
-            pstmtUpdateWatermark.setInt(2, (int)group.getInternalID());
+            pstmtUpdateWatermark.setInt(2, (int) group.getInternalID());
             pstmtUpdateWatermark.execute();
         } catch (SQLException ex) {
             restartConnection(ex);

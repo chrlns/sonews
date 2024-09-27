@@ -53,7 +53,7 @@ public class VirtualThreadedNNTPDaemon extends ThreadedNNTPDaemon {
                     // It is important to set the timeout as early as possible
                     // as in overload situations the connection times out earlier
                     // to relieve the server from load.
-                    clientSocket.setSoTimeout(15 * 1000); // Timeout of 15 seconds
+                    clientSocket.setSoTimeout(20 * 1000); // Timeout of 20 seconds
 
                     logger.log(Level.INFO, "Connected: {0}", clientSocket.getRemoteSocketAddress());
 

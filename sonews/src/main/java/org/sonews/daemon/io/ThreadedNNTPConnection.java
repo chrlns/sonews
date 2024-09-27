@@ -49,9 +49,6 @@ import org.springframework.stereotype.Component;
 @Scope("prototype")
 public class ThreadedNNTPConnection implements NNTPConnection, Runnable {
 
-    public static final String NEWLINE = "\r\n"; // RFC defines this as newline
-    public static final String MESSAGE_ID_PATTERN = "<[^>]+>";
-
     private Charset charset = Charset.forName("UTF-8");
     private Command command = null;
 
