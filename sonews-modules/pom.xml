@@ -14,7 +14,6 @@
         <module>mlgw</module>
         <module>storage-hibernate-ogm-couchdb</module>
         <module>storage-jdbc</module>
-        <module>core</module>
     </modules>
 
 </project>
