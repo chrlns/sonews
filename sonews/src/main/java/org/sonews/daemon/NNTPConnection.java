@@ -19,10 +19,8 @@
 package org.sonews.daemon;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
-
 import org.sonews.auth.User;
 import org.sonews.storage.Article;
 import org.sonews.storage.Group;
@@ -35,6 +33,9 @@ import org.sonews.storage.Group;
  * @author Christian Lins
  */
 public interface NNTPConnection {
+
+    public static final String NEWLINE = "\r\n"; // RFC defines this as newline
+    public static final String MESSAGE_ID_PATTERN = "<[^>]+>";
 
     void close() throws IOException;
 

@@ -28,7 +28,6 @@ import org.sonews.config.Config;
 import org.sonews.daemon.Connections;
 import org.sonews.daemon.DaemonThread;
 import org.sonews.daemon.NNTPDaemonRunnable;
-import org.sonews.daemon.nio.ChannelLineBuffers;
 import org.sonews.feed.FeedManager;
 import org.sonews.storage.StorageManager;
 import org.sonews.storage.StorageProvider;
@@ -112,8 +111,6 @@ public class Application {
         // Enable storage backend
         StorageProvider sprov = context.getBean("storageProvider", StorageProvider.class);
         StorageManager.enableProvider(sprov);
-
-        ChannelLineBuffers.allocateDirect();
 
         // Add shutdown hook
         var shutdownHook = context.getBean(ShutdownHook.class);

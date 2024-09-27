@@ -19,13 +19,10 @@
 package org.sonews.daemon.command;
 
 import java.io.IOException;
-
 import org.sonews.daemon.NNTPConnection;
-import org.sonews.daemon.nio.AsyncNNTPConnection;
 import org.sonews.storage.Article;
 import org.sonews.storage.StorageBackendException;
 import org.sonews.storage.StorageManager;
-
 import org.springframework.stereotype.Component;
 
 /**
@@ -70,7 +67,7 @@ public class StatCommand implements Command {
                 conn.println("420 no current article has been selected");
                 return;
             }
-        } else if (command[1].matches(AsyncNNTPConnection.MESSAGE_ID_PATTERN)) {
+        } else if (command[1].matches(NNTPConnection.MESSAGE_ID_PATTERN)) {
             // Message-ID
             article = StorageManager.current().getArticle(command[1]);
             if (article == null) {
