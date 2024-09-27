@@ -135,22 +135,6 @@ public class Purger extends DaemonRunner implements DaemonRunnable {
                     return;
                 }
 
-                // If the article is the last and only within a group, we do not
-                // delete it. Otherwise we would destroy watermarks because they
-                // are only stored in the postings table.
-                boolean watermarkArticle = false;
-                for (var group : art.getGroups()) {
-                    if (group.getPostingsCount() <= 1) {
-                        watermarkArticle = true;
-                        break;
-                    }
-                }
-
-                if (watermarkArticle) {
-                    logger.log(Level.INFO, "Article {0} is a watermark article.", art);
-                    return; // Skip this article (HOTFIX: return, otherwise endless loop)
-                }
-
                 long artDate = 0; // Article age in UNIX Epoch days
                 String dateStr = art.getHeader(Headers.DATE)[0];
 
