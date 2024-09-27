@@ -18,6 +18,8 @@
 
 package org.sonews;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.sql.Driver;
 import java.sql.DriverManager;
 import java.time.LocalDateTime;
@@ -58,7 +60,8 @@ public class Application {
     public static final LocalDateTime STARTDATE = LocalDateTime.now();
 
     public static void main(String[] args) throws Exception {
-        Logger.getLogger("org.sonews").log(Level.INFO, VERSION);
+        var logger = Logger.getLogger("org.sonews");
+        logger.log(Level.INFO, VERSION);
 
         boolean feed = false; // Enable feeding?
         boolean purgerEnabled = false; // Enable message purging?
@@ -107,9 +110,21 @@ public class Application {
             }
         }
 
+        // Load the Spring context from annotations and sonews.xml config
         ApplicationContext context = new AnnotationConfigApplicationContext(Application.class);
         context = new FileSystemXmlApplicationContext(new String[]{"sonews.xml"}, context);
 
+        // Ensure hostname is configured
+        if (Config.inst().get(Config.HOSTNAME, null) == null) {
+            String hostname = "unknown-host";
+            try {
+                hostname = InetAddress.getLocalHost().getCanonicalHostName();
+            } catch (UnknownHostException ex) {
+                logger.warning("Hostname is not configured and could not be resolved.");
+            }
+            Config.inst().set(Config.HOSTNAME, hostname);
+        }
+        
         // Enable storage backend
         StorageProvider sprov = context.getBean("storageProvider", StorageProvider.class);
         StorageManager.enableProvider(sprov);
