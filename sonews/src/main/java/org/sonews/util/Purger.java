@@ -148,7 +148,7 @@ public class Purger extends DaemonRunner implements DaemonRunnable {
 
                 if (watermarkArticle) {
                     logger.log(Level.INFO, "Article {0} is a watermark article.", art);
-                    continue; // Skip this article
+                    return; // Skip this article (HOTFIX: return, otherwise endless loop)
                 }
 
                 long artDate = 0; // Article age in UNIX Epoch days
