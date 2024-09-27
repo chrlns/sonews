@@ -41,7 +41,7 @@ CREATE TABLE postings
 (
   group_id      INTEGER,
   article_id    INTEGER REFERENCES articles (article_id) ON DELETE CASCADE,
-  article_index INTEGER NOT NULL, 
+  article_index BIGINT NOT NULL, 
 
   PRIMARY KEY(group_id, article_id)
 );

@@ -115,25 +115,42 @@ public class Purger extends DaemonRunner implements DaemonRunnable {
      * @throws InterruptedException
      * @throws StorageBackendException
      */
-    private void purgeOutdated() throws InterruptedException,
-            StorageBackendException {
-        long articleMaximum = Config.inst().get(Config.STORAGE_ARTICLE_MAXNUM, Long.MAX_VALUE);
-        long lifetime = Config.inst().get(Config.STORAGE_ARTICLE_LIFETIME, -1);
+    private void purgeOutdated() throws InterruptedException, StorageBackendException {
+        var smgr = StorageManager.current();
+        var articleMaximum = Config.inst().get(Config.STORAGE_ARTICLE_MAXNUM, Long.MAX_VALUE);
+        var lifetime = Config.inst().get(Config.STORAGE_ARTICLE_LIFETIME, -1);
 
-        if (lifetime > 0 || articleMaximum < StorageManager.current().countArticles()) {
+        if (lifetime > 0 || articleMaximum < smgr.countArticles()) {
             boolean purged = false;
             do {
                 logger.info("Purging old messages...");
-                String mid = StorageManager.current().getOldestArticle();
+                String mid = smgr.getOldestArticle();
                 if (mid == null) { // No articles in the database
                     return;
                 }
 
-                Article art = StorageManager.current().getArticle(mid);
+                Article art = smgr.getArticle(mid);
                 if (art == null) {
                     logger.log(Level.WARNING, "Could not retrieve or delete article: {0}", mid);
                     return;
                 }
+
+                // If the article is the last and only within a group, we do not
+                // delete it. Otherwise we would destroy watermarks because they
+                // are only stored in the postings table.
+                boolean watermarkArticle = false;
+                for (var group : art.getGroups()) {
+                    if (group.getPostingsCount() <= 1) {
+                        watermarkArticle = true;
+                        break;
+                    }
+                }
+
+                if (watermarkArticle) {
+                    logger.log(Level.INFO, "Article {0} is a watermark article.", art);
+                    continue; // Skip this article
+                }
+
                 long artDate = 0; // Article age in UNIX Epoch days
                 String dateStr = art.getHeader(Headers.DATE)[0];
 
@@ -150,7 +167,7 @@ public class Purger extends DaemonRunner implements DaemonRunnable {
                 // Should we delete the message because of its age or because the
                 // article maximum was reached?
                 if (lifetime < 0 || artDate < (currentUnixDays() - lifetime)) {
-                    StorageManager.current().delete(mid);
+                    smgr.delete(mid);
                     logger.log(Level.INFO, "Deleted: {0}", mid);
                     purged = true;
                 }

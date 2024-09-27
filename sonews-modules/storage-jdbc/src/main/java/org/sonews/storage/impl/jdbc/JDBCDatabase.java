@@ -592,6 +592,16 @@ public class JDBCDatabase implements Storage {
         }
     }
 
+    /**
+     * Returns the largest article index (watermark) in this very group.
+     * Currently this method returns an int but this is probably not enough for
+     * VERY large (or old) groups. The SQL template was changed to BIGINT but
+     * some servers may still use INTEGER here.
+     *
+     * @param groupID
+     * @return
+     * @throws StorageBackendException
+     */
     private synchronized int getMaxArticleIndex(long groupID) throws StorageBackendException {
         ResultSet rs = null;
 

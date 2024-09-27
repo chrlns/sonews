@@ -63,7 +63,7 @@ public class Log extends Logger {
         if (this != instance) {
             return;
         }
-        
+
         if (!LogManager.getLogManager().addLogger(instance)) {
             // Should not happen
             System.err.println("Failed to register logger.");
