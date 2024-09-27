@@ -55,12 +55,23 @@ CREATE TABLE headers
 ENGINE = INNODB
 CHARACTER SET utf8;
 
+CREATE TABLE groups
+(
+  group_id  INTEGER,
+  name      TEXT,
+  access    TEXT,
+  
+  PRIMARY KEY(group_id)
+);
+ENGINE = INNODB
+CHARACTER SET utf8;
+
 /*
   Normalization: 1NF, 2NF
 */
 CREATE TABLE postings 
 (
-  group_id      INTEGER,
+  group_id      INTEGER REFERENCES groups.group_id,
   article_id    INTEGER REFERENCES articles.article_id ON DELETE CASCADE,
   article_index BIGINT NOT NULL, 
 

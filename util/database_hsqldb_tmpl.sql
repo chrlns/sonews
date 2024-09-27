@@ -44,6 +44,15 @@ CREATE CACHED TABLE headers
   FOREIGN KEY(article_id) REFERENCES articles(article_id) ON DELETE CASCADE
 );
 
+CREATE CACHED TABLE groups
+(
+  group_id  INTEGER,
+  name      TEXT,
+  access    TEXT,
+  
+  PRIMARY KEY(group_id)
+);
+
 /*
   Normalization: 1NF, 2NF
 */
@@ -54,7 +63,8 @@ CREATE CACHED TABLE postings
   article_index INTEGER NOT NULL, 
 
   PRIMARY KEY(group_id, article_id),
-  FOREIGN KEY(article_id) REFERENCES articles(article_id) ON DELETE CASCADE
+  FOREIGN KEY(article_id) REFERENCES articles(article_id) ON DELETE CASCADE,
+  FOREIGN KEY(group_id) REFERENCES groups(group_id) ON DELETE CASCADE,
 );
 
 COMMIT;
