@@ -12,7 +12,7 @@
 */
 CREATE TABLE groups 
 (
-  group_id      SERIAL,
+  group_id      INTEGER,
   name          VARCHAR(80) NOT NULL,
   flags         TINYINT UNSIGNED DEFAULT 0,
   watermark	BIGINT,
@@ -63,7 +63,7 @@ CHARACTER SET utf8;
 */
 CREATE TABLE postings 
 (
-  group_id      SERIAL,
+  group_id      INTEGER,
   article_id    INTEGER,
   article_index BIGINT NOT NULL, 
 
