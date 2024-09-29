@@ -22,7 +22,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
-import java.net.InetAddress;
 import java.net.Socket;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
@@ -50,9 +49,6 @@ import org.springframework.stereotype.Component;
 @Scope("prototype")
 public class ThreadedNNTPConnection implements NNTPConnection, Runnable {
 
-    public static final String NEWLINE = "\r\n"; // RFC defines this as newline
-    public static final String MESSAGE_ID_PATTERN = "<[^>]+>";
-
     private Charset charset = Charset.forName("UTF-8");
     private Command command = null;
 
@@ -76,7 +72,7 @@ public class ThreadedNNTPConnection implements NNTPConnection, Runnable {
     public void run() {
         try {
             String hello = "200 "
-                    + Config.inst().get(Config.HOSTNAME, InetAddress.getLocalHost().getCanonicalHostName())
+                    + Config.inst().get(Config.HOSTNAME, null)
                     + " sonews news server ready, posting allowed";
 
             out = new PrintWriter(socket.getOutputStream());

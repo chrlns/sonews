@@ -1,6 +1,6 @@
 /*
  *   SONEWS News Server
- *   Copyright (C) 2009-2015  Christian Lins <christian@lins.me>
+ *   Copyright (C) 2009-2024  Christian Lins <christian@lins.me>
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -21,7 +21,6 @@ package org.sonews.daemon.command;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.net.InetAddress;
 import java.util.Arrays;
 import java.util.logging.Level;
 import javax.mail.MessagingException;
@@ -54,9 +53,10 @@ public class PostCommand implements Command {
     private int lineCount = 0;
     private long bodySize = 0;
     private InternetHeaders headers = null;
-    private final long maxBodySize = Config.inst().get(Config.ARTICLE_MAXSIZE, 128) * 1024L; // Size
-                                                                                       // in
-                                                                                       // bytes
+    
+    // Size in kbytes, default is 128k
+    private final long maxBodySize = Config.inst().get(Config.ARTICLE_MAXSIZE, 128) * 1024L; 
+    
     private PostState state = PostState.WaitForLineOne;
     private final ByteArrayOutputStream bufBody = new ByteArrayOutputStream();
     private final StringBuilder strHead = new StringBuilder();
@@ -118,8 +118,7 @@ public class PostCommand implements Command {
                         // Parse the header using the InternetHeader class from
                         // JavaMail API
                         headers = new InternetHeaders(new ByteArrayInputStream(
-                                strHead.toString().trim()
-                                        .getBytes(conn.getCurrentCharset())));
+                                strHead.toString().trim().getBytes(conn.getCurrentCharset())));
 
                         // add the header entries for the article
                         article.setHeaders(headers);
@@ -229,9 +228,8 @@ public class PostCommand implements Command {
         } else if (article.getHeader(Headers.SUPERSEDES)[0].length() > 0) {
             supersedeMessage(conn, article);
         } else { // Post the article regularily
-            // Circle check; note that Path can already contain the hostname
-            // here
-            String host = Config.inst().get(Config.HOSTNAME, InetAddress.getLocalHost().getHostName());
+            // Circle check; note that Path can already contain the hostnamehere
+            String host = Config.inst().get(Config.HOSTNAME, null);
             if (article.getHeader(Headers.PATH)[0].indexOf(host + "!", 1) > 0) {
                 Log.get().log(Level.INFO, "{0} skipped for host {1}",
                         new Object[] { article.getMessageID(), host });

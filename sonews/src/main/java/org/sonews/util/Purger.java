@@ -17,11 +17,9 @@
  */
 package org.sonews.util;
 
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.util.Date;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.Locale;
 import java.util.logging.Level;
 import org.sonews.config.Config;
 import org.sonews.daemon.DaemonRunnable;
@@ -60,7 +58,7 @@ public class Purger extends DaemonRunner implements DaemonRunnable {
                 purgeDeleted();
                 purgeOutdated();
 
-                Thread.sleep(5 * 60 * 1000); // Sleep for 5 minutes
+                Thread.sleep(15 * 60 * 1000); // Sleep for 15 minutes
             }
         } catch (StorageBackendException ex) {
             logger.log(Level.WARNING, "Storage exception", ex);
@@ -101,14 +99,6 @@ public class Purger extends DaemonRunner implements DaemonRunnable {
         }
     }
 
-    private int msAsDays(long time) {
-        return (int) (time / 1000 / 3600 / 24);
-    }
-
-    private int currentUnixDays() {
-        return msAsDays(new Date().getTime());
-    }
-
     /**
      * Purge messages that are older then the given treshold.
      *
@@ -135,22 +125,15 @@ public class Purger extends DaemonRunner implements DaemonRunnable {
                     return;
                 }
 
-                long artDate = 0; // Article age in UNIX Epoch days
                 String dateStr = art.getHeader(Headers.DATE)[0];
 
-                // FIXME Refactor using java.time classes
-                try {
-                    DateFormat dateFormat = DateFormat.getDateInstance(DateFormat.LONG, Locale.US);
-                    artDate = msAsDays(dateFormat.parse(dateStr).getTime());
-                } catch (ParseException ex) {
-                    logger.log(
-                            Level.WARNING, "Could not parse date string: {0} {1}",
-                            new Object[]{dateStr, ex});
-                }
+                var articleDate = LocalDateTime.parse(
+                        dateStr, DateTimeFormatter.RFC_1123_DATE_TIME);
+                var lifeTimeThreshold = LocalDateTime.now().minusDays(lifetime);
 
                 // Should we delete the message because of its age or because the
                 // article maximum was reached?
-                if (lifetime < 0 || artDate < (currentUnixDays() - lifetime)) {
+                if (lifetime < 0 || articleDate.isBefore(lifeTimeThreshold)) {
                     smgr.delete(mid);
                     logger.log(Level.INFO, "Deleted: {0}", mid);
                     purged = true;

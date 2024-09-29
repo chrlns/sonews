@@ -40,7 +40,7 @@ import org.springframework.stereotype.Component;
  * processed in parallel. If there are more than 128 (or 20*CPU_Cores) incoming
  * connections, new connections will be rejected.
  * Due to this limitations the VirtualThreadedNNTPDaemon is the better choice
- * in almost any situations.
+ * in almost any situation.
  *
  * @author Christian Lins
  */
