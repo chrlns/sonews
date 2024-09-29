@@ -15,6 +15,7 @@ CREATE TABLE groups
   group_id      SERIAL,
   name          VARCHAR(80) NOT NULL,
   flags         TINYINT UNSIGNED DEFAULT 0,
+  watermark	BIGINT,
 
   PRIMARY KEY(group_id),
   UNIQUE(name)
@@ -34,36 +35,26 @@ CHARACTER SET utf8;
 
 CREATE TABLE article_ids
 (
-  article_id  INT REFERENCES articles.article_id ON DELETE CASCADE,
+  article_id  INT,
   message_id  VARCHAR(255),
 
   PRIMARY KEY(article_id),
-  UNIQUE(message_id)
+  UNIQUE(message_id),
+  FOREIGN KEY (article_id) REFERENCES articles(article_id) ON DELETE CASCADE
 )
 ENGINE = INNODB
 CHARACTER SET utf8;
 
 CREATE TABLE headers
 (
-  article_id    INT REFERENCES articles.article_id ON DELETE CASCADE,
+  article_id    INT,
   header_key    VARCHAR(255),
-  header_value  TEXT, /* Max. 64k */
+  header_value  TEXT,
   header_index  INT,
 
-  PRIMARY KEY(article_id, header_key, header_index)
+  PRIMARY KEY(article_id, header_key, header_index),
+  FOREIGN KEY (article_id) REFERENCES articles(article_id) ON DELETE CASCADE
 )
-ENGINE = INNODB
-CHARACTER SET utf8;
-
-CREATE TABLE groups
-(
-  group_id  INTEGER,
-  name      TEXT,
-  flags     TEXT,
-  watermark BIGINT,
-  
-  PRIMARY KEY(group_id)
-);
 ENGINE = INNODB
 CHARACTER SET utf8;
 
