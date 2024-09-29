@@ -113,8 +113,9 @@ public class JDBCDatabase implements Storage {
     protected synchronized void arise() throws SQLException {
         try {
             // Load database driver
-            //Class.forName(Config.inst().get(Config.LEVEL_FILE,
-            //        Config.STORAGE_DBMSDRIVER, "java.lang.Object"));
+            var driver = Class.forName(Config.inst().get(Config.LEVEL_FILE,
+                    Config.STORAGE_DBMSDRIVER, "java.lang.Object"));
+            log.log(Level.INFO, "JDBC Driver {0} loaded.", driver.toString());
 
             // Establish database connection
             this.conn = DriverManager.getConnection(

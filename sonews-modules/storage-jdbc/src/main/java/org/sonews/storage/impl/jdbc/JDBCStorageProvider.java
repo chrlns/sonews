@@ -68,6 +68,7 @@ public class JDBCStorageProvider implements StorageProvider {
     @Override
     public boolean isSupported(String uri) {
         return uri.startsWith("jdbc:mysql")
+                || uri.startsWith("jdbc:mariadb")
                 || uri.startsWith("jdbc:postgresql");
     }
 

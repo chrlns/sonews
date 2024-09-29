@@ -63,11 +63,13 @@ CHARACTER SET utf8;
 */
 CREATE TABLE postings 
 (
-  group_id      INTEGER REFERENCES groups.group_id,
-  article_id    INTEGER REFERENCES articles.article_id ON DELETE CASCADE,
+  group_id      SERIAL,
+  article_id    INTEGER,
   article_index BIGINT NOT NULL, 
 
-  PRIMARY KEY(group_id, article_id)
+  PRIMARY KEY(group_id, article_id),
+  FOREIGN KEY (group_id) REFERENCES `groups`(group_id),
+  FOREIGN KEY (article_id) REFERENCES articles(article_id) ON DELETE CASCADE
 )
 ENGINE = INNODB
 CHARACTER SET utf8;
