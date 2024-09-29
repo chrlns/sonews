@@ -1,6 +1,6 @@
 /*
  *   SONEWS News Server
- *   Copyright (C) 2009-2015  Christian Lins <christian@lins.me>
+ *   Copyright (C) 2009-2024  Christian Lins <christian@lins.me>
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -64,6 +64,8 @@ public interface Storage {
     int getLastArticleNumber(Group group) throws StorageBackendException;
 
     String getOldestArticle() throws StorageBackendException;
+
+    List<Group> getGroups() throws StorageBackendException;
 
     int getPostingsCount(String groupname) throws StorageBackendException;
 

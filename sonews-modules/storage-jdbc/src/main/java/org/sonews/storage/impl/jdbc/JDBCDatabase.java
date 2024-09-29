@@ -24,6 +24,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.regex.Matcher;
@@ -82,6 +83,7 @@ public class JDBCDatabase implements Storage {
     protected PreparedStatement pstmtGetArticleIDs = null;
     protected PreparedStatement pstmtGetArticleIndex = null;
     protected PreparedStatement pstmtGetFirstArticleNumber = null;
+    protected PreparedStatement pstmtGetGroups = null;
     protected PreparedStatement pstmtGetLastArticleNumber = null;
     protected PreparedStatement pstmtGetMaxArticleID = null;
     protected PreparedStatement pstmtGetMaxArticleIndex = null;
@@ -227,6 +229,8 @@ public class JDBCDatabase implements Storage {
             this.pstmtGetFirstArticleNumber = conn
                     .prepareStatement("SELECT Min(article_index) FROM postings WHERE group_id = ?");
 
+            pstmtGetGroups = conn.prepareStatement("SELECT * FROM groups");
+
             // Prepare statement for method getPostingsCount()
             prepareGetPostingsCountStatement();
 
@@ -242,7 +246,7 @@ public class JDBCDatabase implements Storage {
 
             // Prepare statement for method updateWatermark()
             pstmtUpdateWatermark = conn.prepareStatement(
-                "UPDATE groups SET watermark = ? WHERE group_id = ?");
+                    "UPDATE groups SET watermark = ? WHERE group_id = ?");
         } catch (Exception ex) {
             throw new Error("JDBC Driver not found!", ex);
         }
@@ -671,6 +675,31 @@ public class JDBCDatabase implements Storage {
         }
     }
 
+    @Override
+    public List<Group> getGroups() throws StorageBackendException {
+        ResultSet rs = null;
+
+        try {
+            rs = this.pstmtGetMaxArticleID.executeQuery();
+
+            List<Group> groups = new LinkedList<>();
+            while (rs.next()) {
+                var id    = rs.getInt("group_id");
+                var flags = rs.getInt("flags");
+                var name  = rs.getString("name");
+                var group = new Group(name, id, flags);
+                groups.add(group);
+            }
+
+            return groups;
+        } catch (SQLException ex) {
+            restartConnection(ex);
+            return getGroups();
+        } finally {
+            closeResultSet(rs);
+        }
+    }
+
     private synchronized int getMaxArticleID() throws StorageBackendException {
         ResultSet rs = null;
 
@@ -904,7 +933,7 @@ public class JDBCDatabase implements Storage {
     protected void updateWatermark(Group group, long watermark) throws StorageBackendException {
         try {
             pstmtUpdateWatermark.setLong(1, watermark);
-            pstmtUpdateWatermark.setInt(2, (int)group.getInternalID());
+            pstmtUpdateWatermark.setInt(2, (int) group.getInternalID());
             pstmtUpdateWatermark.execute();
         } catch (SQLException ex) {
             restartConnection(ex);

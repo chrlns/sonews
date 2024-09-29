@@ -1,6 +1,6 @@
 /*
  *   SONEWS News Server
- *   Copyright (C) 2009-2015  Christian Lins <christian@lins.me>
+ *   Copyright (C) 2009-2024  Christian Lins <christian@lins.me>
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -136,7 +136,7 @@ public class Group {
      * @param id
      * @param flags
      */
-    public Group(final String name, final long id, final int flags) {
+    public Group(String name, long id, int flags) {
         this.id = id;
         this.flags = flags;
         this.name = name;

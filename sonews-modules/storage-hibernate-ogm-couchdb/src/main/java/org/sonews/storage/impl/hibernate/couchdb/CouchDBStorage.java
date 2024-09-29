@@ -134,6 +134,11 @@ public class CouchDBStorage implements Storage {
     }
 
     @Override
+    public List<Group> getGroups() throws StorageBackendException {
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    }
+
+    @Override
     public String getOldestArticle() throws StorageBackendException {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
