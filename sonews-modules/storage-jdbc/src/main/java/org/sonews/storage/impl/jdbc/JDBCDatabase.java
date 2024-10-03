@@ -271,7 +271,7 @@ public class JDBCDatabase implements Storage {
      * @throws StorageBackendException
      */
     @Override
-    @SuppressWarnings("InfiniteRecursion")
+    @SuppressWarnings({"InfiniteRecursion", "NestedSynchronizedStatement"})
     public synchronized void addArticle(final Article article) throws StorageBackendException {
         // It is necessary to synchronize this over all connections otherwise
         // several threads would update the article_id that is database-unique.
