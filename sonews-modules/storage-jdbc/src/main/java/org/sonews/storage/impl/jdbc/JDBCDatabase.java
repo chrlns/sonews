@@ -272,9 +272,12 @@ public class JDBCDatabase implements Storage {
      */
     @Override
     @SuppressWarnings("InfiniteRecursion")
-    public void addArticle(final Article article) throws StorageBackendException {
+    public synchronized void addArticle(final Article article) throws StorageBackendException {
         // It is necessary to synchronize this over all connections otherwise
         // several threads would update the article_id that is database-unique.
+        // The method is synchronized here because in case of an SQL exception
+        // in an another method restartConnection() is called and recreates
+        // the conn object which is used here.
         synchronized (JDBCDatabase.class) {
             try {
                 this.conn.setAutoCommit(false);
@@ -306,14 +309,15 @@ public class JDBCDatabase implements Storage {
     }
 
     /**
-     * Adds an article to the database.
+     * Adds an article to the database. Method is not synchronized as it is only
+     * called by an already synchronized method.
      *
      * @param article
      * @param newArticleID
      * @throws java.sql.SQLException
      * @throws org.sonews.storage.StorageBackendException
      */
-    protected synchronized void addArticle(final Article article, final int newArticleID)
+    protected void addArticle(final Article article, final int newArticleID)
             throws SQLException, StorageBackendException {
         // Fill prepared statement with values;
         // writes body to article table
